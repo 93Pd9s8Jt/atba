@@ -1,0 +1,100 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - v*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release-android:
+    name: Build and Release Android APKs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Configure Android Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}" > android/key.properties
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk
+          mv app-arm64-v8a-release.apk atba-${{ github.ref_name }}-arm64-v8a.apk
+          mv app-armeabi-v7a-release.apk atba-${{ github.ref_name }}-armeabi-v7a.apk
+          mv app-x86_64-release.apk atba-${{ github.ref_name }}-x86_64.apk
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v3
+        with:
+          path: build/app/outputs/flutter-apk/atba-*.apk
+
+      - name: Release APKs
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: build/app/outputs/flutter-apk/atba-*.apk
+          allowUpdates: true
+
+  build-and-release-ios:
+    name: Build and Release iOS IPA (Experimental)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build iOS IPA
+        run: |
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
+          mkdir Payload
+          cd Payload
+          ln -s ../Runner.app
+          cd ..
+          zip -r atba-${{ github.ref_name }}.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          path: build/ios/iphoneos/atba-${{ github.ref_name }}.ipa
+
+      - name: Release IPA
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: build/ios/iphoneos/atba-${{ github.ref_name }}.ipa
+          allowUpdates: true
