@@ -1,15 +1,13 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
-
 
 import 'permission_screen.dart';
 import 'package:atba/services/api_service.dart';
 
 class ApiKeyScreen extends StatelessWidget {
   final TextEditingController _apiKeyController = TextEditingController();
-  
+
   final _storage = const FlutterSecureStorage();
 
   ApiKeyScreen({super.key});
@@ -28,7 +26,8 @@ class ApiKeyScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Welcome!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('Welcome!',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             const Text('Please provide your API key to continue.'),
             const SizedBox(height: 20),
@@ -47,18 +46,21 @@ class ApiKeyScreen extends StatelessWidget {
               onPressed: () async {
                 final apiKey = _apiKeyController.text.trim();
                 await apiService.saveApiKey(apiKey);
-                final response = await apiService.makeRequest('api/user/me?settings=true');
-                final bool isInvalidApiKey = response == null;
-                if (apiKey.isNotEmpty && !isInvalidApiKey) {
-                  await saveApiKey(apiKey);
+                final response =
+                    await apiService.makeRequest('api/user/me?settings=true');
+                if (apiKey.isNotEmpty && response?["success"]) {
+                  await apiService.saveApiKey(apiKey);
                   Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PermissionScreen()),
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PermissionScreen()));
                 } else {
                   apiService.deleteApiKey();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isInvalidApiKey && apiKey.isNotEmpty ?  'Invalid API Key' : 'API Key is required!')),
+                    SnackBar(
+                        content: Text(apiKey.isNotEmpty
+                            ? (response?["detail"] ?? "unknown error")
+                            : 'API Key is required!')),
                   );
                 }
               },

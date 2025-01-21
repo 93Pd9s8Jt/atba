@@ -118,12 +118,14 @@ class TorboxAPI {
     }
   }
 
-  Future<void> saveApiKey(String apiKey) async {
-    await secureStorageService.write('api_key', apiKey);
+  Future<void> saveApiKey(String apiKeyToSave) async {
+    await secureStorageService.write('api_key', apiKeyToSave);
+    apiKey = apiKeyToSave;
   }
 
   Future<void> deleteApiKey() async {
     await secureStorageService.delete('api_key');
+    apiKey = null;
   }
 }
 

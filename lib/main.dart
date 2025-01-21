@@ -48,7 +48,7 @@ Future<void> main() async {
           )..initializeApp(),
         ),
       ],
-      child: MyApp(isFirstRun: isFirstRun, apiKey: apiKey),
+      child: AtbaApp(isFirstRun: isFirstRun, apiKey: apiKey),
     ),
   );
 
@@ -60,10 +60,10 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class AtbaApp extends StatelessWidget {
   final bool isFirstRun;
   final String? apiKey;
-  const MyApp({ required this.isFirstRun,
+  const AtbaApp({ required this.isFirstRun,
                 required this.apiKey,
                 super.key});
 
