@@ -42,8 +42,10 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APKs
+      - name: Build split APKs
         run: flutter build apk --release --split-per-abi
+      - name: Build universal APK
+        run: flutter build apk --release
 
       - name: Rename APKs
         run: |
@@ -51,6 +53,8 @@ jobs:
           mv app-arm64-v8a-release.apk atba-${{ github.ref_name }}-arm64-v8a.apk
           mv app-armeabi-v7a-release.apk atba-${{ github.ref_name }}-armeabi-v7a.apk
           mv app-x86_64-release.apk atba-${{ github.ref_name }}-x86_64.apk
+          mv app-release.apk atba-${{ github.ref_name }}-universal.apk
+
 
       - name: Upload APKs
         uses: actions/upload-artifact@v3
