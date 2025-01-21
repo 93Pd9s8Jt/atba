@@ -110,7 +110,7 @@ class SettingsPage extends StatelessWidget {
 
           SimpleSettingsTile(
             title: 'Account',
-            subtitle: 'Change or delete api key.',
+            subtitle: 'Change or delete API key',
             leading: Icon(Icons.account_circle),
             child: SettingsScreen(
               title: 'Account settings',
