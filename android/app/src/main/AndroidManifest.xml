@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.torbox.atba">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:label="ATBA"
         android:name="${applicationName}"

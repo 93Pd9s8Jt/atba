@@ -44,7 +44,7 @@ class TorboxAPI {
 
     requestType = requestType.toLowerCase();
 
-    final response;
+    final http.Response response;
 
     switch( requestType ) {
       case 'get':
