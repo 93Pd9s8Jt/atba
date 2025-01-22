@@ -145,19 +145,20 @@ class BrowsePageState extends State<DownloadsPage> {
         child: const Icon(Icons.add),
       ),
       appBar: AppBar(
-        title: const Text('Downloads'),
+        // title: const Text('Downloads'),
         actions: [
-                Checkbox(
-                    value: _isTorrentNamesCensored,
-                    onChanged: (value) {
-                      setState(() => _isTorrentNamesCensored = value ?? false);
-                    }),
-                const Text('Censor names'),
-                _buildSortMenu(),
-                IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    onPressed: _showFilterBottomSheet),
-              ],
+          _buildSortMenu(),
+          IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: _showFilterBottomSheet),
+          IconButton(
+              icon: _isTorrentNamesCensored
+                  ? Icon(Icons.visibility_off)
+                  : Icon(Icons.visibility),
+              onPressed: () {
+                setState (() =>_isTorrentNamesCensored = !_isTorrentNamesCensored );
+              }),
+        ],
       ),
       body: Column(
         children: [
@@ -186,9 +187,11 @@ class BrowsePageState extends State<DownloadsPage> {
                   final data = snapshot.data as Map<String, dynamic>;
                   if (data["success"] != true) {
                     return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(child: Text('Failed to fetch data: ${data["detail"]}', style: const TextStyle(color: Colors.red)))
-                    );
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                            child: Text(
+                                'Failed to fetch data: ${data["detail"]}',
+                                style: const TextStyle(color: Colors.red))));
                   }
                   List<dynamic> filteredData = _filterData(data["data"]);
                   if (_selectedSortingOption != "Default") {

@@ -62,10 +62,13 @@ jobs:
           path: build/app/outputs/flutter-apk/atba-*.apk
 
       - name: Release APKs
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: build/app/outputs/flutter-apk/atba-*.apk
-          allowUpdates: true
+          files: build/app/outputs/flutter-apk/atba-*.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
 
   build-and-release-ios:
     name: Build and Release iOS IPA (Experimental)
@@ -99,7 +102,10 @@ jobs:
           path: build/ios/iphoneos/atba-${{ github.ref_name }}.ipa
 
       - name: Release IPA
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: build/ios/iphoneos/atba-${{ github.ref_name }}.ipa
-          allowUpdates: true
+          files: build/ios/iphoneos/atba-${{ github.ref_name }}.ipa
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
