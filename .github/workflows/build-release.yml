@@ -44,7 +44,7 @@ jobs:
 
       - name: Update Version in pubspec.yaml
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${GITHUB_REF#refs/tags/v}
           sed -i "s/^version:.*/version: $VERSION/" pubspec.yaml
 
       - name: Build split APKs
@@ -95,9 +95,9 @@ jobs:
 
       - name: Update Version in pubspec.yaml
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${GITHUB_REF#refs/tags/v}
           sed -i "s/^version:.*/version: $VERSION/" pubspec.yaml
-          
+
       - name: Build iOS IPA
         run: |
           flutter build ios --release --no-codesign
