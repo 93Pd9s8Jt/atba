@@ -183,6 +183,7 @@ class SettingsPage extends StatelessWidget {
             ExpandableSettingsTile(
               title: "Providers",
               children: [
+                // sort needs to ignore the first character which is the flag
                 for (var provider in providers.keys)
                   CheckboxSettingsTile(
                     settingKey: 'key-provider-$provider',
@@ -209,7 +210,7 @@ class SettingsPage extends StatelessWidget {
               title: "Priority foreign language",
               children: [
 
-                for (var language in languages.keys)
+                for (var language in languages.keys.toList()..sort())
                   CheckboxSettingsTile(
                     settingKey: 'key-language-$language',
                     title: languages[language] ?? language,
