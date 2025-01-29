@@ -184,7 +184,6 @@ class SettingsPage extends StatelessWidget {
             ExpandableSettingsTile(
               title: "Providers",
               children: [
-                // sort needs to ignore the first character which is the flag
                 for (var provider in providers.keys)
                   CheckboxSettingsTile(
                     settingKey: 'key-provider-$provider',
