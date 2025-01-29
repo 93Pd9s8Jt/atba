@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/services/api_service.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatelessWidget {
 
@@ -257,7 +258,27 @@ class SettingsPage extends StatelessWidget {
               }
             ),
 
-          ])
+          ]),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.done:
+                  return Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Version: ${snapshot.data!.version}',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
+                default:
+                  return const SizedBox();
+              }
+            },
+          ),
         ]));
   }
 }
