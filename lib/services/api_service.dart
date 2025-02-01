@@ -237,6 +237,7 @@ class TorrentioAPI with ChangeNotifier {
 
   bool isLoading = false;
   Map<String, dynamic> streamData = {};
+  Map<String, Map<String, dynamic>> selectedStreams = {};
   // we can use flutter settings screens to construct the URL
   // full url looks like 
   // https://torrentio.strem.fun/providers=CSPROVIDERS%7Clanguage=CSLANGUAGES%7Cqualityfilter=CSQUALITIES%7Climit=NUMBERPERQUALITYLIMIT%7Csizefilter=SIZELIMIT%7Ctorbox=APIKEY/
@@ -245,8 +246,9 @@ class TorrentioAPI with ChangeNotifier {
   final String CSQUALITIES = qualities.keys.where((key) => Settings.getValue<bool>("key-exclude-quality-$key") ?? false).join(',');
   final String SORTBY = {1: '', 2: 'qualitysize', 3: 'seeders', 4: 'size'}[Settings.getValue<int>("key-sort-by") ?? 1]!;
   final String SIZELIMIT = Settings.getValue<String>("key-video-size-limit") ?? '';
-  final String NUMBERPERQUALITYLIMIT = Settings.getValue<String>("key-max-results-per-quality") ?? '';
+  final String NUMBERPERQUALITYLIMIT = Settings.getValue<String>("key-max-results-per-quality") ?? ''; // TODO: validate
   late String baseUrl;
+
 
   TorrentioAPI(this.secureStorageService) {
     _init();
@@ -255,14 +257,20 @@ class TorrentioAPI with ChangeNotifier {
   Future<void> _init() async {
 
     apiKey = await secureStorageService.read('api_key');
+    if (apiKey == null) {
+      throw Exception('API key not found');
+    }
     baseUrl = 'https://torrentio.strem.fun/providers=$CSPROVIDERS%7Csort=$SORTBY%7Clanguage=$CSLANGUAGES%7Cqualityfilter=$CSQUALITIES%7climit=$NUMBERPERQUALITYLIMIT%7Csizefilter=$SIZELIMIT%7Ctorbox=$apiKey';
 
   }
 
+  void setStream(String id, Map<String, dynamic> stream) {
+    selectedStreams[id] = stream;
+    notifyListeners();
+  }
+
   Future<void> fetchStreamData(String id, SearchType type) async {
     isLoading = true;
-    notifyListeners();
-
     try {
       final response = await http.get(
         Uri.parse(
@@ -272,6 +280,7 @@ class TorrentioAPI with ChangeNotifier {
 
       if (response.statusCode == 200) {
         streamData = jsonDecode(response.body);
+        selectedStreams[id] = streamData['streams']?.first;
       } else {
         throw Exception('Failed to load stream data: ${response.statusCode}');
       }
@@ -279,7 +288,7 @@ class TorrentioAPI with ChangeNotifier {
       throw("Error fetching stream data: $e");
       streamData = {}; // Clear data on error
     } finally {
-      url = streamData["streams"][0]['url'];
+      url = selectedStreams[id]?['url'];
       isLoading = false;
       notifyListeners();
     }
