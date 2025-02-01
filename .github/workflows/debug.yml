@@ -1,0 +1,78 @@
+name: CD
+
+on:
+    push:
+      branches: [ "master" ]
+    pull_request:
+      branches: [ "master" ]
+
+jobs:
+    build-debug-android:
+        runs-on: ubuntu-latest
+    
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+    
+        - name: Setup Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            flutter-version: 3.27.1
+    
+        - name: Get Dependencies
+          run: flutter pub get
+    
+        - name: Setup Java
+          uses: actions/setup-java@v4
+          with:
+            distribution: "temurin"
+            java-version: "17"
+
+        - name: Decode Keystore
+          run: |
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+          env:
+            ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    
+        - name: Configure Android Keystore
+          run: echo "${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}" > android/key.properties
+    
+        - name: Build APK
+          run: flutter build apk --debug
+    
+        - name: Upload debug APK
+          uses: actions/upload-artifact@v4
+          with:
+            name: app-debug
+            path: build/app/outputs/flutter-apk/app-debug.apk
+
+    build-debug-ios:
+        runs-on: macos-latest
+    
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+    
+        - name: Setup Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            flutter-version: 3.27.1
+    
+        - name: Get Dependencies
+          run: flutter pub get
+    
+        - name: Build iOS
+          run: |
+            flutter build ios --debug --no-codesign
+            cd build/ios/iphoneos
+            mkdir Payload
+            cd Payload
+            ln -s ../Runner.app
+            cd ..
+            zip -r debug.ipa Payload
+    
+        - name: Upload debug iOS
+          uses: actions/upload-artifact@v4
+          with:
+            name: app-debug
+            path:  build/ios/iphoneos/debug.ipa
