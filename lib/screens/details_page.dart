@@ -461,19 +461,25 @@ class _DetailsPageState extends State<DetailsPage>
   }
 }
 
-class QualitySelector extends StatelessWidget {
+class QualitySelector extends StatefulWidget {
+  final Function(Map<String, dynamic>) onStreamSelected;
   final String id;
   final SearchType type;
-  final Function(Map<String, dynamic>) onStreamSelected;
 
-  const QualitySelector(this.id, this.type, {required this.onStreamSelected, super.key});
+   QualitySelector(this.id, this.type, {required this.onStreamSelected, super.key});
 
+  @override
+  _QualitySelectorState createState() => _QualitySelectorState();
+}
+
+class _QualitySelectorState extends State<QualitySelector> {
+  bool expanded = false;
   @override
   Widget build(BuildContext context) {
     final torrentioProvider = Provider.of<TorrentioAPI>(context, listen: false);
 
     return FutureBuilder<void>(
-      future: torrentioProvider.fetchStreamData(id, type),
+      future: torrentioProvider.fetchStreamData(widget.id, widget.type),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -489,25 +495,41 @@ class QualitySelector extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 10),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: torrentioProvider.streamData['streams']?.length ?? 0,
-                    itemBuilder: (context, index) {
-                      final stream = torrentioProvider.streamData['streams'][index];
-                      return ListTile(
-                        title: Text(stream['title']),
-                        onTap: () {
-                          torrentioProvider.setStream(id, stream);
-                          onStreamSelected(stream);
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
+                  child: StreamList(torrentioProvider: torrentioProvider, widget: widget),
                 ),
               ],
             ),
           );
         }
+      },
+    );
+  }
+}
+
+class StreamList extends StatelessWidget {
+  const StreamList({
+    super.key,
+    required this.torrentioProvider,
+    required this.widget,
+  });
+
+  final TorrentioAPI torrentioProvider;
+  final QualitySelector widget;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: torrentioProvider.streamData['streams']?.length ?? 0,
+      itemBuilder: (context, index) {
+        final stream = torrentioProvider.streamData['streams'][index];
+        return ListTile(
+          title: Text(stream['title']),
+          onTap: () {
+            torrentioProvider.setStream(widget.id, stream);
+            widget.onStreamSelected(stream);
+            Navigator.pop(context);
+          },
+        );
       },
     );
   }
