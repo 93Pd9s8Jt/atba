@@ -90,8 +90,6 @@ class _WatchPageState extends State<WatchPage>
                         final item = api.searchResults[searchType]![index];
                         return MovieCard(
                           title: item['name'] ?? "",
-                          description:
-                              item['description'] ?? "No description available",
                           posterUrl: item['poster'] ?? "",
                           onTap: () {
                             Navigator.push(
@@ -155,14 +153,12 @@ class _SearchBarState extends State<SearchBar> {
 
 class MovieCard extends StatelessWidget {
   final String title;
-  final String description;
   final String posterUrl;
   final VoidCallback onTap;
 
   const MovieCard({
     super.key,
     required this.title,
-    required this.description,
     required this.posterUrl,
     required this.onTap,
   });
