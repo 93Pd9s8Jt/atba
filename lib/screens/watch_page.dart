@@ -10,9 +10,10 @@ class WatchPage extends StatefulWidget {
   _WatchPageState createState() => _WatchPageState();
 }
 
-class _WatchPageState extends State<WatchPage> with SingleTickerProviderStateMixin {
+class _WatchPageState extends State<WatchPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   final List<Tab> _tabTypes = const [
     Tab(text: 'Movies'),
     Tab(text: 'Series'),
@@ -23,7 +24,6 @@ class _WatchPageState extends State<WatchPage> with SingleTickerProviderStateMix
     super.initState();
     _tabController = TabController(length: _tabTypes.length, vsync: this);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,6 @@ class _WatchPageState extends State<WatchPage> with SingleTickerProviderStateMix
         children: [
           SearchBar(
             onSearch: (query) {
-
               stremioApi.fetchSearchResults(query);
             },
           ),
@@ -55,7 +54,9 @@ class _WatchPageState extends State<WatchPage> with SingleTickerProviderStateMix
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    if (api.searchResults["movie"]!.isEmpty && api.searchResults["series"]!.isEmpty && api.hasSearched) {
+                    if (api.searchResults["movie"]!.isEmpty &&
+                        api.searchResults["series"]!.isEmpty &&
+                        api.hasSearched) {
                       return const Center(child: Text("No results found"));
                     }
 
@@ -75,21 +76,31 @@ class _WatchPageState extends State<WatchPage> with SingleTickerProviderStateMix
                         break;
                     }
 
-
-                    return ListView.builder(
+                    return GridView.builder(
                       padding: const EdgeInsets.all(8),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                        childAspectRatio: 0.7,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 0,
+                      ),
                       itemCount: api.searchResults[searchType]!.length,
                       itemBuilder: (context, index) {
                         final item = api.searchResults[searchType]![index];
                         return MovieCard(
                           title: item['name'] ?? "",
-                          description: item['description'] ?? "No description available",
+                          description:
+                              item['description'] ?? "No description available",
                           posterUrl: item['poster'] ?? "",
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => DetailsPage(title: item["name"], type: searchType, id: item["id"]),
+                                builder: (context) => DetailsPage(
+                                    title: item["name"],
+                                    type: searchType,
+                                    id: item["id"]),
                               ),
                             );
                           },
@@ -159,65 +170,52 @@ class MovieCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Theme.of(context).colorScheme.secondaryContainer,
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 3,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Row(
+        borderRadius: BorderRadius.circular(4),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Poster Image
             if (posterUrl.isNotEmpty)
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(8),
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
                 ),
                 child: Image.network(
                   posterUrl,
-                  width: 100,
-                  height: 150,
-                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.fitHeight,
                 ),
               )
             else
               Container(
-                width: 100,
-                height: 150,
+                width: double.infinity,
+                height: 200,
                 color: Colors.grey[300],
-                child: const Icon(Icons.image_not_supported, color: Colors.white70),
+                child: const Icon(Icons.image_not_supported,
+                    color: Colors.white70),
               ),
-            // Title and Description
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      heightFactor: 0.2,
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    // const SizedBox(height: 8),
-                    // Text(
-                    //   description,
-                    //   style: const TextStyle(fontSize: 14, color: Colors.black54),
-                    //   maxLines: 3,
-                    //   overflow: TextOverflow.ellipsis,
-                    // ),
-                  ],
+            // Title
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    // fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
