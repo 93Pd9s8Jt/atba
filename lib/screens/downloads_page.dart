@@ -29,16 +29,16 @@ class BrowsePageState extends State<DownloadsPage> {
   };
 
   static final Map<String, Function> _filters = {
-    "Usenet": (json) => false,
+    // "Usenet": (json) => false,
     "Download Ready": (json) => json["download_finished"] as bool,
-    "Web downloads": (json) => false,
+    // "Web downloads": (json) => false,
     "Uploading": (json) => json["upload_speed"] as num > 0,
     "Downloading": (json) => json["download_speed"] as num > 0,
-    "Torrents": (json) => true,
+    // "Torrents": (json) => true,
     "Inactive": (json) => !json["active"],
     "Cached": (json) => json["cached"] as bool,
     "Active": (json) => json["active"] as bool,
-    "I": (json) => (json["name"] as String).startsWith("I"),
+    // "I": (json) => (json["name"] as String).startsWith("I"),
   };
   static int _compareDates(String a, String b) {
     final aDate = DateTime.parse(a);
