@@ -10,7 +10,7 @@ dependencies:
   android_intent_plus: ^5.2.1
   chewie: ^1.8.5
   dynamic_color: ^1.7.0
-  file_picker: ^8.1.7
+  file_picker: ^9.0.0
   flutter:
     sdk: flutter
   flutter_launcher_icons: ^0.14.3
