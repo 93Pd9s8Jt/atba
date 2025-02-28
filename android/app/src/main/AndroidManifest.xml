@@ -3,6 +3,15 @@
         android:label="ATBA"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <provider
+            android:name="vn.hunghd.flutterdownloader.DownloadedFileProvider"
+            android:authorities="${applicationId}.flutter_downloader.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -18,12 +27,12 @@
                  while the Flutter UI initializes. After that, this theme continues
                  to determine the Window background behind the Flutter UI. -->
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+            />
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -39,8 +48,8 @@
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -48,6 +57,9 @@
             <data android:mimeType="video/*" />
         </intent>
     </queries>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATION"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 </manifest>

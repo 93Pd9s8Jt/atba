@@ -1,14 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
 import 'services/shared_prefs_service.dart';
 import 'services/secure_storage_service.dart';
-import 'services/api_service.dart';
+import 'services/torbox_service.dart';
+import 'services/stremio_service.dart';
+import 'services/torrentio_service.dart';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'screens/setup/api_screen.dart';
 import 'screens/home_page.dart';
+import 'package:atba/models/torrent.dart';
 // import 'cache_provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'app_state.dart';
@@ -16,6 +21,7 @@ import 'app_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initSettings();
+  await FlutterDownloader.initialize(debug: kDebugMode);
 
   final sharedPrefsService = SharedPrefsService();
   await sharedPrefsService.init();
@@ -28,9 +34,9 @@ Future<void> main() async {
   final apiService = TorboxAPI(
     secureStorageService: secureStorageService,
   );
+  Torrent.initApiService(apiService);
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
-
 
   runApp(
     MultiProvider(
@@ -51,10 +57,9 @@ Future<void> main() async {
       child: AtbaApp(isFirstRun: isFirstRun, apiKey: apiKey),
     ),
   );
-
 }
 
-  Future<void> initSettings() async {
+Future<void> initSettings() async {
   await Settings.init(
     cacheProvider: SharePreferenceCache(),
   );
@@ -63,9 +68,7 @@ Future<void> main() async {
 class AtbaApp extends StatelessWidget {
   final bool isFirstRun;
   final String? apiKey;
-  const AtbaApp({ required this.isFirstRun,
-                required this.apiKey,
-                super.key});
+  const AtbaApp({required this.isFirstRun, required this.apiKey, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -97,8 +100,15 @@ class AtbaApp extends StatelessWidget {
             }
 
             return MaterialApp(
-              title: 'Simple Setup Flow',
+              title: '',
               theme: ThemeData(
+                pageTransitionsTheme: const PageTransitionsTheme(
+                  builders: <TargetPlatform, PageTransitionsBuilder>{
+                    // Set the predictive back transitions for Android.
+                    TargetPlatform.android:
+                        PredictiveBackPageTransitionsBuilder(),
+                  },
+                ),
                 useMaterial3: true,
                 colorScheme: lightColorScheme,
               ),
@@ -106,9 +116,7 @@ class AtbaApp extends StatelessWidget {
                   ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
               themeMode: ThemeMode.system,
               home: isFirstRun
-                  ? (apiKey == null
-                      ? ApiKeyScreen()
-                      : const HomeScreen())
+                  ? (apiKey == null ? ApiKeyScreen() : const HomeScreen())
                   : const HomeScreen(),
             );
           },
@@ -117,8 +125,6 @@ class AtbaApp extends StatelessWidget {
     );
   }
 }
-
-
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});

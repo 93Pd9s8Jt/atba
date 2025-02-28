@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:atba/services/api_service.dart';
+import 'package:atba/services/torbox_service.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -137,8 +137,8 @@ class SettingsPage extends StatelessWidget {
               onPressed: () async {
                 final apiKey = _apiKeyController.text.trim();
                 await apiService.saveApiKey(apiKey);
-                final response = await apiService.makeRequest('api/user/me?settings=true');
-                if (apiKey.isNotEmpty && response?["success"]) {
+                final response = await apiService.getUserData();
+                if (apiKey.isNotEmpty && response.success) {
                   await apiService.saveApiKey(apiKey);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('API Key saved')),
@@ -147,7 +147,7 @@ class SettingsPage extends StatelessWidget {
                 } else {
                   apiService.deleteApiKey();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(apiKey.isNotEmpty ?  (response?["detail"] ?? "unknown error") : 'API Key is required!')),
+                    SnackBar(content: Text(apiKey.isNotEmpty ?  (response.detail.isNotEmpty ? response.detail : "unknown error") : 'API Key is required!')),
                   );
                 }
               },

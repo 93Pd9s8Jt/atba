@@ -1,319 +1,335 @@
-import 'package:flutter/material.dart';
-import 'package:atba/services/api_service.dart';
-import 'package:provider/provider.dart';
-import 'package:atba/parse_torrent_name.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:flutter/material.dart';
+import 'package:atba/services/torbox_service.dart' as torbox;
+import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:atba/models/torrent.dart';
+import 'package:atba/models/widgets/torrentlist.dart';
+import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/models/permission_model.dart';
 
-class DownloadsPage extends StatefulWidget {
+class DownloadsPage extends StatelessWidget {
   const DownloadsPage({super.key});
 
   @override
-  BrowsePageState createState() => BrowsePageState();
-}
-
-class BrowsePageState extends State<DownloadsPage> {
-  bool _isTorrentNamesCensored = false;
-
-  static const Map<String, Map<String, dynamic>> torrentStatuses = {
-    "cached": {"color": Colors.grey, "icon": Icons.cached},
-    "downloading": {"color": Colors.blue, "icon": Icons.cloud_download},
-    "paused": {"color": Colors.grey, "icon": Icons.pause},
-    "uploading": {"color": Colors.green, "icon": Icons.cloud_upload},
-    "uploading (no peers)": {"color": Colors.green, "icon": Icons.cloud_upload},
-    "completed": {"color": Colors.green, "icon": Icons.check_circle},
-    "stalled (no seeds)": {"color": Colors.yellow, "icon": Icons.stop},
-    "failed (processing)": {"color": Colors.orange, "icon": Icons.error},
-    "processing": {"color": Colors.yellow, "icon": Icons.arrow_circle_right},
-    "stoppedUP": {"color": Colors.red, "icon": Icons.stop}, // completed
-  };
-
-  static final Map<String, Function> _filters = {
-    // "Usenet": (json) => false,
-    "Download Ready": (json) => json["download_finished"] as bool,
-    // "Web downloads": (json) => false,
-    "Uploading": (json) => json["upload_speed"] as num > 0,
-    "Downloading": (json) => json["download_speed"] as num > 0,
-    // "Torrents": (json) => true,
-    "Inactive": (json) => !json["active"],
-    "Cached": (json) => json["cached"] as bool,
-    "Active": (json) => json["active"] as bool,
-    // "I": (json) => (json["name"] as String).startsWith("I"),
-  };
-  static int _compareDates(String a, String b) {
-    final aDate = DateTime.parse(a);
-    final bDate = DateTime.parse(b);
-    return aDate.compareTo(bDate);
-  }
-
-  static Map<String, int? Function(dynamic, dynamic)> sortingOptions = {
-    "Default": (a, b) => null,
-    "A to Z": (a, b) => (a["name"] as String)
-        .toLowerCase()
-        .compareTo((b["name"] as String).toLowerCase()),
-    "Z to A": (a, b) => -(a["name"] as String)
-        .toLowerCase()
-        .compareTo((b["name"] as String).toLowerCase()),
-    "Largest": (a, b) => a["size"].compareTo(b["size"]),
-    "Smallest": (a, b) => -a["size"].compareTo(b["size"]),
-    "Oldest": (a, b) => _compareDates(a["created_at"], b["created_at"]),
-    "Newest": (a, b) => -_compareDates(a["created_at"], b["created_at"]),
-    "Recently updated": (a, b) =>
-        _compareDates(a["updated_at"], b["updated_at"])
-  };
-
-  String _selectedSortingOption = "Default";
-  final bool _useTNP =
-      Settings.getValue<bool>("key-use-torrent-name-parsing") ?? true;
-
-  final List<String> _selectedMainFilters =
-      List.from(_filters.keys); // everything selected initially
-
-  @override
-  void initState() {
-    super.initState();
-    setState(() {
-      _isTorrentNamesCensored = false;
-    });
-  }
-
-  void _updateFilter(String filter, bool selected) {
-    setState(() {
-      if (selected) {
-        _selectedMainFilters.add(filter);
-      } else {
-        _selectedMainFilters.remove(filter);
-      }
-    });
-  }
-
-  String toTitleCase(String input) {
-    if (input.isEmpty) return '';
-
-    // List of small words to keep lowercase unless they're the first or last word
-    const smallWords = {
-      'a',
-      'an',
-      'the',
-      'and',
-      'but',
-      'or',
-      'as',
-      'at',
-      'by',
-      'for',
-      'in',
-      'of',
-      'on',
-      'to',
-      'up',
-      'with',
-      'is',
-      'it'
-    };
-
-    const punctuation = {'.', ',', '!', '?', ';', ':'};
-
-    List<String> words =
-        input.toLowerCase().replaceAll(RegExp(r" +"), ' ').split(' ');
-    for (int i = 0; i < words.length; i++) {
-      if (i == words.length - 1 ||
-          !smallWords.contains(words[i]) ||
-          i != 0 && punctuation.any((punc) => words[i - 1].endsWith(punc))) {
-        words[i] = words[i][0].toUpperCase() + words[i].substring(1);
-      }
-    }
-
-    return words.join(' ');
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = Provider.of<TorboxAPI>(context, listen: false);
-
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // allow the user to add torrents / web downlaods / usenet
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return const FullscreenMenu();
-            },
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
-      appBar: AppBar(
-        // title: const Text('Downloads'),
-        actions: [
-          _buildSortMenu(),
-          IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: _showFilterBottomSheet),
-          IconButton(
-              icon: _isTorrentNamesCensored
-                  ? Icon(Icons.visibility)
-                  : Icon(Icons.visibility_off),
-              onPressed: () {
-                setState (() =>_isTorrentNamesCensored = !_isTorrentNamesCensored );
-              }),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Padding(
-          //   padding: const EdgeInsets.only(top: 16.0),
-          //   child: Row(
-          //     children: [
-          //       Checkbox(
-          //           value: _isTorrentNamesCensored,
-          //           onChanged: (value) {
-          //             setState(() => _isTorrentNamesCensored = value ?? false);
-          //           }),
-          //       const Text('Censor names'),
-          //       _buildSortMenu(),
-          //       IconButton(
-          //           icon: const Icon(Icons.filter_list),
-          //           onPressed: _showFilterBottomSheet),
-          //     ],
-          //   ),
-          // ),
-          Expanded(
-            child: FutureBuilder(
-              future: apiService.makeRequest('api/torrents/mylist'),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final data = snapshot.data as Map<String, dynamic>;
-                  if (data["success"] != true) {
-                    return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                'Failed to fetch data: ${data["detail"]}',
-                                style: const TextStyle(color: Colors.red))));
-                  }
-                  List<dynamic> filteredData = _filterData(data["data"]);
-                  if (_selectedSortingOption != "Default") {
-                    filteredData.sort((a, b) =>
-                        sortingOptions[_selectedSortingOption]!(a, b)!);
-                  }
-                  return ListView.builder(
-                    itemCount: filteredData.length,
-                    itemBuilder: (context, index) {
-                      final download = filteredData[index];
-                      final status = download['download_state'];
-                      final statusColor =
-                          torrentStatuses[status]?['color'] ?? Colors.grey;
-
-                      final statusIcon = torrentStatuses[status]?['icon'] ??
-                          Icons.question_mark;
-                      PTN ptn = PTN();
-                      final parsedTitle = ptn.parse(download['name'] ?? "");
-                      return ListTile(
-                        leading: Icon(statusIcon, color: statusColor),
-                        title: Text(_isTorrentNamesCensored
-                            ? 'Torrent ${index + 1}'
-                            : _useTNP
-                                ? parsedTitle["title"]
-                                : download['name']),
-                        subtitle: Text(
-                            '${(download['size'] / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB - $status'),
+    return ChangeNotifierProvider(
+      create: (_) => DownloadsPageState(context),
+      child: Consumer<DownloadsPageState>(
+        builder: (context, state, child) {
+          return Scaffold(
+            appBar: AppBar(
+              actions: [
+                if (state.isSelecting)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.select_all),
+                        onPressed: () {
+                          state.selectAllTorrents();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.flip),
+                        onPressed: () {
+                          state.invertSelection();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          state.clearSelection();
+                        },
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.sort),
+                        onSelected: (String value) {
+                          state.updateSortingOption(value);
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return DownloadsPageState.sortingOptions.keys
+                              .map<PopupMenuItem<String>>((String value) {
+                            return PopupMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList();
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.filter_list),
+                        onPressed: () => _showFilterBottomSheet(context),
+                      ),
+                      IconButton(
+                        icon: state.isTorrentNamesCensored
+                            ? Icon(Icons.visibility)
+                            : Icon(Icons.visibility_off),
+                        onPressed: () {
+                          state.toggleTorrentNamesCensoring();
+                        },
+                      ),
+                      // IconButton(
+                      //   icon: Icon(Icons.search),
+                      //   onPressed: () {
+                      //     // Implement search functionality here.
+                      //   },
+                      // )
+                    ],
+                  ),
+              ],
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: FutureBuilder(
+                    future: state.torrentsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final data = snapshot.data as Map<String, dynamic>;
+                        if (data.containsKey("success") &&
+                            data["success"] != true) {
+                          return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                  child: Column(
+                                children: [
+                                  Text(
+                                      'Failed to fetch data: ${data["detail"]}',
+                                      style:
+                                          const TextStyle(color: Colors.red)),
+                                  data["stackTrace"] != null
+                                      ? ElevatedButton(
+                                          child: const Text('Copy stack trace'),
+                                          onPressed: () {
+                                            Clipboard.setData(ClipboardData(
+                                                text: data["stackTrace"]
+                                                    .toString()));
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Stack trace copied to clipboard'),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : SizedBox(),
+                                ],
+                              )));
+                        }
+                        List<Torrent> activeTorrents =
+                            (data["postQueued"] as List<Torrent>)
+                                .where((torrent) => torrent.active)
+                                .toList();
+                        List<QueuedTorrent> queuedTorrents = data["queued"];
+                        List<Torrent> inactiveTorrents =
+                            (data["postQueued"] as List<Torrent>)
+                                .where((torrent) => !torrent.active)
+                                .toList();
+                        return TorrentsList(
+                          activeTorrents: activeTorrents,
+                          queuedTorrents: queuedTorrents,
+                          inactiveTorrents: inactiveTorrents,
+                        );
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                ),
+                if (state.isSelecting)
+                  BottomAppBar(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            state.deleteSelectedTorrents();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.pause),
+                          onPressed: () {
+                            state.pauseSelectedTorrents();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.play_arrow),
+                          onPressed: () {
+                            state.resumeSelectedTorrents();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.refresh),
+                          onPressed: () {
+                            state.reannounceSelectedTorrents();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.download),
+                          onPressed: () async {
+                            if (Settings.getValue<String>("folder_path") ==
+                                null) {
+                              bool granted =
+                                  await _showPermissionDialog(context);
+                              if (granted) {
+                                // Proceed with download
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'Permission not granted. Cannot proceed with download.'),
+                                  ),
+                                );
+                              }
+                            } else {
+                              // Proceed with download
+                              state.downloadSelectedTorrents();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            floatingActionButton: state.isSelecting
+                ? SizedBox.shrink()
+                : FloatingActionButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return const FullscreenMenu();
+                        },
                       );
                     },
-                  );
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
-          )
-        ],
+                    child: const Icon(Icons.add),
+                  ),
+          );
+        },
       ),
     );
   }
 
-  List<dynamic> _filterData(List<dynamic> data) {
-    Map<String, Function> filtersCopy = Map.from(_filters);
-    filtersCopy
-        .removeWhere((key, value) => !_selectedMainFilters.contains(key));
-    print(filtersCopy.entries);
-    List<dynamic> newData = data
-        .where((value) => filtersCopy.values.any((element) => element(value)))
-        .toList();
-    return newData;
+  Future<bool> _showPermissionDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Permission Required'),
+              content: const Text(
+                  'Storage access is required to download files. Do you want to grant permission?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    PermissionModel permissionModel = PermissionModel();
+                    bool granted = await permissionModel.grantPermission(
+                        Permission.storage, context);
+                    Navigator.of(context).pop(granted);
+                  },
+                  child: const Text('Yes'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
-  Widget _buildMainFilters(StateSetter setState) {
-    return Wrap(
-      spacing: 8.0,
-      children: _filters.keys.map((filter) {
-        return FilterChip(
-          label: Text(filter, style: const TextStyle(fontSize: 12)),
-          selected: _selectedMainFilters.contains(filter),
-          onSelected: (selected) {
-            setState(() {
-              _updateFilter(filter, selected);
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      builder: (context2) {
+        return ChangeNotifierProvider<DownloadsPageState>.value(
+            value: context.watch<DownloadsPageState>(),
+            builder: (context, _) {
+              return Theme(
+                data: Theme.of(context).copyWith(),
+                child: StatefulBuilder(
+                  builder: (BuildContext _, StateSetter setState) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const ListTile(
+                            title: Text('Main'),
+                          ),
+                          _buildMainFilters(context,  setState),
+                          // const ListTile(title: Text("Qualities")),
+                          // _buildQualityFilters(context, setState),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
             });
-          },
-          showCheckmark: false,
-        );
-      }).toList(),
+      },
     );
   }
 
-  void _showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true, // Ensure it inherits the app's theme
-      builder: (context) {
-        return Theme(
-          data: Theme.of(context).copyWith(),
-          child: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const ListTile(
-                      title: Text(
-                        'Main',
-                      ),
-                    ),
-                    _buildMainFilters(setState),
-                    const ListTile(
-                      title: Text('Metadata'),
-                    ),
-                    // _buildParsedFilters(setState),
-                  ],
-                ),
-              );
-            },
-          ),
+  Widget _buildMainFilters(
+      BuildContext context, StateSetter setState) {
+    return Consumer<DownloadsPageState>(
+      builder: (context, state, child) {
+        return Wrap(
+          spacing: 8.0,
+          children: DownloadsPageState.filters.keys.map((filter) {
+            return FilterChip(
+              label: Text(filter, style: const TextStyle(fontSize: 12)),
+              selected: state.selectedMainFilters.contains(filter),
+              onSelected: (selected) {
+                setState(() {
+                  state.updateFilter(filter, selected);
+                });
+              },
+              showCheckmark: false,
+            );
+          }).toList(),
         );
       },
     );
   }
 
-  Widget _buildSortMenu() {
-    return DropdownButton<String>(
-        underline: Container(),
-        icon: const Icon(Icons.sort),
-        items:
-            sortingOptions.keys.map<DropdownMenuItem<String>>((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (String? value) {
-          setState(() {
-            _selectedSortingOption = value ?? "Default";
-          });
-        });
-  }
+  // Widget _buildQualityFilters(BuildContext context, StateSetter setState) {
+  //   return Consumer<DownloadsPageState>(
+  //     builder: (context, state, child) {
+  //       return Wrap(
+  //         spacing: 8.0,
+  //         children: DownloadsPageState.qualityFilters.keys.map((filter) {
+  //           return FilterChip(
+  //             label: Text(filter, style: const TextStyle(fontSize: 12)),
+  //             selected: state.selectedQualityFilters.contains(filter),
+  //             onSelected: (selected) {
+  //               setState(() {
+  //                 state.updateQualityFilter(filter, selected);
+  //               });
+  //             },
+  //             showCheckmark: false,
+  //           );
+  //         }).toList(),
+  //       );
+  //     },
+  //   );
+  // }
 }
 
 class FullscreenMenu extends StatelessWidget {
@@ -321,7 +337,7 @@ class FullscreenMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiService = Provider.of<TorboxAPI>(context, listen: false);
+    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return DefaultTabController(
       length: 3,
@@ -348,7 +364,7 @@ class FullscreenMenu extends StatelessWidget {
 }
 
 class WebDownloadsTab extends StatefulWidget {
-  final TorboxAPI apiService;
+  final torbox.TorboxAPI apiService;
 
   const WebDownloadsTab({super.key, required this.apiService});
 
@@ -400,17 +416,16 @@ class _WebDownloadsTabState extends State<WebDownloadsTab> {
                     for (var url in urls) {
                       var response = await widget.apiService.makeRequest(
                           'api/webdl/createwebdownload',
-                          requestType: 'post',
+                          method: 'post',
                           body: {
                             "link": url.trim(),
                             "password": password,
                           });
-                      if (response == null) continue;
-                      if (response["success"] != true) {
+                      if (response.success != true) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                                'Failed to add $url: ${response["detail"]}'),
+                            content:
+                                Text('Failed to add $url: ${response.detail}'),
                           ),
                         );
                       }
@@ -441,7 +456,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final apiService = Provider.of<TorboxAPI>(context, listen: false);
+    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -471,7 +486,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
 
                 var response = await apiService.makeRequest(
                   'api/torrents/createtorrent',
-                  requestType: 'post',
+                  method: 'post',
                   body: {
                     "file": file, // file is handled on api side
                     "magnet": null,
@@ -482,7 +497,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
                   },
                 );
 
-                if (response != null && response["success"] == true) {
+                if (response.success == true) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Torrent added successfully'),
@@ -492,7 +507,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                          'Failed to add torrent: ${response?["detail"] ?? "Unknown error"}'),
+                          'Failed to add torrent: ${response.detailOrUnknown}'),
                     ),
                   );
                 }
@@ -524,7 +539,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
 
                     var response = await apiService.makeRequest(
                       'api/torrents/createtorrent',
-                      requestType: 'post',
+                      method: 'post',
                       body: {
                         "magnet": magnetLink,
                         "seed": null,
@@ -534,7 +549,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
                       },
                     );
 
-                    if (response != null && response["success"] == true) {
+                    if (response.success) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Torrent added successfully'),
@@ -544,7 +559,7 @@ class _TorrentsTabState extends State<TorrentsTab> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Failed to add torrent: ${response?["detail"] ?? "Unknown error"}'),
+                              'Failed to add torrent: ${response.detailOrUnknown}'),
                         ),
                       );
                     }
@@ -575,7 +590,7 @@ class _UsenetTabState extends State<UsenetTab> {
 
   @override
   Widget build(BuildContext context) {
-    final apiService = Provider.of<TorboxAPI>(context, listen: false);
+    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -612,7 +627,7 @@ class _UsenetTabState extends State<UsenetTab> {
 
                 var response = await apiService.makeRequest(
                   'api/usenet/createusenetdownload',
-                  requestType: 'post',
+                  method: 'post',
                   body: {
                     "file": file, // file is handled on api side
                     "link": null,
@@ -624,7 +639,7 @@ class _UsenetTabState extends State<UsenetTab> {
                   },
                 );
 
-                if (response != null && response["success"] == true) {
+                if (response.success) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Usenet download added successfully'),
@@ -634,7 +649,7 @@ class _UsenetTabState extends State<UsenetTab> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                          'Failed to add Usenet download: ${response?["detail"] ?? "Unknown error"}'),
+                          'Failed to add Usenet download: ${response.detailOrUnknown}'),
                     ),
                   );
                 }
@@ -662,7 +677,7 @@ class _UsenetTabState extends State<UsenetTab> {
 
                     var response = await apiService.makeRequest(
                       'api/usenet/createusenetdownload',
-                      requestType: 'post',
+                      method: 'post',
                       body: {
                         "file": null,
                         "link": link,
@@ -672,7 +687,7 @@ class _UsenetTabState extends State<UsenetTab> {
                       },
                     );
 
-                    if (response != null && response["success"] == true) {
+                    if (response.success) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Usenet download added successfully'),
@@ -682,7 +697,7 @@ class _UsenetTabState extends State<UsenetTab> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Failed to add Usenet download: ${response?["detail"] ?? "Unknown error"}'),
+                              'Failed to add Usenet download: ${response.detailOrUnknown}'),
                         ),
                       );
                     }

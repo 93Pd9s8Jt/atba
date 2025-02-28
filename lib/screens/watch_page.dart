@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:atba/services/api_service.dart';
+import 'package:atba/services/stremio_service.dart';
 import 'package:atba/screens/details_page.dart';
 
 class WatchPage extends StatefulWidget {

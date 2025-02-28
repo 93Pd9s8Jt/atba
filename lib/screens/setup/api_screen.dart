@@ -3,9 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 
 import 'permission_screen.dart';
-import 'package:atba/screens/home_page.dart';
 
-import 'package:atba/services/api_service.dart';
+import 'package:atba/services/torbox_service.dart';
 
 class ApiKeyScreen extends StatelessWidget {
   final TextEditingController _apiKeyController = TextEditingController();
@@ -22,7 +21,6 @@ class ApiKeyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final apiService = Provider.of<TorboxAPI>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(title: const Text('Enter API Key')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -48,20 +46,19 @@ class ApiKeyScreen extends StatelessWidget {
               onPressed: () async {
                 final apiKey = _apiKeyController.text.trim();
                 await apiService.saveApiKey(apiKey);
-                final response =
-                    await apiService.makeRequest('api/user/me?settings=true');
-                if (apiKey.isNotEmpty && response?["success"]) {
+                final response = await apiService.getUserData();
+                if (apiKey.isNotEmpty && response.success) {
                   await apiService.saveApiKey(apiKey);
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const HomeScreen()));
+                          builder: (context) => const PermissionScreen()));
                 } else {
                   apiService.deleteApiKey();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(apiKey.isNotEmpty
-                            ? (response?["detail"] ?? "unknown error")
+                            ? (response.detail.isNotEmpty ? response.detail : "Unknown error.")
                             : 'API Key is required!')),
                   );
                 }
