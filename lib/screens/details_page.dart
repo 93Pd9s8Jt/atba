@@ -524,7 +524,7 @@ class StreamList extends StatelessWidget {
       itemBuilder: (context, index) {
         final stream = torrentioProvider.streamData['streams'][index];
         return ListTile(
-          title: Text(stream['title']),
+          title: Text("${stream["name"]}\n${stream['title']}"),
           onTap: () {
             torrentioProvider.setStream(widget.id, stream);
             widget.onStreamSelected(stream);
