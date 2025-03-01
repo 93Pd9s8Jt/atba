@@ -48,7 +48,7 @@ class TorrentsListState extends State<TorrentsList> {
         ),
         SliverToBoxAdapter(
           child: CollapsibleSection(
-            title: '${sortedActiveTorrents.length}/${widget.activeTorrents.length} Active Torrents',
+            title: sortedActiveTorrents.length == widget.activeTorrents.length ? '${widget.activeTorrents.length} Active Torrents' :'${sortedActiveTorrents.length}/${widget.activeTorrents.length} Active Torrents',
             initiallyExpanded: true,
             children: sortedActiveTorrents
                 .map((torrent) => TorrentWidget(torrent: torrent))
@@ -57,7 +57,7 @@ class TorrentsListState extends State<TorrentsList> {
         ),
         SliverToBoxAdapter(
           child: CollapsibleSection(
-            title: '${sortedInactiveTorrents.length}/${widget.inactiveTorrents.length} Inactive Torrents',
+            title: sortedInactiveTorrents.length == widget.inactiveTorrents.length ? '${widget.inactiveTorrents.length} Inactive Torrents' :'${sortedInactiveTorrents.length}/${widget.inactiveTorrents.length} Inactive Torrents',
             initiallyExpanded: true,
             children: sortedInactiveTorrents
                 .map((torrent) => TorrentWidget(torrent: torrent))
