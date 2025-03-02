@@ -18,7 +18,7 @@ dependencies:
   flutter_downloader: ^1.12.0
   flutter_launcher_icons: ^0.14.3
   flutter_screenutil: ^5.9.3
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^9.2.4
   flutter_settings_screens: ^0.3.4
   http: ^1.2.2
   package_info_plus: ^8.3.0
