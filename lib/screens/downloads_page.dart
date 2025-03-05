@@ -58,7 +58,13 @@ class DownloadsPage extends StatelessWidget {
                               .map<PopupMenuItem<String>>((String value) {
                             return PopupMenuItem<String>(
                               value: value,
-                              child: Text(value),
+                              child: Row(
+                              children: [
+                                Text(value),
+                                if (state.selectedSortingOption == value)
+                                Icon(Icons.check, color: Colors.blue),
+                              ],
+                              ),
                             );
                           }).toList();
                         },
