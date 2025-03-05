@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:atba/services/torrent_name_parser.dart';
@@ -11,8 +12,13 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 class DownloadsPageState extends ChangeNotifier {
   bool _isTorrentNamesCensored = false;
-  String _selectedSortingOption = Settings.getValue<String>("key-selected-sorting-option", defaultValue: "Default")!;
-  final List<String> _selectedMainFilters = Settings.getValue<List<String>>("key-selected-main-filters", defaultValue: [])!;
+  String _selectedSortingOption = Settings.getValue<String>(
+      "key-selected-sorting-option",
+      defaultValue: "Default")!;
+  final List<String> _selectedMainFilters = List<String>.from(jsonDecode(Settings.getValue<String>("key-selected-main-filters",
+              defaultValue: "[]")!));
+  
+  
   late Future<Map<String, dynamic>> _torrentsFuture;
   List<Torrent> _postQueuedTorrents = [];
   List<Torrent> _filteredPostQueuedTorrents = [];
@@ -36,34 +42,40 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateSortingOption(String option) async {
+  void updateSortingOption(String option) {
     _selectedSortingOption = option;
-    await Settings.setValue<String>("key-selected-sorting-option", _selectedSortingOption);
     notifyListeners();
+    Future.microtask(() async {
+      await Settings.setValue<String>(
+          "key-selected-sorting-option", _selectedSortingOption);
+    });
   }
 
-  void updateFilter(String filter, bool selected) async {
+  void updateFilter(String filter, bool selected) {
     if (selected) {
       _selectedMainFilters.add(filter);
     } else {
       _selectedMainFilters.remove(filter);
     }
-    await Settings.setValue<List<String>>("key-selected-main-filters", _selectedMainFilters);
     notifyListeners();
+    Future.microtask(() async {
+      await Settings.setValue<String>(
+          "key-selected-main-filters", jsonEncode(_selectedMainFilters));
+    });
   }
 
   Future<Map<String, dynamic>> _fetchTorrents(BuildContext context) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
-      final responses = await Future.wait([
-        apiService.getTorrentsList(),
-        apiService.getQueuedItemsList()
-      ]);
+      final responses = await Future.wait(
+          [apiService.getTorrentsList(), apiService.getQueuedItemsList()]);
 
       if (!responses[0].success || !responses[1].success) {
         return {
           "success": false,
-          "detail": (responses[0].detail.isNotEmpty) ? responses[0].detail : responses[1].detail
+          "detail": (responses[0].detail.isNotEmpty)
+              ? responses[0].detail
+              : responses[1].detail
         };
       }
 
@@ -79,15 +91,20 @@ class DownloadsPageState extends ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('Error in _fetchTorrents: $e');
       debugPrint('Stack trace: $stackTrace');
-      return {"success": false, "detail": e.toString(), "stackTrace": stackTrace};
+      return {
+        "success": false,
+        "detail": e.toString(),
+        "stackTrace": stackTrace
+      };
     }
   }
 
   void filterTorrents(List<Torrent> data) {
     Map<String, Function> filtersCopy = Map.from(filters);
-    filtersCopy.removeWhere((key, value) => !_selectedMainFilters.contains(key));
-    data.removeWhere((value) => !filtersCopy.values.every((element) => element(value)));
-   
+    filtersCopy
+        .removeWhere((key, value) => !_selectedMainFilters.contains(key));
+    data.removeWhere(
+        (value) => !filtersCopy.values.every((element) => element(value)));
   }
 
   void applyFilters(List<Torrent> torrents) {
@@ -230,9 +247,10 @@ class DownloadsPageState extends ChangeNotifier {
     "Downloading": (torrent) => torrent.downloadSpeed > 0 && torrent.active,
     "Cached": (torrent) => torrent.cached,
   };
-  
+
   static String handleTorrentName(String name) {
-    if (Settings.getValue<bool>('key-use-torrent-name-parsing', defaultValue: false)!) {
+    if (Settings.getValue<bool>('key-use-torrent-name-parsing',
+        defaultValue: false)!) {
       PTN ptn = PTN();
       return ptn.parse(name)['title'];
     } else {
@@ -242,8 +260,12 @@ class DownloadsPageState extends ChangeNotifier {
 
   static Map<String, int? Function(Torrent, Torrent)> sortingOptions = {
     "Default": (a, b) => null,
-    "A to Z": (a, b) => (handleTorrentName(a.name)).toLowerCase().compareTo(handleTorrentName(b.name).toLowerCase()),
-    "Z to A": (a, b) => -(handleTorrentName(a.name)).toLowerCase().compareTo(handleTorrentName(b.name).toLowerCase()),
+    "A to Z": (a, b) => (handleTorrentName(a.name))
+        .toLowerCase()
+        .compareTo(handleTorrentName(b.name).toLowerCase()),
+    "Z to A": (a, b) => -(handleTorrentName(a.name))
+        .toLowerCase()
+        .compareTo(handleTorrentName(b.name).toLowerCase()),
     "Largest": (a, b) => a.size.compareTo(b.size),
     "Smallest": (a, b) => -a.size.compareTo(b.size),
     "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
