@@ -208,7 +208,6 @@ class QueuedTorrentWidget extends StatelessWidget {
                     backgroundColor:
                         Theme.of(context).textTheme.bodySmall?.color)
                 : null),
-        subtitle: Text(torrent.hash),
       ),
     );
   }
