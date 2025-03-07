@@ -74,6 +74,18 @@ class TorrentWidget extends StatelessWidget {
     "moving": {"color": Colors.yellow, "icon": Icons.stop},
   };
 
+  String _formatTimeDifference(Duration duration) {
+    if (duration.inDays > 0) {
+      return '${duration.inDays}d';
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours}h';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes}m';
+    } else {
+      return '${duration.inSeconds}s';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<DownloadsPageState>(builder: (context, state, child) {
@@ -109,7 +121,10 @@ class TorrentWidget extends StatelessWidget {
             }
           }(),
           title: Text(
-            Settings.getValue<bool>("key-use-torrent-name-parsing", defaultValue: false)! ? ptn.parse(torrent.name)['title'] : torrent.name,
+            Settings.getValue<bool>("key-use-torrent-name-parsing",
+                    defaultValue: false)!
+                ? ptn.parse(torrent.name)['title']
+                : torrent.name,
             style: isCensored
                 ? TextStyle(
                     backgroundColor:
@@ -133,23 +148,44 @@ class TorrentWidget extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(4.0),
                           decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8.0),
                           ),
                           child: Text(torrentState),
                         ),
-
-                        SizedBox(width: 4.0), // this will be left floating if ratio is 0
                         torrent.ratio == 0
                             ? Container()
-                            : Container(
-                          padding: const EdgeInsets.all(4.0),
-                          decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Text(torrent.ratio.toStringAsFixed(2)),
-                        ),
+                            : Row(
+                                children: [
+                                  SizedBox(width: 4.0),
+                                  Container(
+                                    padding: const EdgeInsets.all(4.0),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    child:
+                                        Text(torrent.ratio.toStringAsFixed(2)),
+                                  ),
+                                ],
+                              ),
+                        torrent.active
+                            ? Row(
+                                children: [
+                                  SizedBox(width: 4.0),
+                                  Container(
+                                    padding: const EdgeInsets.all(4.0),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    child: Text(_formatTimeDifference(
+                                        DateTime.now()
+                                            .difference(torrent.createdAt))),
+                                  ),
+                                ],
+                              )
+                            : Container()
                       ],
                     ),
                     if (torrentState.toLowerCase() == 'downloading')
@@ -157,6 +193,14 @@ class TorrentWidget extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 4.0),
                         child: LinearProgressIndicator(value: torrent.progress),
                       ),
+                    // works, but needs live update to be decent
+                    // SizedBox(height: 4.0),
+                    // if (torrent.active)
+                    //   Padding(
+                    //     padding: const EdgeInsets.only(top: 4.0),
+                    //     child: Text(
+                    //         '↓ ${getReadableSize(torrent.downloadSpeed)}/s | ↑ ${getReadableSize(torrent.uploadSpeed)}/s'),
+                    //   ),
                   ],
                 );
             }
@@ -169,13 +213,13 @@ class TorrentWidget extends StatelessWidget {
               Provider.of<DownloadsPageState>(context, listen: false)
                   .toggleSelection(torrent);
             } //else {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => TorrentDetailScreen(torrent: torrent),
-          //       ),
-          //     );
-          //   }
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => TorrentDetailScreen(torrent: torrent),
+            //       ),
+            //     );
+            //   }
           },
           onLongPress: () {
             Provider.of<DownloadsPageState>(context, listen: false)
@@ -203,7 +247,11 @@ class QueuedTorrentWidget extends StatelessWidget {
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
-        title: Text(Settings.getValue<bool>("key-use-torrent-name-parsing", defaultValue: false)! ? ptn.parse(torrent.name)['title'] : torrent.name,
+        title: Text(
+            Settings.getValue<bool>("key-use-torrent-name-parsing",
+                    defaultValue: false)!
+                ? ptn.parse(torrent.name)['title']
+                : torrent.name,
             style: isCensored
                 ? TextStyle(
                     backgroundColor:

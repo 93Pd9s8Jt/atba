@@ -16,7 +16,7 @@ class DownloadsPageState extends ChangeNotifier {
       "key-selected-sorting-option",
       defaultValue: "Default")!;
   final List<String> _selectedMainFilters = List<String>.from(jsonDecode(Settings.getValue<String>("key-selected-main-filters",
-              defaultValue: "[]")!));
+              defaultValue: "[]")!)); // probably code be improved
   
   
   late Future<Map<String, dynamic>> _torrentsFuture;
