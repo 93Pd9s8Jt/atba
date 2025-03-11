@@ -126,7 +126,7 @@ class TorrentWidget extends StatelessWidget {
                     defaultValue: false)!
                 ? ptn.parse(torrent.name)['title']
                 : torrent.name
-          ).animate(target: isCensored ? 1 : 0).blurXY(),
+          ).animate(target: isCensored ? 1 : 0).blur(),
           subtitle: () {
             switch (torrent.status) {
               case TorrentStatus.loading:
@@ -247,7 +247,7 @@ class QueuedTorrentWidget extends StatelessWidget {
             Settings.getValue<bool>("key-use-torrent-name-parsing",
                     defaultValue: false)!
                 ? ptn.parse(torrent.name)['title']
-                : torrent.name).animate(target: isCensored ? 1 : 0).blurXY(),
+                : torrent.name).animate(target: isCensored ? 1 : 0).blur(),
       ),
     );
   }

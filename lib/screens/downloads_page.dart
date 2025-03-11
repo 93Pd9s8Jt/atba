@@ -92,111 +92,116 @@ class DownloadsPage extends StatelessWidget {
                   ),
               ],
             ),
-            body: Column(
-              children: [
-                Expanded(
-                  child: FutureBuilder(
-                    future: state.torrentsFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final data = snapshot.data as Map<String, dynamic>;
-                        if (data.containsKey("success") &&
-                            data["success"] != true) {
-                          return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Center(
-                                  child: Column(
-                                children: [
-                                  Text(
-                                      'Failed to fetch data: ${data["detail"]}',
-                                      style:
-                                          const TextStyle(color: Colors.red)),
-                                  data["stackTrace"] != null
-                                      ? ElevatedButton(
-                                          child: const Text('Copy stack trace'),
-                                          onPressed: () {
-                                            Clipboard.setData(ClipboardData(
-                                                text: data["stackTrace"]
-                                                    .toString()));
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                    'Stack trace copied to clipboard'),
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : SizedBox(),
-                                ],
-                              )));
+            body: RefreshIndicator(
+              onRefresh: () async {
+                await state.refreshTorrents();
+              },
+              child: Column(
+                children: [
+                  Expanded(
+                    child: FutureBuilder(
+                      future: state.torrentsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          final data = snapshot.data as Map<String, dynamic>;
+                          if (data.containsKey("success") &&
+                              data["success"] != true) {
+                            return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Center(
+                                    child: Column(
+                                  children: [
+                                    Text(
+                                        'Failed to fetch data: ${data["detail"]}',
+                                        style:
+                                            const TextStyle(color: Colors.red)),
+                                    data["stackTrace"] != null
+                                        ? ElevatedButton(
+                                            child: const Text('Copy stack trace'),
+                                            onPressed: () {
+                                              Clipboard.setData(ClipboardData(
+                                                  text: data["stackTrace"]
+                                                      .toString()));
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      'Stack trace copied to clipboard'),
+                                                ),
+                                              );
+                                            },
+                                          )
+                                        : SizedBox(),
+                                  ],
+                                )));
+                          }
+                          
+                          return TorrentsList();
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          return const Center(child: CircularProgressIndicator());
                         }
-                        
-                        return TorrentsList();
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  ),
-                ),
-                if (state.isSelecting)
-                  BottomAppBar(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            state.deleteSelectedTorrents();
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.pause),
-                          onPressed: () {
-                            state.pauseSelectedTorrents();
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.play_arrow),
-                          onPressed: () {
-                            state.resumeSelectedTorrents();
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.refresh),
-                          onPressed: () {
-                            state.reannounceSelectedTorrents();
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.download),
-                          onPressed: () async {
-                            if (Settings.getValue<String>("folder_path") ==
-                                null) {
-                              bool granted =
-                                  await _showPermissionDialog(context);
-                              if (granted) {
-                                // Proceed with download
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Permission not granted. Cannot proceed with download.'),
-                                  ),
-                                );
-                              }
-                            } else {
-                              // Proceed with download
-                              state.downloadSelectedTorrents();
-                            }
-                          },
-                        ),
-                      ],
+                      },
                     ),
                   ),
-              ],
+                  if (state.isSelecting)
+                    BottomAppBar(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              state.deleteSelectedTorrents();
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.pause),
+                            onPressed: () {
+                              state.pauseSelectedTorrents();
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.play_arrow),
+                            onPressed: () {
+                              state.resumeSelectedTorrents();
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.refresh),
+                            onPressed: () {
+                              state.reannounceSelectedTorrents();
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.download),
+                            onPressed: () async {
+                              if (Settings.getValue<String>("folder_path") ==
+                                  null) {
+                                bool granted =
+                                    await _showPermissionDialog(context);
+                                if (granted) {
+                                  // Proceed with download
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Permission not granted. Cannot proceed with download.'),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                // Proceed with download
+                                state.downloadSelectedTorrents();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
             floatingActionButton: state.isSelecting
                 ? SizedBox.shrink()
