@@ -3,6 +3,7 @@ import 'package:atba/services/downloads_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 class TorrentWidget extends StatelessWidget {
@@ -124,13 +125,8 @@ class TorrentWidget extends StatelessWidget {
             Settings.getValue<bool>("key-use-torrent-name-parsing",
                     defaultValue: false)!
                 ? ptn.parse(torrent.name)['title']
-                : torrent.name,
-            style: isCensored
-                ? TextStyle(
-                    backgroundColor:
-                        Theme.of(context).textTheme.bodySmall?.color)
-                : null,
-          ),
+                : torrent.name
+          ).animate(target: isCensored ? 1 : 0).blurXY(),
           subtitle: () {
             switch (torrent.status) {
               case TorrentStatus.loading:
@@ -251,12 +247,7 @@ class QueuedTorrentWidget extends StatelessWidget {
             Settings.getValue<bool>("key-use-torrent-name-parsing",
                     defaultValue: false)!
                 ? ptn.parse(torrent.name)['title']
-                : torrent.name,
-            style: isCensored
-                ? TextStyle(
-                    backgroundColor:
-                        Theme.of(context).textTheme.bodySmall?.color)
-                : null),
+                : torrent.name).animate(target: isCensored ? 1 : 0).blurXY(),
       ),
     );
   }

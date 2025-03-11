@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/torrent_widget.dart';
 import 'package:flutter/material.dart';
@@ -94,7 +96,7 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
             crossFadeState: isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
-            duration: Duration(milliseconds: 200),
+            duration: Duration(milliseconds: (200 + log(widget.children.length+1).round() * 50).toInt()),
             firstCurve: Curves.easeOut,
             secondCurve: Curves.easeIn,
           ),
