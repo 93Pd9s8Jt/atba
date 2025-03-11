@@ -1,3 +1,4 @@
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:atba/services/torbox_service.dart' as torbox;
@@ -204,7 +205,7 @@ class DownloadsPage extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
-                          return const FullscreenMenu();
+                          return const FullscreenMenu().animate().scale(curve: Curves.easeIn, duration: Duration(milliseconds: 250));
                         },
                       );
                     },
