@@ -145,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.7.0"
+  either_dart:
+    dependency: "direct main"
+    description:
+      name: either_dart
+      sha256: "0b57f6a9410ce0ba2cc340220109f545bf4bad1b06b242219f0af11ab9e84f0e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   fake_async:
     dependency: transitive
     description:
@@ -320,6 +328,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.2"
+  implicitly_animated_reorderable_list_2:
+    dependency: "direct main"
+    description:
+      name: implicitly_animated_reorderable_list_2
+      sha256: "1fe22c38ca53067042e7f07e40d970bb8405ffc2a991fe774bf9ad34925712c8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.0"
   js:
     dependency: transitive
     description:

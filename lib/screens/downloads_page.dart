@@ -130,20 +130,8 @@ class DownloadsPage extends StatelessWidget {
                                 ],
                               )));
                         }
-                        List<Torrent> activeTorrents =
-                            (data["postQueued"] as List<Torrent>)
-                                .where((torrent) => torrent.active)
-                                .toList();
-                        List<QueuedTorrent> queuedTorrents = data["queued"];
-                        List<Torrent> inactiveTorrents =
-                            (data["postQueued"] as List<Torrent>)
-                                .where((torrent) => !torrent.active)
-                                .toList();
-                        return TorrentsList(
-                          activeTorrents: activeTorrents,
-                          queuedTorrents: queuedTorrents,
-                          inactiveTorrents: inactiveTorrents,
-                        );
+                        
+                        return TorrentsList();
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else {
