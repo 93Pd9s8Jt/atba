@@ -63,7 +63,7 @@ class DownloadsPage extends StatelessWidget {
                               children: [
                                 Text(value),
                                 if (state.selectedSortingOption == value)
-                                Icon(Icons.check, color: Colors.blue),
+                                Icon(Icons.check, color: Theme.of(context).colorScheme.primary),
                               ],
                               ),
                             );
