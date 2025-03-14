@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/torrentlist.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:atba/models/permission_model.dart';
@@ -22,6 +21,9 @@ class DownloadsPage extends StatelessWidget {
         builder: (context, state, child) {
           return Scaffold(
             appBar: AppBar(
+              title: (state.isSelecting)
+                  ? Text("${state.selectedTorrents.length} selected")
+                  : null,
               actions: [
                 if (state.isSelecting)
                   Row(
@@ -60,16 +62,19 @@ class DownloadsPage extends StatelessWidget {
                             return PopupMenuItem<String>(
                               value: value,
                               child: Row(
-                              children: [
-                                Text(value),
-                                if (state.selectedSortingOption == value)
-                                Row(
-                                  children: [
-                                    SizedBox(width: 4),
-                                    Icon(Icons.check, color: Theme.of(context).colorScheme.primary),
-                                  ],
-                                ),
-                              ],
+                                children: [
+                                  Text(value),
+                                  if (state.selectedSortingOption == value)
+                                    Row(
+                                      children: [
+                                        SizedBox(width: 4),
+                                        Icon(Icons.check,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                      ],
+                                    ),
+                                ],
                               ),
                             );
                           }).toList();
@@ -122,7 +127,8 @@ class DownloadsPage extends StatelessWidget {
                                             const TextStyle(color: Colors.red)),
                                     data["stackTrace"] != null
                                         ? ElevatedButton(
-                                            child: const Text('Copy stack trace'),
+                                            child:
+                                                const Text('Copy stack trace'),
                                             onPressed: () {
                                               Clipboard.setData(ClipboardData(
                                                   text: data["stackTrace"]
@@ -140,69 +146,85 @@ class DownloadsPage extends StatelessWidget {
                                   ],
                                 )));
                           }
-                          
+
                           return TorrentsList();
                         } else if (snapshot.hasError) {
                           return Text('Error: ${snapshot.error}');
                         } else {
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                              child: CircularProgressIndicator());
                         }
                       },
                     ),
                   ),
                   if (state.isSelecting)
                     BottomAppBar(
-                      color: Theme.of(context).focusColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              state.deleteSelectedTorrents();
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.pause),
-                            onPressed: () {
-                              state.pauseSelectedTorrents();
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.play_arrow),
-                            onPressed: () {
-                              state.resumeSelectedTorrents();
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.refresh),
-                            onPressed: () {
-                              state.reannounceSelectedTorrents();
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.download),
-                            onPressed: () async {
-                              if (Settings.getValue<String>("folder_path") ==
-                                  null) {
-                                bool granted =
-                                    await _showPermissionDialog(context);
-                                if (granted) {
-                                  // Proceed with download
+                          if (state.selectedTorrents
+                              .any((torrent) => torrent.isLeft)) ...[
+                            IconButton(
+                              icon: Icon(Icons.play_arrow),
+                              onPressed: () {
+                                state.resumeSelectedTorrents();
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                state.deleteSelectedTorrents();
+                              },
+                            ),
+                          ] else ...[
+                            IconButton(
+                              icon: Icon(Icons.pause),
+                              onPressed: () {
+                                state.pauseSelectedTorrents();
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.play_arrow),
+                              onPressed: () {
+                                state.resumeSelectedTorrents();
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.refresh),
+                              onPressed: () {
+                                state.reannounceSelectedTorrents();
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                state.deleteSelectedTorrents();
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.download),
+                              onPressed: () async {
+                                if (Settings.getValue<String>("folder_path") ==
+                                    null) {
+                                  bool granted =
+                                      await _showPermissionDialog(context);
+                                  if (granted) {
+                                    // Proceed with download
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Permission not granted. Cannot proceed with download.'),
+                                      ),
+                                    );
+                                  }
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Permission not granted. Cannot proceed with download.'),
-                                    ),
-                                  );
+                                  // Proceed with download
+                                  state.downloadSelectedTorrents();
                                 }
-                              } else {
-                                // Proceed with download
-                                state.downloadSelectedTorrents();
-                              }
-                            },
-                          ),
+                              },
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -216,7 +238,9 @@ class DownloadsPage extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
-                          return const FullscreenMenu().animate().scale(curve: Curves.easeIn, duration: Duration(milliseconds: 250));
+                          return const FullscreenMenu().animate().scale(
+                              curve: Curves.easeIn,
+                              duration: Duration(milliseconds: 250));
                         },
                       );
                     },
@@ -278,7 +302,7 @@ class DownloadsPage extends StatelessWidget {
                           const ListTile(
                             title: Text('Main'),
                           ),
-                          _buildMainFilters(context,  setState),
+                          _buildMainFilters(context, setState),
                           // const ListTile(title: Text("Qualities")),
                           // _buildQualityFilters(context, setState),
                         ],
@@ -292,8 +316,7 @@ class DownloadsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMainFilters(
-      BuildContext context, StateSetter setState) {
+  Widget _buildMainFilters(BuildContext context, StateSetter setState) {
     return Consumer<DownloadsPageState>(
       builder: (context, state, child) {
         return Wrap(

@@ -1,6 +1,7 @@
 import 'package:atba/models/torrent.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
+import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -95,7 +96,7 @@ class TorrentWidget extends StatelessWidget {
           Provider.of<DownloadsPageState>(context).isTorrentNamesCensored;
       final isSelected = Provider.of<DownloadsPageState>(context)
           .selectedTorrents
-          .contains(torrent);
+          .contains(Right<QueuedTorrent, Torrent>(torrent));
       final torrentState = torrent.active
           ? torrent.downloadState
           : torrent.downloadState == "uploading"
@@ -207,7 +208,7 @@ class TorrentWidget extends StatelessWidget {
             if (Provider.of<DownloadsPageState>(context, listen: false)
                 .isSelecting) {
               Provider.of<DownloadsPageState>(context, listen: false)
-                  .toggleSelection(torrent);
+                  .toggleSelection(Right<QueuedTorrent, Torrent>(torrent));
             } //else {
             //     Navigator.push(
             //       context,
@@ -219,7 +220,7 @@ class TorrentWidget extends StatelessWidget {
           },
           onLongPress: () {
             Provider.of<DownloadsPageState>(context, listen: false)
-                .startSelection(torrent);
+                .startSelection(Right<QueuedTorrent, Torrent>(torrent));
           },
         ),
       );
@@ -230,6 +231,7 @@ class TorrentWidget extends StatelessWidget {
 class QueuedTorrentWidget extends StatelessWidget {
   final QueuedTorrent torrent;
   const QueuedTorrentWidget({super.key, required this.torrent});
+  
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +239,7 @@ class QueuedTorrentWidget extends StatelessWidget {
         Provider.of<DownloadsPageState>(context).isTorrentNamesCensored;
     final isSelected = Provider.of<DownloadsPageState>(context)
         .selectedTorrents
-        .contains(torrent);
+        .contains(Left<QueuedTorrent, Torrent>(torrent));
     PTN ptn = PTN();
 
     return Container(
@@ -248,6 +250,38 @@ class QueuedTorrentWidget extends StatelessWidget {
                     defaultValue: false)!
                 ? ptn.parse(torrent.name)['title']
                 : torrent.name).animate(target: isCensored ? 1 : 0).blur(),
+        leading: () {
+            switch (torrent.status) {
+              case TorrentStatus.loading:
+                return CircularProgressIndicator();
+              case TorrentStatus.success:
+                return Icon(Icons.check, color: Colors.green);
+              case TorrentStatus.error:
+                return Icon(Icons.error, color: Colors.red);
+              default:
+                return null;
+            }
+        }(),
+        subtitle: () {
+            switch (torrent.status) {
+              case TorrentStatus.loading:
+                return Text('Loading...');
+              case TorrentStatus.success:
+                return Text('Success');
+              case TorrentStatus.error:
+                return Text('Error: ${torrent.errorMessage}');
+              default:
+                return null;
+            }
+        }(),
+        onLongPress: () {
+            Provider.of<DownloadsPageState>(context, listen: false)
+                .startSelection(Left<QueuedTorrent, Torrent>(torrent));
+          },
+        onTap: () {
+          Provider.of<DownloadsPageState>(context, listen: false)
+              .toggleSelection(Left<QueuedTorrent, Torrent>(torrent));
+        },
       ),
     );
   }
