@@ -152,6 +152,7 @@ class DownloadsPage extends StatelessWidget {
                   ),
                   if (state.isSelecting)
                     BottomAppBar(
+                      color: Theme.of(context).focusColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
