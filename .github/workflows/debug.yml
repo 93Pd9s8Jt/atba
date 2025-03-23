@@ -43,7 +43,7 @@ jobs:
         - name: Upload debug APK
           uses: actions/upload-artifact@v4
           with:
-            name: app-debug
+            name: apk-debug
             path: build/app/outputs/flutter-apk/app-debug.apk
 
     build-debug-ios:
@@ -74,5 +74,5 @@ jobs:
         - name: Upload debug iOS
           uses: actions/upload-artifact@v4
           with:
-            name: app-debug
+            name: ipa-debug
             path:  build/ios/iphoneos/debug.ipa
