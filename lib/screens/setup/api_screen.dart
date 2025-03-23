@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 
 import 'permission_screen.dart';
+import 'package:atba/screens/home_page.dart';
+
 import 'package:atba/services/api_service.dart';
 
 class ApiKeyScreen extends StatelessWidget {
@@ -53,7 +55,7 @@ class ApiKeyScreen extends StatelessWidget {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PermissionScreen()));
+                          builder: (context) => const HomeScreen()));
                 } else {
                   apiService.deleteApiKey();
                   ScaffoldMessenger.of(context).showSnackBar(
