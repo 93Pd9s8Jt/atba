@@ -1,50 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'package:atba/screens/home_page.dart';
+import 'package:atba/services/shared_prefs_service.dart';
+import 'package:atba/models/permission_model.dart';
 
-
-// TODO: skip if notification permission is already granted
-
-class PermissionScreen extends StatelessWidget {
+class PermissionScreen extends StatefulWidget {
   const PermissionScreen({super.key});
 
-  Future<PermissionStatus> requestNotificationPermission() async {
-    return await Permission.notification.request();
+  @override
+  _PermissionScreenState createState() => _PermissionScreenState();
+}
+
+class _PermissionScreenState extends State<PermissionScreen> {
+  final Map<String, bool> _grantedPermissions = {};
+  final PermissionModel _permissionModel = PermissionModel();
+
+  Future<PermissionStatus> requestPermission(Permission permission) async {
+    return await permission.request();
+  }
+
+  Future<String?> selectFolder() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    return selectedDirectory;
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> permissions = [
+      {
+        'icon': Icons.folder,
+        'title': 'Storage Access',
+        'description': 'Access your storage to save and retrieve files.',
+        'permission': Permission.storage,
+      },
+      {
+        'icon': Icons.notifications,
+        'title': 'Notifications',
+        'description': 'Receive notifications about your downloads.',
+        'permission': Permission.notification,
+      }
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Notification Permission')),
+      appBar: AppBar(title: const Text('Permissions')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications, size: 64, color:  Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 20),
-            const Text(
-              'Enable Notifications?',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Get notified about important updates. You can enable or disable this later in settings.',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                PermissionStatus status = await requestNotificationPermission();
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
-              },
-              child: const Text('Enable Notifications'),
-            ),
+            ...permissions.map((perm) {
+              bool isGranted = _grantedPermissions[perm['title']] ?? false;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    Icon(perm['icon'],
+                        color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            perm['title'],
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            perm['description'],
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                    isGranted
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : ElevatedButton(
+                            onPressed: () async {
+                              bool granted = await _permissionModel
+                                  .grantPermission(perm['permission'], context);
+                              if (granted) {
+                                setState(() {
+                                  _grantedPermissions[perm['title']] = true;
+                                });
+                              } else {
+                                if (perm['permission'] == Permission.storage) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'No folder was selected. You can continue without granting storage.'),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Text('Grant'),
+                          ),
+                  ],
+                ),
+              );
+            }),
             TextButton(
               onPressed: () {
                 Navigator.pushReplacement(
@@ -52,7 +109,7 @@ class PermissionScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               },
-              child: const Text('Skip'),
+              child: const Text('Continue'),
             ),
           ],
         ),

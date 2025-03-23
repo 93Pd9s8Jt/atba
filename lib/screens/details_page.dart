@@ -1,4 +1,5 @@
-import 'package:atba/services/api_service.dart';
+import 'package:atba/services/torrentio_service.dart';
+import 'package:atba/services/torrentio_config.dart';
 import 'package:atba/screens/video_player_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
