@@ -169,6 +169,12 @@ class BrowsePageState extends State<DownloadsPage> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final data = snapshot.data as Map<String, dynamic>;
+                  if (data["success"] != true) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(child: Text('Failed to fetch data: ${data["detail"]}', style: const TextStyle(color: Colors.red)))
+                    );
+                  }
                   List<dynamic> filteredData = _filterData(data["data"]);
                   if (_selectedSortingOption != "Default") {
                     filteredData.sort((a, b) =>

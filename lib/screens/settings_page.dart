@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:atba/services/api_service.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+
+  final TextEditingController _apiKeyController = TextEditingController();
+
+  SettingsPage({super.key});
   // yts,eztv,rarbg,1337x,thepiratebay,kickasstorrents,torrentgalaxy,magnetdl,horriblesubs,nyaasi,tokyotosho,anidex,rutor,rutracker,comando,bludv,torrent9,ilcorsaronero,mejortorrent,wolfmax4k,cinecalidad
   static const Map<String, String> providers = {
     // value, name
@@ -92,13 +97,77 @@ class SettingsPage extends StatelessWidget {
 
   };
 
+  
+
   @override
   Widget build(BuildContext context) {
+    final apiService = Provider.of<TorboxAPI>(context, listen: false);
     return Scaffold(
         appBar: AppBar(
           title: const Text('Settings'),
         ),
         body: ListView(children: [
+
+          SimpleSettingsTile(
+            title: 'Account',
+            subtitle: 'Change or delete api key.',
+            leading: Icon(Icons.account_circle),
+            child: SettingsScreen(
+              title: 'Account settings',
+              children: <Widget>[
+                // We're using secure storage to store the API key, so we would need to implement a custom storage on top of SharedPreferences to combine it with secure storage
+                // in this case, it's easier just to use a custom widget
+                // to change the api key, especially with verifying it
+
+                // could probably share with setup/api_screen.dart
+                // TODO: make look less ugly & share code
+                TextField(
+              controller: _apiKeyController,
+              decoration: const InputDecoration(
+                labelText: 'API Key',
+                border: OutlineInputBorder(),
+              ),
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                final apiKey = _apiKeyController.text.trim();
+                await apiService.saveApiKey(apiKey);
+                final response = await apiService.makeRequest('api/user/me?settings=true');
+                if (apiKey.isNotEmpty && response?["success"]) {
+                  await apiService.saveApiKey(apiKey);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('API Key saved')),
+                  );
+                  Navigator.pop(context);
+                } else {
+                  apiService.deleteApiKey();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(apiKey.isNotEmpty ?  (response?["detail"] ?? "unknown error") : 'API Key is required!')),
+                  );
+                }
+              },
+              child: const Text('Continue'),
+            ),
+
+                SimpleSettingsTile(
+                  title: 'Delete API Key',
+                  leading: Icon(Icons.delete),
+                  onTap: () async {
+                    await apiService.deleteApiKey();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('API Key deleted')),
+                    );
+                  },
+                ),
+                
+              ],
+            ),
+          ),
+
           CheckboxSettingsTile(
             settingKey: 'key-use-torrent-name-parsing',
             title: 'Use torrent name parsing',
