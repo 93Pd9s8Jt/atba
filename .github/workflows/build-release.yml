@@ -57,7 +57,7 @@ jobs:
 
 
       - name: Upload APKs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: build/app/outputs/flutter-apk/atba-*.apk
 
@@ -97,7 +97,7 @@ jobs:
           zip -r atba-${{ github.ref_name }}.ipa Payload
 
       - name: Upload IPA
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: build/ios/iphoneos/atba-${{ github.ref_name }}.ipa
 
