@@ -1,4 +1,4 @@
-package com.example.atba
+package com.torbox.atba
 
 import io.flutter.embedding.android.FlutterActivity
 
