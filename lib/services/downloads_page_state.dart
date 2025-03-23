@@ -67,6 +67,12 @@ class DownloadsPageState extends ChangeNotifier {
   List<String> get selectedMainFilters => _selectedMainFilters;
   Future<Map<String, dynamic>> get torrentsFuture => _torrentsFuture;
 
+  Future<void> refreshTorrents() async {
+    _torrentsFuture = _fetchTorrents(context);
+    await _torrentsFuture;
+    notifyListeners();
+  }
+
   void toggleTorrentNamesCensoring() {
     _isTorrentNamesCensored = !_isTorrentNamesCensored;
     notifyListeners();
