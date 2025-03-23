@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -21,7 +22,9 @@ import 'app_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initSettings();
-  await FlutterDownloader.initialize(debug: kDebugMode);
+  if (Platform.isAndroid || Platform.isIOS) {
+    await FlutterDownloader.initialize(debug: kDebugMode);
+  }
 
   final sharedPrefsService = SharedPrefsService();
   await sharedPrefsService.init();
