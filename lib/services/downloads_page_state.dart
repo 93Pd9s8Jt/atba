@@ -11,8 +11,8 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 class DownloadsPageState extends ChangeNotifier {
   bool _isTorrentNamesCensored = false;
-  String _selectedSortingOption = "Default";
-  final List<String> _selectedMainFilters = [];
+  String _selectedSortingOption = Settings.getValue<String>("key-selected-sorting-option", defaultValue: "Default")!;
+  final List<String> _selectedMainFilters = Settings.getValue<List<String>>("key-selected-main-filters", defaultValue: [])!;
   late Future<Map<String, dynamic>> _torrentsFuture;
   List<Torrent> _postQueuedTorrents = [];
   List<Torrent> _filteredPostQueuedTorrents = [];
@@ -36,17 +36,19 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateSortingOption(String option) {
+  void updateSortingOption(String option) async {
     _selectedSortingOption = option;
+    await Settings.setValue<String>("key-selected-sorting-option", _selectedSortingOption);
     notifyListeners();
   }
 
-  void updateFilter(String filter, bool selected) {
+  void updateFilter(String filter, bool selected) async {
     if (selected) {
       _selectedMainFilters.add(filter);
     } else {
       _selectedMainFilters.remove(filter);
     }
+    await Settings.setValue<List<String>>("key-selected-main-filters", _selectedMainFilters);
     notifyListeners();
   }
 
