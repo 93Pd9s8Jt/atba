@@ -20,7 +20,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   flutter_secure_storage: ^9.2.4
   flutter_settings_screens: ^0.3.4
-  http: ^1.2.2
+  http: ^1.3.0
   package_info_plus: ^8.3.0
   path_provider: ^2.1.5
   permission_handler: ^11.3.1
