@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:atba/services/torrent_name_parser.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:atba/models/torrent.dart';
@@ -227,11 +228,20 @@ class DownloadsPageState extends ChangeNotifier {
     "Downloading": (torrent) => torrent.downloadSpeed > 0 && torrent.active,
     "Cached": (torrent) => torrent.cached,
   };
+  
+  static String handleTorrentName(String name) {
+    if (Settings.getValue<bool>('key-use-torrent-name-parsing', defaultValue: false)!) {
+      PTN ptn = PTN();
+      return ptn.parse(name)['title'];
+    } else {
+      return name;
+    }
+  }
 
   static Map<String, int? Function(Torrent, Torrent)> sortingOptions = {
     "Default": (a, b) => null,
-    "A to Z": (a, b) => (a.name).toLowerCase().compareTo((b.name).toLowerCase()),
-    "Z to A": (a, b) => -(a.name).toLowerCase().compareTo((b.name).toLowerCase()),
+    "A to Z": (a, b) => (handleTorrentName(a.name)).toLowerCase().compareTo(handleTorrentName(b.name).toLowerCase()),
+    "Z to A": (a, b) => -(handleTorrentName(a.name)).toLowerCase().compareTo(handleTorrentName(b.name).toLowerCase()),
     "Largest": (a, b) => a.size.compareTo(b.size),
     "Smallest": (a, b) => -a.size.compareTo(b.size),
     "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),

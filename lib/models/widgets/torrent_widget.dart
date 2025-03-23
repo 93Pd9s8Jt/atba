@@ -198,11 +198,12 @@ class QueuedTorrentWidget extends StatelessWidget {
     final isSelected = Provider.of<DownloadsPageState>(context)
         .selectedTorrents
         .contains(torrent);
+    PTN ptn = PTN();
 
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
-        title: Text(torrent.name,
+        title: Text(Settings.getValue<bool>("key-use-torrent-name-parsing", defaultValue: false)! ? ptn.parse(torrent.name)['title'] : torrent.name,
             style: isCensored
                 ? TextStyle(
                     backgroundColor:
