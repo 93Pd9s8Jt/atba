@@ -35,7 +35,7 @@ class _DetailsPageState extends State<DetailsPage>
   bool _hasError = false;
   bool showButton = false;
   bool _isPlaying = false;
-  Map<String, Map<String, dynamic>> _selectedStreams = {};
+  final Map<String, Map<String, dynamic>> _selectedStreams = {};
   TabController? _tabController; // hmmm - won't be initialized for movies
   final GlobalKey _contentKey = GlobalKey();
   double _appBarHeight = 0;
@@ -466,7 +466,7 @@ class QualitySelector extends StatefulWidget {
   final String id;
   final SearchType type;
 
-   QualitySelector(this.id, this.type, {required this.onStreamSelected, super.key});
+   const QualitySelector(this.id, this.type, {required this.onStreamSelected, super.key});
 
   @override
   _QualitySelectorState createState() => _QualitySelectorState();
