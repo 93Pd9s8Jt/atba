@@ -42,6 +42,11 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Update Version in pubspec.yaml
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "s/^version:.*/version: $VERSION/" pubspec.yaml
+
       - name: Build split APKs
         run: flutter build apk --release --split-per-abi
       - name: Build universal APK
@@ -88,6 +93,11 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Update Version in pubspec.yaml
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "s/^version:.*/version: $VERSION/" pubspec.yaml
+          
       - name: Build iOS IPA
         run: |
           flutter build ios --release --no-codesign
