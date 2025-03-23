@@ -34,6 +34,8 @@ class _DetailsPageState extends State<DetailsPage>
   bool _isLoading = true;
   bool _hasError = false;
   bool showButton = false;
+  bool _isPlaying = false;
+  Map<String, Map<String, dynamic>> _selectedStreams = {};
   TabController? _tabController; // hmmm - won't be initialized for movies
   final GlobalKey _contentKey = GlobalKey();
   double _appBarHeight = 0;
@@ -107,19 +109,31 @@ class _DetailsPageState extends State<DetailsPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: widget.type == "movie"
-            ? AppBar(
-                title: Text(widget.title),
-              )
-            : null,
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _hasError
-                ? const Center(child: Text('Failed to load data'))
-                : widget.type == "movie"
-                    ? buildMovieDetailBody()
-                    : buildSeriesDetailBody());
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: widget.type == "movie"
+              ? AppBar(
+                  title: Text(widget.title),
+                )
+              : null,
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _hasError
+                  ? const Center(child: Text('Failed to load data'))
+                  : widget.type == "movie"
+                      ? buildMovieDetailBody()
+                      : buildSeriesDetailBody(),
+        ),
+        if (_isPlaying)
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget buildMovieDetailBody() {
@@ -159,9 +173,13 @@ class _DetailsPageState extends State<DetailsPage>
                     title: Text("E${episode["number"]}: ${episode["name"]}"),
                     subtitle: Text("${episode["overview"]}"),
                     onTap: () {
-                      playEpisode(episode["id"], SearchType.tv);
+                      playEpisode(episode["id"]);
                       print("Selected: ${episode["id"]}");
                     },
+                    trailing: IconButton(
+                      icon: Icon(Icons.more_vert),
+                      onPressed: () => showQualitySelector(context, episode["id"], SearchType.tv),
+                    ),
                   );
                 },
               );
@@ -250,13 +268,24 @@ class _DetailsPageState extends State<DetailsPage>
           //       height: 200,
           //     ),
           //   ),
-          if (showButton)
-            FilledButton.icon(
-                onPressed: () {
-                  playMovie(widget.id);
-                },
-                label: const Text('Play'),
-                icon: const Icon(Icons.play_arrow)),
+          if (showButton) // play button & video file change
+            Row(
+              children: [
+                FilledButton.icon(
+                    onPressed: () {
+                      playMovie(widget.id);
+                    },
+                    label: const Text('Play'),
+                    icon: const Icon(Icons.play_arrow)),
+                IconButton(
+                    icon: Icon(Icons.more_vert),
+                    onPressed: () => showQualitySelector(context, widget.id, SearchType.movie),
+                    ),
+              ],
+            ),
+          // const SizedBox(height: 16),
+          // video file change 3 dot menu (minor) icon
+
           const SizedBox(height: 16),
           if (_metaData?['description'] != null)
             Text(
@@ -353,23 +382,53 @@ class _DetailsPageState extends State<DetailsPage>
     );
   }
 
+    void showQualitySelector(BuildContext context, String id, SearchType type) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return QualitySelector(id, type, onStreamSelected: (stream) {
+          setState(() {
+            _selectedStreams[id] = stream;
+          });
+        });
+      },
+    );
+  }
+  
+
   void _launchURL(String url) async {
     // TODO: Implement URL launcher for opening YouTube trailers
     // This method should be completed with a package like url_launcher
   }
 
-  Future<void> playEpisode(String id, SearchType type) async {
-    final torrentioApi = Provider.of<TorrentioAPI>(context, listen: false);
-    print(torrentioApi.baseUrl);
+  Future<void> playStream(String id, SearchType type) async {
+    setState(() {
+      _isPlaying = true;
+    });
 
-    await torrentioApi.fetchStreamData(id, type);
-    playURL(torrentioApi.url);
+    final torrentioApi = Provider.of<TorrentioAPI>(context, listen: false);
+
+    if (_selectedStreams[id] == null) {
+      await torrentioApi.fetchStreamData(id, type);
+      _selectedStreams[id] = torrentioApi.selectedStreams[id]!;
+    }
+
+    playURL(_selectedStreams[id]?['url']);
+
+    setState(() {
+      _isPlaying = false;
+    });
+  }
+
+  Future<void> playEpisode(String id) async {
+    playStream(id, SearchType.tv);
   }
 
   Future<void> playMovie(String id) async {
-    final torrentioApi = Provider.of<TorrentioAPI>(context, listen: false);
-    await torrentioApi.fetchStreamData(id, SearchType.movie);
-    playURL(torrentioApi.url);
+    playStream(id, SearchType.movie);
   }
 
   void _showError(String message) {
@@ -380,12 +439,11 @@ class _DetailsPageState extends State<DetailsPage>
 
   void _launchIntent(String url) async {
     AndroidIntent intent = AndroidIntent(
-        action: 'action_view',
-        type: "video/*",
-        data: url,
-      );
-      intent.launch();
-  
+      action: 'action_view',
+      type: "video/*",
+      data: url,
+    );
+    intent.launch();
   }
 
   void playURL(String? url) {
@@ -400,5 +458,57 @@ class _DetailsPageState extends State<DetailsPage>
                 builder: (context) => VideoPlayerScreen(url: url)),
           )
         : _launchIntent(url);
+  }
+}
+
+class QualitySelector extends StatelessWidget {
+  final String id;
+  final SearchType type;
+  final Function(Map<String, dynamic>) onStreamSelected;
+
+  const QualitySelector(this.id, this.type, {required this.onStreamSelected, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final torrentioProvider = Provider.of<TorrentioAPI>(context, listen: false);
+
+    return FutureBuilder<void>(
+      future: torrentioProvider.fetchStreamData(id, type),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else {
+          return Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Choose video quality:",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: torrentioProvider.streamData['streams']?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      final stream = torrentioProvider.streamData['streams'][index];
+                      return ListTile(
+                        title: Text(stream['title']),
+                        onTap: () {
+                          torrentioProvider.setStream(id, stream);
+                          onStreamSelected(stream);
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
   }
 }

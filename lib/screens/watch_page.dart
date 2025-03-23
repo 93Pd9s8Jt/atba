@@ -60,7 +60,7 @@ class _WatchPageState extends State<WatchPage> with SingleTickerProviderStateMix
                     }
 
                     if (!api.hasSearched) {
-                      return const Center(child: Text("Start typing to search"));
+                      return const Center(child: Text("Press enter to search"));
                     }
                     final String searchType;
                     switch (tab.text!.toLowerCase()) {
