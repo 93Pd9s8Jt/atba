@@ -153,8 +153,8 @@ class BrowsePageState extends State<DownloadsPage> {
               onPressed: _showFilterBottomSheet),
           IconButton(
               icon: _isTorrentNamesCensored
-                  ? Icon(Icons.visibility_off)
-                  : Icon(Icons.visibility),
+                  ? Icon(Icons.visibility)
+                  : Icon(Icons.visibility_off),
               onPressed: () {
                 setState (() =>_isTorrentNamesCensored = !_isTorrentNamesCensored );
               }),
