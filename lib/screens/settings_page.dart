@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatelessWidget {
-
   final TextEditingController _apiKeyController = TextEditingController();
 
   SettingsPage({super.key});
@@ -79,8 +78,8 @@ class SettingsPage extends StatelessWidget {
     'thai': '🇹🇭 Thai',
   };
 
-
-  static const Map<String, String> qualities = { // brremux,hdrall,dolbyvision,dolbyvisionwithhdr,threed,nonthreed,4k,1080p,720p,480p,other,scr,cam,unknown
+  static const Map<String, String> qualities = {
+    // brremux,hdrall,dolbyvision,dolbyvisionwithhdr,threed,nonthreed,4k,1080p,720p,480p,other,scr,cam,unknown
     'brremux': 'BluRay REMUX',
     'hdrall': 'HDR/HDR10+/Dolby Vision',
     'dolbyvision': 'Dolby Vision',
@@ -95,10 +94,7 @@ class SettingsPage extends StatelessWidget {
     'scr': 'Screener',
     'cam': 'Cam',
     'unknown': 'Unknown',
-
   };
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +104,6 @@ class SettingsPage extends StatelessWidget {
           title: const Text('Settings'),
         ),
         body: ListView(children: [
-
           SimpleSettingsTile(
             title: 'Account',
             subtitle: 'Change or delete API key',
@@ -123,36 +118,41 @@ class SettingsPage extends StatelessWidget {
                 // could probably share with setup/api_screen.dart
                 // TODO: make look less ugly & share code
                 TextField(
-              controller: _apiKeyController,
-              decoration: const InputDecoration(
-                labelText: 'API Key',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-              enableSuggestions: false,
-              autocorrect: false,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                final apiKey = _apiKeyController.text.trim();
-                await apiService.saveApiKey(apiKey);
-                final response = await apiService.getUserData();
-                if (apiKey.isNotEmpty && response.success) {
-                  await apiService.saveApiKey(apiKey);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('API Key saved')),
-                  );
-                  Navigator.pop(context);
-                } else {
-                  apiService.deleteApiKey();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(apiKey.isNotEmpty ?  (response.detail.isNotEmpty ? response.detail : "unknown error") : 'API Key is required!')),
-                  );
-                }
-              },
-              child: const Text('Continue'),
-            ),
+                  controller: _apiKeyController,
+                  decoration: const InputDecoration(
+                    labelText: 'API Key',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    final apiKey = _apiKeyController.text.trim();
+                    await apiService.saveApiKey(apiKey);
+                    final response = await apiService.getUserData();
+                    if (apiKey.isNotEmpty && response.success) {
+                      await apiService.saveApiKey(apiKey);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('API Key saved')),
+                      );
+                      Navigator.pop(context);
+                    } else {
+                      apiService.deleteApiKey();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(apiKey.isNotEmpty
+                                ? (response.detail.isNotEmpty
+                                    ? response.detail
+                                    : "unknown error")
+                                : 'API Key is required!')),
+                      );
+                    }
+                  },
+                  child: const Text('Continue'),
+                ),
 
                 SimpleSettingsTile(
                   title: 'Delete API Key',
@@ -164,16 +164,13 @@ class SettingsPage extends StatelessWidget {
                     );
                   },
                 ),
-                
               ],
             ),
           ),
-
           CheckboxSettingsTile(
             settingKey: 'key-use-torrent-name-parsing',
             title: 'Use torrent name parsing',
             defaultValue: true,
-
           ),
           CheckboxSettingsTile(
             settingKey: 'key-use-internal-video-player',
@@ -209,7 +206,6 @@ class SettingsPage extends StatelessWidget {
             ExpandableSettingsTile(
               title: "Priority foreign language",
               children: [
-
                 for (var language in languages.keys.toList()..sort())
                   CheckboxSettingsTile(
                     settingKey: 'key-language-$language',
@@ -218,7 +214,6 @@ class SettingsPage extends StatelessWidget {
                   ),
               ],
             ),
-
             ExpandableSettingsTile(
               title: "Exclude qualities",
               children: [
@@ -244,34 +239,33 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             TextInputSettingsTile(
-              settingKey: 'key-video-size-limit',
-              title: 'Video size limit',
-              keyboardType: TextInputType.number,
-              helperText: 'Leave empty for no limit; use a comma to have a different size for movies and series e.g. 5GB ; 800MB ; 10GB,2GB',
-              validator: (value) {
-                if (value == null || value.isEmpty) return null;
-                if (!RegExp(r'^([0-9.]*(?:MB|GB),?)+$').hasMatch(value)) {
-                  return 'Invalid size';
-                }
-                return null;
-              }
-            ),
-
+                settingKey: 'key-video-size-limit',
+                title: 'Video size limit',
+                keyboardType: TextInputType.number,
+                helperText:
+                    'Leave empty for no limit; use a comma to have a different size for movies and series e.g. 5GB ; 800MB ; 10GB,2GB',
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  if (!RegExp(r'^([0-9.]*(?:MB|GB),?)+$').hasMatch(value)) {
+                    return 'Invalid size';
+                  }
+                  return null;
+                }),
           ]),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
                 case ConnectionState.done:
-                  return Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Version: ${snapshot.data!.version}',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ),
+                  return ListTile(
+                    title: const Text('About'),
+                    leading: const Icon(Icons.info),
+                    onTap: () {
+                      showAboutDialog(
+                          context: context,
+                          applicationName: 'ATBA',
+                          applicationVersion: snapshot.data!.version);
+                    },
                   );
                 default:
                   return const SizedBox();
