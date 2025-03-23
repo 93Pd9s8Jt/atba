@@ -144,12 +144,9 @@ class BrowsePageState extends State<DownloadsPage> {
         },
         child: const Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Row(
-              children: [
+      appBar: AppBar(
+        title: const Text('Downloads'),
+        actions: [
                 Checkbox(
                     value: _isTorrentNamesCensored,
                     onChanged: (value) {
@@ -161,8 +158,26 @@ class BrowsePageState extends State<DownloadsPage> {
                     icon: const Icon(Icons.filter_list),
                     onPressed: _showFilterBottomSheet),
               ],
-            ),
-          ),
+      ),
+      body: Column(
+        children: [
+          // Padding(
+          //   padding: const EdgeInsets.only(top: 16.0),
+          //   child: Row(
+          //     children: [
+          //       Checkbox(
+          //           value: _isTorrentNamesCensored,
+          //           onChanged: (value) {
+          //             setState(() => _isTorrentNamesCensored = value ?? false);
+          //           }),
+          //       const Text('Censor names'),
+          //       _buildSortMenu(),
+          //       IconButton(
+          //           icon: const Icon(Icons.filter_list),
+          //           onPressed: _showFilterBottomSheet),
+          //     ],
+          //   ),
+          // ),
           Expanded(
             child: FutureBuilder(
               future: apiService.makeRequest('api/torrents/mylist'),
