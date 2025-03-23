@@ -273,6 +273,8 @@ class QueuedTorrent {
   final String hash;
   final String name;
   final String type;
+  TorrentStatus status = TorrentStatus.idle;
+  String? errorMessage;
 
   QueuedTorrent({
     required this.id,
@@ -294,6 +296,30 @@ class QueuedTorrent {
       name: json['name'] as String,
       type: json['type'] as String,
     );
+  }
+
+  Future<TorboxAPIResponse> delete() async {
+    status = TorrentStatus.loading;
+    final response = await Torrent.apiService.controlQueuedItem(QueuedItemOperation.delete, queuedId: id);
+    if (response.success) {
+      status = TorrentStatus.success;
+    } else {
+      status = TorrentStatus.error;
+      errorMessage = response.detail;
+    }
+    return response;
+  }
+
+  Future<TorboxAPIResponse> start() async {
+    status = TorrentStatus.loading;
+    final response = await Torrent.apiService.controlQueuedItem(QueuedItemOperation.start, queuedId: id);
+    if (response.success) {
+      status = TorrentStatus.success;
+    } else {
+      status = TorrentStatus.error;
+      errorMessage = response.detail;
+    }
+    return response;
   }
 }
 
