@@ -1,12 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:atba/services/torrent_name_parser.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/services/torbox_service.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
@@ -15,13 +12,47 @@ class DownloadsPageState extends ChangeNotifier {
   String _selectedSortingOption = Settings.getValue<String>(
       "key-selected-sorting-option",
       defaultValue: "Default")!;
-  final List<String> _selectedMainFilters = List<String>.from(jsonDecode(Settings.getValue<String>("key-selected-main-filters",
-              defaultValue: "[]")!)); // probably code be improved
-  
-  
+  final List<String> _selectedMainFilters = List<String>.from(jsonDecode(
+      Settings.getValue<String>("key-selected-main-filters",
+          defaultValue: "[]")!)); // probably code be improved
+
+  late List<Torrent> activeTorrents;
+  late List<QueuedTorrent> queuedTorrents;
+  late List<Torrent> inactiveTorrents;
+
+  late List<Torrent> sortedActiveTorrents;
+  late List<Torrent> sortedInactiveTorrents;
+  late List<QueuedTorrent> sortedQueuedTorrents;
+
+  late List<Torrent> filteredSortedActiveTorrents;
+  late List<Torrent> filteredSortedInactiveTorrents;
+
+  final GlobalKey<AnimatedListState> animatedActiveTorrentsListKey =
+      GlobalKey<AnimatedListState>(debugLabel: 'activeTorrentsListKey');
+  final GlobalKey<AnimatedListState> animatedQueuedTorrentsListKey =
+      GlobalKey<AnimatedListState>(debugLabel: 'queuedTorrentsListKey');
+  final GlobalKey<AnimatedListState> animatedInactiveTorrentsListKey =
+      GlobalKey<AnimatedListState>(debugLabel: 'inactiveTorrentsListKey');
+
+  void addItemToAnimatedList(Torrent torrent) {
+    final listItems = torrent.active
+        ? filteredSortedActiveTorrents
+        : filteredSortedInactiveTorrents;
+    listItems.add(torrent);
+    sortAndFilterTorrents();
+    notifyListeners();
+  }
+
+  void removeItemFromAnimatedList(Torrent torrent) {
+    final listItems = torrent.active
+        ? activeTorrents
+        : inactiveTorrents;
+    listItems.remove(torrent);
+    sortAndFilterTorrents();
+    notifyListeners();
+  }
+
   late Future<Map<String, dynamic>> _torrentsFuture;
-  List<Torrent> _postQueuedTorrents = [];
-  List<Torrent> _filteredPostQueuedTorrents = [];
 
   bool isSelecting = false;
   List<Torrent> selectedTorrents = [];
@@ -35,7 +66,6 @@ class DownloadsPageState extends ChangeNotifier {
   String get selectedSortingOption => _selectedSortingOption;
   List<String> get selectedMainFilters => _selectedMainFilters;
   Future<Map<String, dynamic>> get torrentsFuture => _torrentsFuture;
-  List<Torrent> get filteredPostQueuedTorrents => _filteredPostQueuedTorrents;
 
   void toggleTorrentNamesCensoring() {
     _isTorrentNamesCensored = !_isTorrentNamesCensored;
@@ -44,6 +74,7 @@ class DownloadsPageState extends ChangeNotifier {
 
   void updateSortingOption(String option) {
     _selectedSortingOption = option;
+    sortAndFilterTorrents();
     notifyListeners();
     Future.microtask(() async {
       await Settings.setValue<String>(
@@ -73,21 +104,25 @@ class DownloadsPageState extends ChangeNotifier {
       if (!responses[0].success || !responses[1].success) {
         return {
           "success": false,
-          "detail": (responses[0].detail.isNotEmpty)
-              ? responses[0].detail
-              : responses[1].detail
+          "detail":
+              responses.firstWhere((response) => !response.success).detail,
         };
       }
 
-      _postQueuedTorrents = (responses[0].data as List)
+      final postQueuedTorrents = (responses[0].data as List)
           .map((json) => Torrent.fromJson(json))
           .toList();
 
-      final queuedTorrents = (responses[1].data as List)
+      queuedTorrents = (responses[1].data as List)
           .map((json) => QueuedTorrent.fromJson(json))
           .toList();
 
-      return {"postQueued": _postQueuedTorrents, "queued": queuedTorrents};
+      activeTorrents =
+          postQueuedTorrents.where((torrent) => torrent.active).toList();
+      inactiveTorrents =
+          postQueuedTorrents.where((torrent) => !torrent.active).toList();
+
+      return {"success": true};
     } catch (e, stackTrace) {
       debugPrint('Error in _fetchTorrents: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -99,7 +134,7 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  void filterTorrents(List<Torrent> data) {
+  void _filterTorrents(List<Torrent> data) {
     Map<String, Function> filtersCopy = Map.from(filters);
     filtersCopy
         .removeWhere((key, value) => !_selectedMainFilters.contains(key));
@@ -108,7 +143,7 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   void applyFilters(List<Torrent> torrents) {
-    filterTorrents(torrents);
+    _filterTorrents(torrents);
     notifyListeners();
   }
 
@@ -136,22 +171,44 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortTorrents(List<Torrent> torrents) {
+  void sortAndFilterTorrents() {
+    sortedActiveTorrents = List<Torrent>.from(activeTorrents);
+    sortedInactiveTorrents = List<Torrent>.from(inactiveTorrents);
+    sortedQueuedTorrents = List<QueuedTorrent>.from(queuedTorrents);
+    _sortTorrents(sortedActiveTorrents);
+    _sortTorrents(sortedInactiveTorrents);
+    _sortQueuedTorrents(sortedQueuedTorrents);
+    filteredSortedActiveTorrents = List<Torrent>.from(sortedActiveTorrents);
+    filteredSortedInactiveTorrents = List<Torrent>.from(sortedInactiveTorrents);
+    _filterTorrents(filteredSortedActiveTorrents);
+    _filterTorrents(filteredSortedInactiveTorrents);
+  }
+
+  void _sortTorrents(List<Torrent> torrents) {
     final sortingFunction = sortingOptions[_selectedSortingOption];
     if (sortingFunction != null) {
       torrents.sort((a, b) => sortingFunction(a, b) ?? 0);
     }
   }
 
+  void _sortQueuedTorrents(List<QueuedTorrent> torrents) {
+    final sortingFunction = queuedSortingOptions[_selectedSortingOption];
+    if (sortingFunction != null) {
+      torrents.sort((a, b) => sortingFunction(a, b) ?? 0);
+    }
+  }
+
   void selectAllTorrents() {
-    selectedTorrents = _filteredPostQueuedTorrents;
+    selectedTorrents =
+        filteredSortedInactiveTorrents + filteredSortedActiveTorrents;
     notifyListeners();
   }
 
   void invertSelection() {
-    selectedTorrents = _filteredPostQueuedTorrents
-        .where((torrent) => !selectedTorrents.contains(torrent))
-        .toList();
+    selectedTorrents = [
+      ...filteredSortedInactiveTorrents,
+      ...filteredSortedActiveTorrents
+    ].where((torrent) => !selectedTorrents.contains(torrent)).toList();
     notifyListeners();
   }
 
@@ -162,7 +219,7 @@ class DownloadsPageState extends ChangeNotifier {
       final response = await torrent.delete();
       if (response.success) {
         torrent.status = TorrentStatus.success;
-        _filteredPostQueuedTorrents.remove(torrent);
+        removeItemFromAnimatedList(torrent);
       } else {
         torrent.status = TorrentStatus.error;
         torrent.errorMessage = "${response.detail} (${response.error})";
@@ -271,5 +328,13 @@ class DownloadsPageState extends ChangeNotifier {
     "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
     "Newest": (a, b) => -a.createdAt.compareTo(b.createdAt),
     "Recently updated": (a, b) => a.updatedAt.compareTo(b.updatedAt)
+  };
+
+  static Map<String, int? Function(QueuedTorrent, QueuedTorrent)> queuedSortingOptions = {
+    "Default": (a, b) => null,
+    "A to Z": (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    "Z to A": (a, b) => -a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
+    "Newest": (a, b) => -a.createdAt.compareTo(b.createdAt),
   };
 }
