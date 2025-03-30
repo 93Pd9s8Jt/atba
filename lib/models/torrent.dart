@@ -85,7 +85,7 @@ class Torrent {
   final bool downloadPresent;
   final bool downloadFinished;
   final List<TorrentFile>? files;
-  final int inactiveCheck;
+  final int? inactiveCheck;
   final num availability;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -166,7 +166,7 @@ class Torrent {
       files: (json['files'] as List?)
           ?.map((fileJson) => TorrentFile.fromJson(fileJson as Map<String, dynamic>))
           .toList(),
-      inactiveCheck: json['inactive_check'] as int,
+      inactiveCheck: json['inactive_check'] as int?,
       availability: json['availability'] as num,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
