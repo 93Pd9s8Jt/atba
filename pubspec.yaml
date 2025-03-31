@@ -13,7 +13,7 @@ dependencies:
   dartz: ^0.10.1
   dynamic_color: ^1.7.0
   either_dart: ^1.0.0
-  file_picker: ^9.0.2
+  file_picker: ^9.2.3
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2
