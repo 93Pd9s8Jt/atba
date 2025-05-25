@@ -6,6 +6,8 @@ import 'package:atba/services/torrent_name_parser.dart';
 import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
 import 'package:atba/models/torrent.dart';
+import 'package:atba/models/webdownload.dart';
+import 'package:atba/models/usenet.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
@@ -18,6 +20,9 @@ class DownloadsPageState extends ChangeNotifier {
   final List<String> _selectedMainFilters = List<String>.from(jsonDecode(
       Settings.getValue<String>("key-selected-main-filters",
           defaultValue: "[]")!)); // probably code be improved
+
+  late List<Usenet> usenetDownloads;
+  late List<WebDownload> webDownloads;
 
   late List<Torrent> activeTorrents;
   late List<QueuedTorrent> queuedTorrents;
@@ -56,6 +61,8 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   late Future<Map<String, dynamic>> _torrentsFuture;
+  late Future<Map<String, dynamic>> _webDownloadsFuture;
+  late Future<Map<String, dynamic>> _usenetFuture;
 
   bool isSelecting = false;
   List<Either<QueuedTorrent, Torrent>> selectedTorrents = [];
@@ -63,16 +70,32 @@ class DownloadsPageState extends ChangeNotifier {
 
   DownloadsPageState(this.context) {
     _torrentsFuture = _fetchTorrents(context);
+    _webDownloadsFuture = _fetchWebDownloads(context);
+    _usenetFuture = _fetchUsenet(context);
   }
 
   bool get isTorrentNamesCensored => _isTorrentNamesCensored;
   String get selectedSortingOption => _selectedSortingOption;
   List<String> get selectedMainFilters => _selectedMainFilters;
   Future<Map<String, dynamic>> get torrentsFuture => _torrentsFuture;
+  Future<Map<String, dynamic>> get webDownloadsFuture => _webDownloadsFuture;
+  Future<Map<String, dynamic>> get usenetFuture => _usenetFuture;
 
-  Future<void> refreshTorrents() async {
+  Future<void> refreshTorrents({bool bypassCache=false}) async {
     _torrentsFuture = _fetchTorrents(context);
     await _torrentsFuture;
+    notifyListeners();
+  }
+
+  Future<void> refreshWebDownloads({bool bypassCache=false}) async {
+    _webDownloadsFuture = _fetchWebDownloads(context);
+    await _webDownloadsFuture;
+    notifyListeners();
+  }
+
+  Future<void> refreshUsenet({bool bypassCache=false}) async {
+    _usenetFuture = _fetchUsenet(context);
+    await _usenetFuture;
     notifyListeners();
   }
 
@@ -134,6 +157,60 @@ class DownloadsPageState extends ChangeNotifier {
       return {"success": true};
     } catch (e, stackTrace) {
       debugPrint('Error in _fetchTorrents: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return {
+        "success": false,
+        "detail": e.toString(),
+        "stackTrace": stackTrace
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchWebDownloads(BuildContext context) async {
+    try {
+      final apiService = Provider.of<TorboxAPI>(context, listen: false);
+      final response = await apiService.getWebDownloadsList();
+
+      if (!response.success) {
+        return {
+          "success": false,
+          "detail": response.detail,
+        };
+      }
+      webDownloads = (response.data as List)
+          .map((json) => WebDownload.fromJson(json))
+          .toList();
+
+      return {"success": true};
+    } catch (e, stackTrace) {
+      debugPrint('Error in _fetchWebDownloads: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return {
+        "success": false,
+        "detail": e.toString(),
+        "stackTrace": stackTrace
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchUsenet(BuildContext context) async {
+    try {
+      final apiService = Provider.of<TorboxAPI>(context, listen: false);
+      final response = await apiService.getUsenetDownloadsList();
+
+      if (!response.success) {
+        return {
+          "success": false,
+          "detail": response.detail,
+        };
+      }
+      usenetDownloads = (response.data as List)
+          .map((json) => Usenet.fromJson(json))
+          .toList();
+
+      return {"success": true};
+    } catch (e, stackTrace) {
+      debugPrint('Error in _fetchUsenet: $e');
       debugPrint('Stack trace: $stackTrace');
       return {
         "success": false,
@@ -300,7 +377,7 @@ class DownloadsPageState extends ChangeNotifier {
 
   static final Map<String, bool? Function(Torrent)> filters = {
     "Download Ready": (torrent) => torrent.downloadFinished,
-    "Uploading": (torrent) => torrent.uploadSpeed > 0 && torrent.active,
+    "Uploading": (torrent) => (torrent.uploadSpeed ?? 0) > 0 && torrent.active,
     "Downloading": (torrent) => torrent.downloadSpeed > 0 && torrent.active,
     "Cached": (torrent) => torrent.cached,
   };

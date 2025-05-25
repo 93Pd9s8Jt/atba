@@ -2,6 +2,7 @@ import 'package:atba/services/torbox_service.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'downloadable_item.dart';
 
 /*
 Sample data:
@@ -57,38 +58,18 @@ String getReadableSize(int size) {
 
 enum TorrentStatus { idle, loading, success, error }
 
-class Torrent {
+class Torrent extends DownloadableItem {
   static late TorboxAPI apiService;
 
   static void initApiService(TorboxAPI apiServicee) {
     apiService = apiServicee;
   }
 
-  final int id;
   final String hash;
   final String? magnet;
-  final int size;
-  final bool active;
-  final String authId;
-  final String downloadState;
   final int seeds;
   final int peers;
   final double ratio;
-  final double progress;
-  final int downloadSpeed;
-  final int uploadSpeed;
-  final String name;
-  final int eta;
-  final int server;
-  final bool torrentFile;
-  final DateTime? expiresAt;
-  final bool downloadPresent;
-  final bool downloadFinished;
-  final List<TorrentFile>? files;
-  final int? inactiveCheck;
-  final num availability;
-  final DateTime createdAt;
-  final DateTime updatedAt;
   final String? downloadPath;
   final String? tracker;
   final int totalUploaded;
@@ -98,36 +79,35 @@ class Torrent {
   final bool seedTorrent;
   final bool allowZipped;
   final bool longTermSeeding;
-  final String? trackerMessage;  
+  final String? trackerMessage;
   TorrentStatus status = TorrentStatus.idle;
   String? errorMessage;
 
   Torrent({
-    required this.id,
+    required int id,
+    required String name,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required int size,
+    required bool active,
+    required String authId,
+    required String downloadState,
+    required double progress,
+    required int downloadSpeed,
+    required int uploadSpeed,
+    required int eta,
+    required bool torrentFile,
+    required DateTime? expiresAt,
+    required bool downloadPresent,
+    required bool downloadFinished,
+    required List<DownloadableFile> files,
+    required int? inactiveCheck,
+    required num? availability,
     required this.hash,
     required this.magnet,
-    required this.size,
-    required this.active,
-    required this.authId,
-    required this.downloadState,
     required this.seeds,
     required this.peers,
     required this.ratio,
-    required this.progress,
-    required this.downloadSpeed,
-    required this.uploadSpeed,
-    required this.name,
-    required this.eta,
-    required this.server,
-    required this.torrentFile,
-    required this.expiresAt,
-    required this.downloadPresent,
-    required this.downloadFinished,
-    required this.files,
-    required this.inactiveCheck,
-    required this.availability,
-    required this.createdAt,
-    required this.updatedAt,
     required this.downloadPath,
     required this.tracker,
     required this.totalUploaded,
@@ -138,38 +118,56 @@ class Torrent {
     required this.allowZipped,
     required this.longTermSeeding,
     required this.trackerMessage,
-
-  });
+  }) : super(
+          id: id,
+          name: name,
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+          size: size,
+          active: active,
+          authId: authId,
+          downloadState: downloadState,
+          progress: progress,
+          downloadSpeed: downloadSpeed,
+          uploadSpeed: uploadSpeed,
+          eta: eta,
+          torrentFile: torrentFile,
+          expiresAt: expiresAt,
+          downloadPresent: downloadPresent,
+          downloadFinished: downloadFinished,
+          files: files,
+          inactiveCheck: inactiveCheck,
+          availability: availability,
+        );
 
   factory Torrent.fromJson(Map<String, dynamic> json) {
     return Torrent(
       id: json['id'] as int,
-      hash: json['hash'] as String,
-      magnet: json['magnet'] as String?,
+      name: json['name'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
       size: json['size'] as int,
       active: json['active'] as bool,
       authId: json['auth_id'] as String,
       downloadState: json['download_state'] as String,
-      seeds: json['seeds'] as int,
-      peers: json['peers'] as int,
-      ratio: (json['ratio'] as num).toDouble(),
       progress: (json['progress'] as num).toDouble(),
       downloadSpeed: json['download_speed'] as int,
       uploadSpeed: json['upload_speed'] as int,
-      name: json['name'] as String,
       eta: json['eta'] as int,
-      server: json['server'] as int,
       torrentFile: json['torrent_file'] as bool,
-      expiresAt: json["expires_at"] == null ? null : DateTime.parse(json['expires_at']),
+      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at'] as String) : null,
       downloadPresent: json['download_present'] as bool,
       downloadFinished: json['download_finished'] as bool,
-      files: (json['files'] as List?)
-          ?.map((fileJson) => TorrentFile.fromJson(fileJson as Map<String, dynamic>))
+      files: (json['files'] as List)
+          .map((fileJson) => DownloadableFile.fromJson(fileJson as Map<String, dynamic>))
           .toList(),
       inactiveCheck: json['inactive_check'] as int?,
-      availability: json['availability'] as num,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      availability: json['availability'] as num?,
+      hash: json['hash'] as String,
+      magnet: json['magnet'] as String?,
+      seeds: json['seeds'] as int,
+      peers: json['peers'] as int,
+      ratio: (json['ratio'] as num).toDouble(),
       downloadPath: json['download_path'] as String?,
       tracker: json['tracker'] as String?,
       totalUploaded: json['total_uploaded'] as int,
@@ -183,10 +181,7 @@ class Torrent {
     );
   }
 
-
-
-  // methods to interact with api
-
+  @override
   Future<TorboxAPIResponse> delete() async {
     status = TorrentStatus.loading;
     final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.delete);
@@ -210,6 +205,7 @@ class Torrent {
     }
     return response;
   }
+
   Future<TorboxAPIResponse> pause() async {
     status = TorrentStatus.loading;
     final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.pause);
@@ -221,7 +217,6 @@ class Torrent {
     }
     return response;
   }
-
 
   Future<TorboxAPIResponse> resume() async {
     status = TorrentStatus.loading;
@@ -259,10 +254,7 @@ class Torrent {
       openFileFromNotification: true,
     );
     return response;
-    
   }
-
-
 }
 
 class QueuedTorrent {
