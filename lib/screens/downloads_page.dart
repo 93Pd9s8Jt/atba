@@ -57,34 +57,52 @@ class DownloadsPage extends StatelessWidget {
                   else
                     Row(
                       children: [
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.sort),
-                          onSelected: (String value) {
-                            state.updateSortingOption(value);
+                        // reimplment popup menu with MenuAnchor
+                        // animation issues due to https://github.com/flutter/flutter/issues/143781
+                        // TODO: so we will need to manually implement animations
+                        MenuAnchor(
+                          builder: (BuildContext context, MenuController controlller, Widget? child) {
+                            return IconButton(
+                              icon: const Icon(Icons.sort),
+                              onPressed: () {
+                                if (controlller.isOpen) {
+                                  controlller.close();
+                                } else {
+                                  controlller.open();
+                                }
+                              },
+                              tooltip: "Sort downloads",
+                            );
                           },
-                          itemBuilder: (BuildContext context) {
-                            return DownloadsPageState.sortingOptions.keys
-                                .map<PopupMenuItem<String>>((String value) {
-                              return PopupMenuItem<String>(
-                                value: value,
-                                child: Row(
-                                  children: [
-                                    Text(value),
-                                    if (state.selectedSortingOption == value)
-                                      Row(
-                                        children: [
-                                          SizedBox(width: 4),
-                                          Icon(Icons.check,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary),
-                                        ],
-                                      ),
-                                  ],
-                                ),
-                              );
-                            }).toList();
-                          },
+                          menuChildren: List<MenuItemButton>.generate(
+                            DownloadsPageState.sortingOptions.length,
+                            (int index) => MenuItemButton(
+                              onPressed: () {
+                                state.updateSortingOption(
+                                    DownloadsPageState.sortingOptions.keys
+                                        .elementAt(index));
+                                    // Navigator.pop(context);
+                              },
+                              child: Row(
+                                children: [
+                                  Text(DownloadsPageState.sortingOptions.keys
+                                      .elementAt(index)),
+                                  if (state.selectedSortingOption ==
+                                      DownloadsPageState.sortingOptions.keys
+                                          .elementAt(index))
+                                    Row(
+                                      children: [
+                                        SizedBox(width: 4),
+                                        Icon(Icons.check,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          )
                         ),
                         IconButton(
                           icon: const Icon(Icons.filter_list),
