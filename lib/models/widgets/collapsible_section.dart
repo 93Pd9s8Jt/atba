@@ -37,76 +37,45 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ExpansionTile(
+      initiallyExpanded: false,
+      title: Text(
+        widget.title,
+        style: TextStyle(fontSize: 16.0),
+      ),
       children: [
-        GestureDetector(
-          onTap: () {
+        ImplicitlyAnimatedReorderableList<Either<Torrent, QueuedTorrent>>(
+          shrinkWrap: true,
+          
+        
+          key: widget.listKey,
+          items: widget.children,
+          areItemsTheSame: (oldItem, newItem) => oldItem == newItem,
+          onReorderFinished: (item, from, to, newItems) {
             setState(() {
-              isExpanded = !isExpanded;
+              widget.children
+                ..clear()
+                ..addAll(newItems);
             });
           },
-          child: Container(
-            padding: EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.title,
-                  style: TextStyle(fontSize: 16.0),
-                ),
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
-                ),
-              ],
-            ),
-          ),
-        ),
-        ClipRect(
-          child: AnimatedCrossFade(
-            firstChild: Container(),
-            secondChild: ImplicitlyAnimatedReorderableList<
-                Either<Torrent, QueuedTorrent>>(
-                  shrinkWrap: true,
-              items: widget.children,
-              areItemsTheSame: (oldItem, newItem) => oldItem == newItem,
-              onReorderFinished: (item, from, to, newItems) {
-                setState(() {
-                  widget.children
-                    ..clear()
-                    ..addAll(newItems);
-                });
-              },
-              itemBuilder: (context, itemAnimation, item, index) {
-                return Reorderable(
-                  key: ValueKey(item),
-                  builder: (context, dragAnimation, inDrag) {
-                    return SizeFadeTransition(
-                      sizeFraction: 0.7,
-                      curve: Curves.easeInOut,
-                      animation: itemAnimation,
-                      child: item.fold(
-                        (torrent) => TorrentWidget(torrent: torrent),
-                        (queuedTorrent) =>
-                            QueuedTorrentWidget(torrent: queuedTorrent),
-                      ),
-                    );
-                  },
+          itemBuilder: (context, itemAnimation, item, index) {
+            return Reorderable(
+              key: ValueKey(item),
+              builder: (context, dragAnimation, inDrag) {
+                return SizeFadeTransition(
+                  sizeFraction: 0.7,
+                  curve: Curves.easeInOut,
+                  animation: itemAnimation,
+                  child: item.fold(
+                    (torrent) => TorrentWidget(torrent: torrent),
+                    (queuedTorrent) =>
+                        QueuedTorrentWidget(torrent: queuedTorrent),
+                  ),
                 );
               },
-            ),
-            crossFadeState: isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: Duration(
-                milliseconds:
-                    (200 + log(widget.children.length + 1).round() * 50)
-                        .toInt()),
-            firstCurve: Curves.easeOut,
-            secondCurve: Curves.easeIn,
-          ),
+            );
+          },
         ),
-        Divider(),
       ],
     );
   }
