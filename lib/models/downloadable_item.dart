@@ -15,7 +15,7 @@ abstract class DownloadableItem {
   final String authId;
   final String downloadState;
   final double progress;
-  final int downloadSpeed;
+  final int? downloadSpeed;
   final int? uploadSpeed;
   final int eta;
   final bool? torrentFile;

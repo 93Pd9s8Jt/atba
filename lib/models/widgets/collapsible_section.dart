@@ -9,7 +9,8 @@ import 'package:either_dart/either.dart';
 
 class CollapsibleSection extends StatefulWidget {
   final String title;
-  final List<Either<Torrent, QueuedTorrent>> children; // List<Torrent> or List<QueuedTorrent>
+  final List<Either<Torrent, QueuedTorrent>>
+      children; // List<Torrent> or List<QueuedTorrent>
   final GlobalKey listKey;
   final bool initiallyExpanded;
 
@@ -63,10 +64,10 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
         ),
         ClipRect(
           child: AnimatedCrossFade(
-            firstChild: Container(), // Collapsed view: nothing
-            secondChild: ImplicitlyAnimatedReorderableList<Either<Torrent, QueuedTorrent>>(
-              shrinkWrap: true,
-              // physics: NeverScrollableScrollPhysics(),
+            firstChild: Container(),
+            secondChild: ImplicitlyAnimatedReorderableList<
+                Either<Torrent, QueuedTorrent>>(
+                  shrinkWrap: true,
               items: widget.children,
               areItemsTheSame: (oldItem, newItem) => oldItem == newItem,
               onReorderFinished: (item, from, to, newItems) {
@@ -86,7 +87,8 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
                       animation: itemAnimation,
                       child: item.fold(
                         (torrent) => TorrentWidget(torrent: torrent),
-                        (queuedTorrent) => QueuedTorrentWidget(torrent: queuedTorrent),
+                        (queuedTorrent) =>
+                            QueuedTorrentWidget(torrent: queuedTorrent),
                       ),
                     );
                   },
@@ -96,7 +98,10 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
             crossFadeState: isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
-            duration: Duration(milliseconds: (200 + log(widget.children.length+1).round() * 50).toInt()),
+            duration: Duration(
+                milliseconds:
+                    (200 + log(widget.children.length + 1).round() * 50)
+                        .toInt()),
             firstCurve: Curves.easeOut,
             secondCurve: Curves.easeIn,
           ),

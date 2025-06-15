@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
@@ -89,6 +87,7 @@ class PermissionModel {
   }
 
   Future<bool> isPathOnSdCard(String path) async {
+    // only works on Android - todo: make cross platform
     return !path.startsWith("/storage/emulated/0/");
   }
 }

@@ -1,9 +1,6 @@
-import 'dart:math';
 
-import 'package:atba/models/widgets/torrent_widget.dart';
 import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/collapsible_section.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +20,6 @@ class TorrentsListState extends State<TorrentsList> {
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<DownloadsPageState>(context);
-    state.sortAndFilterTorrents();
 
     return CustomScrollView(
       slivers: [

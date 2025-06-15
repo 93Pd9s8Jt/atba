@@ -3,7 +3,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:atba/screens/home_page.dart';
-import 'package:atba/services/shared_prefs_service.dart';
 import 'package:atba/models/permission_model.dart';
 
 class PermissionScreen extends StatefulWidget {

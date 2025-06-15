@@ -48,5 +48,6 @@ app.*.map.json
 key.properties
 
 # extra
-.vscode/settings.json
+.vscode/
 er.name
+

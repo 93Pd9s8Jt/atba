@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:atba/models/torbox_api_response.dart';
@@ -153,6 +152,7 @@ class DownloadsPageState extends ChangeNotifier {
           postQueuedTorrents.where((torrent) => torrent.active).toList();
       inactiveTorrents =
           postQueuedTorrents.where((torrent) => !torrent.active).toList();
+      sortAndFilterTorrents();
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -378,7 +378,7 @@ class DownloadsPageState extends ChangeNotifier {
   static final Map<String, bool? Function(Torrent)> filters = {
     "Download Ready": (torrent) => torrent.downloadFinished,
     "Uploading": (torrent) => (torrent.uploadSpeed ?? 0) > 0 && torrent.active,
-    "Downloading": (torrent) => torrent.downloadSpeed > 0 && torrent.active,
+    "Downloading": (torrent) => (torrent.downloadSpeed ?? 0) > 0 && torrent.active,
     "Cached": (torrent) => torrent.cached,
   };
 

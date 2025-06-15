@@ -158,9 +158,9 @@ class Torrent extends DownloadableItem {
       expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at'] as String) : null,
       downloadPresent: json['download_present'] as bool,
       downloadFinished: json['download_finished'] as bool,
-      files: (json['files'] as List)
-          .map((fileJson) => DownloadableFile.fromJson(fileJson as Map<String, dynamic>))
-          .toList(),
+      files: (json['files'] as List?)
+          ?.map((fileJson) => DownloadableFile.fromJson(fileJson as Map<String, dynamic>))
+          .toList() ?? [],
       inactiveCheck: json['inactive_check'] as int?,
       availability: json['availability'] as num?,
       hash: json['hash'] as String,
