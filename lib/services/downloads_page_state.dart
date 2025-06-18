@@ -441,6 +441,21 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
+  void handleReorder(GlobalKey listKey, Either<Torrent, QueuedTorrent> item, int from, int to, List<Either<Torrent, QueuedTorrent>> newItems) {
+    if (listKey == animatedActiveTorrentsListKey) {
+        activeTorrents.remove(item.left);
+        activeTorrents.insert(to, item.left);
+    } else if (listKey == animatedQueuedTorrentsListKey) {
+      queuedTorrents.remove(item.right);
+      queuedTorrents.insert(to, item.right);
+    } else if (listKey == animatedInactiveTorrentsListKey) {
+      inactiveTorrents.remove(item.left);
+      inactiveTorrents.insert(to, item.left);
+    }
+    // sortAndFilterTorrents();
+    notifyListeners();
+  }
+
   static final Map<String, bool? Function(Torrent)> filters = {
     "Download Ready": (torrent) => torrent.downloadFinished,
     "Uploading": (torrent) => (torrent.uploadSpeed ?? 0) > 0 && torrent.active,
