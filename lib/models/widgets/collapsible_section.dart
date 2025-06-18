@@ -38,7 +38,7 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      initiallyExpanded: false,
+      initiallyExpanded: isExpanded,
       title: Text(
         widget.title,
         style: TextStyle(fontSize: 16.0),
@@ -46,8 +46,6 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
       children: [
         ImplicitlyAnimatedReorderableList<Either<Torrent, QueuedTorrent>>(
           shrinkWrap: true,
-          
-        
           key: widget.listKey,
           items: widget.children,
           areItemsTheSame: (oldItem, newItem) => oldItem == newItem,

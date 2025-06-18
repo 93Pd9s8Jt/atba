@@ -95,8 +95,8 @@ class TorrentWidget extends StatelessWidget {
       final isCensored =
           Provider.of<DownloadsPageState>(context).isTorrentNamesCensored;
       final isSelected = Provider.of<DownloadsPageState>(context)
-          .selectedTorrents
-          .contains(Right<QueuedTorrent, Torrent>(torrent));
+          .selectedItems
+          .contains(torrent);
       final torrentState = torrent.active
           ? torrent.downloadState
           : torrent.downloadState == "uploading"
@@ -208,7 +208,7 @@ class TorrentWidget extends StatelessWidget {
             if (Provider.of<DownloadsPageState>(context, listen: false)
                 .isSelecting) {
               Provider.of<DownloadsPageState>(context, listen: false)
-                  .toggleSelection(Right<QueuedTorrent, Torrent>(torrent));
+                  .toggleSelection(torrent);
             } //else {
             //     Navigator.push(
             //       context,
@@ -220,7 +220,7 @@ class TorrentWidget extends StatelessWidget {
           },
           onLongPress: () {
             Provider.of<DownloadsPageState>(context, listen: false)
-                .startSelection(Right<QueuedTorrent, Torrent>(torrent));
+                .startSelection(torrent);
           },
         ),
       );
@@ -238,8 +238,8 @@ class QueuedTorrentWidget extends StatelessWidget {
     final isCensored =
         Provider.of<DownloadsPageState>(context).isTorrentNamesCensored;
     final isSelected = Provider.of<DownloadsPageState>(context)
-        .selectedTorrents
-        .contains(Left<QueuedTorrent, Torrent>(torrent));
+        .selectedItems
+        .contains(torrent);
     PTN ptn = PTN();
 
     return Container(
@@ -276,11 +276,11 @@ class QueuedTorrentWidget extends StatelessWidget {
         }(),
         onLongPress: () {
             Provider.of<DownloadsPageState>(context, listen: false)
-                .startSelection(Left<QueuedTorrent, Torrent>(torrent));
+                .startSelection(torrent);
           },
         onTap: () {
           Provider.of<DownloadsPageState>(context, listen: false)
-              .toggleSelection(Left<QueuedTorrent, Torrent>(torrent));
+              .toggleSelection(torrent);
         },
       ),
     );

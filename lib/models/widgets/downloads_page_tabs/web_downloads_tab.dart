@@ -1,3 +1,4 @@
+import 'package:atba/models/widgets/downloadable_item_widget.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,10 +52,7 @@ class WebDownloadsTab extends StatelessWidget {
               itemCount: state.webDownloads.length,
               itemBuilder: (context, index) {
                 final download = state.webDownloads[index];
-                return ListTile(
-                  title: Text(download.name),
-                  subtitle: Text(download.downloadState),
-                );
+                return DownloadableItemWidget(item: download);
               },
             ) : const Center(child: Text('No web downloads available'));
           } else if (snapshot.hasError) {

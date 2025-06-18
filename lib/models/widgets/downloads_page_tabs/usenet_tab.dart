@@ -1,3 +1,4 @@
+import 'package:atba/models/widgets/downloadable_item_widget.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,9 +52,8 @@ class UsenetTab extends StatelessWidget {
               itemCount: state.usenetDownloads.length,
               itemBuilder: (context, index) {
                 final download = state.usenetDownloads[index];
-                return ListTile(
-                  title: Text(download.name),
-                  subtitle: Text(download.downloadState),
+                return DownloadableItemWidget(
+                  item: download,
                 );
               },
             )

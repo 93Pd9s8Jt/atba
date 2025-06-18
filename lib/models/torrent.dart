@@ -246,6 +246,9 @@ class Torrent extends DownloadableItem {
       throw Exception('Folder path not set');
     }
     final response = await apiService.getTorrentDownloadUrl(id, zipLink: true);
+    if (!response.success) {
+      return response; // Return early if the response is not successful
+    }
     await FlutterDownloader.enqueue(
       url: response.data as String,
       savedDir: folderPath,

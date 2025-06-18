@@ -102,3 +102,7 @@ class DownloadableFile {
     );
   }
 }
+
+/// Union type for selectable items in the UI.
+/// Add more types as needed.
+typedef SelectableItem = Object /* DownloadableItem | QueuedTorrent */;
