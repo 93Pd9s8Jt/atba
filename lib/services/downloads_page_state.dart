@@ -482,8 +482,8 @@ class DownloadsPageState extends ChangeNotifier {
     "Z to A": (a, b) => -(handleTorrentName(a.name))
         .toLowerCase()
         .compareTo(handleTorrentName(b.name).toLowerCase()),
-    "Largest": (a, b) => a.size.compareTo(b.size),
-    "Smallest": (a, b) => -a.size.compareTo(b.size),
+    "Largest": (a, b) => -a.size.compareTo(b.size),
+    "Smallest": (a, b) => a.size.compareTo(b.size),
     "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
     "Newest": (a, b) => -a.createdAt.compareTo(b.createdAt),
     "Recently updated": (a, b) => a.updatedAt.compareTo(b.updatedAt)

@@ -30,18 +30,18 @@ class CollapsibleSection extends StatefulWidget {
 }
 
 class _CollapsibleSectionState extends State<CollapsibleSection> {
-  late bool isExpanded;
+  late bool isInitiallyExpanded;
 
   @override
   void initState() {
     super.initState();
-    isExpanded = widget.initiallyExpanded;
+    isInitiallyExpanded = widget.initiallyExpanded;
   }
 
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      initiallyExpanded: isExpanded,
+      initiallyExpanded: isInitiallyExpanded,
       title: Text(
         widget.title,
         style: TextStyle(fontSize: 16.0),
