@@ -84,25 +84,25 @@ class Torrent extends DownloadableItem {
   String? errorMessage;
 
   Torrent({
-    required int id,
-    required String name,
-    required DateTime createdAt,
-    required DateTime updatedAt,
-    required int size,
-    required bool active,
-    required String authId,
-    required String downloadState,
-    required double progress,
-    required int downloadSpeed,
-    required int uploadSpeed,
-    required int eta,
-    required bool torrentFile,
-    required DateTime? expiresAt,
-    required bool downloadPresent,
-    required bool downloadFinished,
-    required List<DownloadableFile> files,
-    required int? inactiveCheck,
-    required num? availability,
+    required super.id,
+    required super.name,
+    required super.createdAt,
+    required super.updatedAt,
+    required super.size,
+    required super.active,
+    required super.authId,
+    required super.downloadState,
+    required super.progress,
+    required int super.downloadSpeed,
+    required int super.uploadSpeed,
+    required super.eta,
+    required bool super.torrentFile,
+    required super.expiresAt,
+    required super.downloadPresent,
+    required super.downloadFinished,
+    required super.files,
+    required super.inactiveCheck,
+    required super.availability,
     required this.hash,
     required this.magnet,
     required this.seeds,
@@ -118,27 +118,7 @@ class Torrent extends DownloadableItem {
     required this.allowZipped,
     required this.longTermSeeding,
     required this.trackerMessage,
-  }) : super(
-          id: id,
-          name: name,
-          createdAt: createdAt,
-          updatedAt: updatedAt,
-          size: size,
-          active: active,
-          authId: authId,
-          downloadState: downloadState,
-          progress: progress,
-          downloadSpeed: downloadSpeed,
-          uploadSpeed: uploadSpeed,
-          eta: eta,
-          torrentFile: torrentFile,
-          expiresAt: expiresAt,
-          downloadPresent: downloadPresent,
-          downloadFinished: downloadFinished,
-          files: files,
-          inactiveCheck: inactiveCheck,
-          availability: availability,
-        );
+  });
 
   factory Torrent.fromJson(Map<String, dynamic> json) {
     return Torrent(
@@ -240,6 +220,7 @@ class Torrent extends DownloadableItem {
     return response; // data has path to file
   }
 
+  @override
   Future<TorboxAPIResponse> download() async {
     final folderPath = Settings.getValue<String>("folder_path");
     if (folderPath == null) {

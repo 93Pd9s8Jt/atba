@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/torrent_widget.dart';

@@ -25,6 +25,10 @@ abstract class DownloadableItem {
   final List<DownloadableFile> files;
   final int? inactiveCheck;
   final num? availability;
+  // not part of the API response, but used in the UI
+  DownloadableItemStatus? itemStatus;
+  String? errorMessage;
+
 
   DownloadableItem({
     required this.id,
@@ -46,6 +50,8 @@ abstract class DownloadableItem {
     required this.files,
     required this.inactiveCheck,
     required this.availability,
+    this.itemStatus,
+    this.errorMessage,
   });
 
   static void initApiService(TorboxAPI apiServicee) {
@@ -106,3 +112,7 @@ class DownloadableFile {
 /// Union type for selectable items in the UI.
 /// Add more types as needed.
 typedef SelectableItem = Object /* DownloadableItem | QueuedTorrent */;
+
+enum DownloadableItemStatus {
+  loading, success, error
+}

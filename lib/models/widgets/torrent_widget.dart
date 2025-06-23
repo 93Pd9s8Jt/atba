@@ -1,7 +1,6 @@
 import 'package:atba/models/torrent.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
-import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_animate/flutter_animate.dart';

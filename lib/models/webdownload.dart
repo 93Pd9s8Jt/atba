@@ -54,48 +54,28 @@ class WebDownload extends DownloadableItem {
   final String error;
 
   WebDownload({
-    required int id,
-    required String name,
-    required DateTime createdAt,
-    required DateTime updatedAt,
-    required int size,
-    required bool active,
-    required String authId,
-    required String downloadState,
-    required double progress,
-    required int? downloadSpeed,
-    required int? uploadSpeed,
-    required int eta,
-    required bool? torrentFile,
-    required DateTime expiresAt,
-    required bool downloadPresent,
-    required bool downloadFinished,
-    required List<DownloadableFile> files,
-    required int? inactiveCheck,
-    required num? availability,
+    required super.id,
+    required super.name,
+    required super.createdAt,
+    required super.updatedAt,
+    required super.size,
+    required super.active,
+    required super.authId,
+    required super.downloadState,
+    required super.progress,
+    required super.downloadSpeed,
+    required super.uploadSpeed,
+    required super.eta,
+    required super.torrentFile,
+    required DateTime super.expiresAt,
+    required super.downloadPresent,
+    required super.downloadFinished,
+    required super.files,
+    required super.inactiveCheck,
+    required super.availability,
     required this.state,
     required this.error,
-  }) : super(
-          id: id,
-          name: name,
-          createdAt: createdAt,
-          updatedAt: updatedAt,
-          size: size,
-          active: active,
-          authId: authId,
-          downloadState: downloadState,
-          progress: progress,
-          downloadSpeed: downloadSpeed,
-          uploadSpeed: uploadSpeed,
-          eta: eta,
-          torrentFile: torrentFile,
-          expiresAt: expiresAt,
-          downloadPresent: downloadPresent,
-          downloadFinished: downloadFinished,
-          files: files,
-          inactiveCheck: inactiveCheck,
-          availability: availability,
-        );
+  });
 
   factory WebDownload.fromJson(Map<String, dynamic> json) {
     return WebDownload(
@@ -133,6 +113,7 @@ class WebDownload extends DownloadableItem {
     return await apiService.controlWebDownload(ControlWebdlType.delete, webId: id);
   }
 
+  @override
   Future<TorboxAPIResponse> download() async {
     final folderPath = Settings.getValue<String>("folder_path");
     if (folderPath == null) {

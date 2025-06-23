@@ -1,3 +1,5 @@
+import 'package:atba/models/usenet.dart';
+import 'package:atba/models/webdownload.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -38,6 +40,8 @@ Future<void> main() async {
     secureStorageService: secureStorageService,
   );
   Torrent.initApiService(apiService);
+  WebDownload.initApiService(apiService);
+  Usenet.initApiService(apiService);
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
 

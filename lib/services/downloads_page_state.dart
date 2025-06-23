@@ -334,9 +334,22 @@ class DownloadsPageState extends ChangeNotifier {
       switch (item.runtimeType) {
         case Usenet:
           item = item as Usenet;
+
           break;
         case WebDownload:
           item = item as WebDownload;
+          item.itemStatus = DownloadableItemStatus.loading;
+          notifyListeners();
+          final response = await action(item);
+          if (response!.success) {
+            item.itemStatus = DownloadableItemStatus.success;
+            if (actionIsDelete) {
+              webDownloads.remove(item); // not an animated list like below
+            }
+          } else {
+            item.itemStatus = DownloadableItemStatus.error;
+            item.errorMessage = "${response.detail} (${response.error})";
+          }
           break;
         case Torrent:
           Torrent torrent = item as Torrent;
@@ -383,13 +396,13 @@ class DownloadsPageState extends ChangeNotifier {
   Future<void> deleteSelectedItems() async {
     await _handleSelectedItems((item) {
       if (item is Usenet) {
-        return (item as Usenet).delete();
+        return (item).delete();
       } else if (item is WebDownload) {
-        return (item as WebDownload).delete();
+        return (item).delete();
       } else if (item is QueuedTorrent) {
-        return (item as QueuedTorrent).delete();
+        return (item).delete();
       } else if (item is Torrent) {
-        return (item as Torrent).delete();
+        return (item).delete();
       } else {
         throw Exception('Invalid selectable type');
       }
@@ -400,8 +413,9 @@ class DownloadsPageState extends ChangeNotifier {
     await _handleSelectedItems((item) {
       if (item is Torrent) {
         return item.pause();
-      } else
+      } else {
         return null;
+      }
     });
   }
 
