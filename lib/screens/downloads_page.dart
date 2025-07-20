@@ -1,33 +1,59 @@
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:atba/models/permission_model.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/downloads_page_tabs/torrents_tab.dart';
 import 'package:atba/models/widgets/downloads_page_tabs/web_downloads_tab.dart';
 import 'package:atba/models/widgets/downloads_page_tabs/usenet_tab.dart';
 import 'package:atba/models/widgets/downloads_page_tabs/add_tabs.dart';
+import 'package:atba/services/torbox_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:atba/services/downloads_page_state.dart';
+import 'package:icon_craft/icon_craft.dart';
 
-class DownloadsPage extends StatelessWidget {
+class DownloadsPage extends StatefulWidget {
   const DownloadsPage({super.key});
 
   @override
+  State<DownloadsPage> createState() => _DownloadsPageState();
+}
+
+class _DownloadsPageState extends State<DownloadsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(vsync: this, length: 3);
+    _tabController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final apiService = Provider.of<TorboxAPI>(context, listen: false);
     return ChangeNotifierProvider(
       create: (_) => DownloadsPageState(context),
       child: Consumer<DownloadsPageState>(
         builder: (context, state, child) {
-          return DefaultTabController(
-            length: 3,
-            child: Scaffold(
+          return Scaffold(
               appBar: AppBar(
                 title: (state.isSelecting)
                     ? Text("${state.selectedItems.length} selected")
                     : null,
-                bottom: const TabBar(
+                bottom: TabBar(
+                  controller: _tabController,
                   tabs: [
                     Tab(text: 'Torrents'),
                     Tab(text: 'Web'),
@@ -131,6 +157,7 @@ class DownloadsPage extends StatelessWidget {
                 ],
               ),
               body: TabBarView(
+                controller: _tabController,
                 children: [
                   buildTorrentsTab(state, context),
                   WebDownloadsTab(state: state),
@@ -209,23 +236,155 @@ class DownloadsPage extends StatelessWidget {
                       ),
                     )
                   : null,
-              floatingActionButton: state.isSelecting
-                  ? SizedBox.shrink()
-                  : FloatingActionButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return const FullscreenMenu().animate().scale(
-                                curve: Curves.easeIn,
-                                duration: Duration(milliseconds: 250));
-                          },
+                floatingActionButton: state.isSelecting
+                  ? const SizedBox.shrink()
+                  : AnimatedBuilder(
+                      animation: _tabController.animation!,
+                      builder: (context, child) {
+                        // Calculate the current and next tab index
+                        final animationValue = _tabController.animation!.value;
+                        final currentIndex = _tabController.index;
+                        final nextIndex = animationValue.round();
+                        // Determine if we're transitioning and how far
+                        final transitionProgress =
+                            (animationValue - currentIndex).abs();
+                        // If transition is more than halfway, use next tab's icon
+                        int iconTabIndex;
+                        if (transitionProgress > 0.5) {
+                          iconTabIndex = nextIndex;
+                        } else {
+                          iconTabIndex = currentIndex;
+                        }
+                        Icon getFabIcon() {
+                          switch (iconTabIndex) {
+                            case 0:
+                              return const Icon(Icons.diversity_2);
+                            case 1:
+                              return const Icon(Icons.cloud_download);
+                            case 2:
+                              return const Icon(Icons.hub);
+                            default:
+                              return const Icon(Icons.diversity_2);
+                          }
+                        }
+
+                        List<SpeedDialChild> getSpeedDialChildren() {
+                          switch (iconTabIndex) {
+                            case 1: // Web Downloads
+                              return [
+                                SpeedDialChild(
+                                  child: const Icon(Icons.cloud_download),
+                                  label: 'Web link',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddWebDownloadsTab(
+                                                apiService: apiService),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ];
+                            case 2: // Usenet
+                              return [
+                                SpeedDialChild(
+                                  child: const Icon(Icons.link),
+                                  label: 'Add NZB from URL',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddNzbLinkTab(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SpeedDialChild(
+                                  child: const Icon(Icons.upload_file),
+                                  label: 'Add NZB from file',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddNzbFileTab(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SpeedDialChild(
+                                  child: const Icon(Icons.search),
+                                  label: 'Search',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddUsenetSearchTab(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ];
+                            case 0:
+                            default:
+                              return [
+                                SpeedDialChild(
+                                  child: const Icon(Icons.upload_file),
+                                  label: '.torrent file',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddTorrentFileTab(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SpeedDialChild(
+                                  child: const Icon(Icons.link),
+                                  label: 'Magnet',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddMagnetTab(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SpeedDialChild(
+                                  child: const Icon(Icons.search),
+                                  label: 'Search',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddSearchTorrentTab(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ];
+                          }
+                        }
+
+                        return SpeedDial(
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+                          child: IconCraft(
+                            const Icon(Icons.add),
+                            getFabIcon(),
+                            alignment: const Alignment(1.5, 1.5),
+                          ),
+                          activeChild: const Icon(Icons.close),
+                          direction: SpeedDialDirection.up,
+                          children: getSpeedDialChildren(),
                         );
                       },
-                      child: const Icon(Icons.add),
-                    ),
-            ),
-          );
+                    ));
         },
       ),
     );

@@ -81,6 +81,7 @@ class Torrent extends DownloadableItem {
   final bool longTermSeeding;
   final String? trackerMessage;
   TorrentStatus status = TorrentStatus.idle;
+  @override
   String? errorMessage;
 
   Torrent({

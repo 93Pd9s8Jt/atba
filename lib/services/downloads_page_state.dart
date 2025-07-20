@@ -41,6 +41,7 @@ class DownloadsPageState extends ChangeNotifier {
       GlobalKey<AnimatedListState>(debugLabel: 'queuedTorrentsListKey');
   final GlobalKey<AnimatedListState> animatedInactiveTorrentsListKey =
       GlobalKey<AnimatedListState>(debugLabel: 'inactiveTorrentsListKey');
+      
 
   void addItemToAnimatedList(Torrent torrent) {
     final listItems = torrent.active

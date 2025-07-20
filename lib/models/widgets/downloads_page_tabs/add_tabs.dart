@@ -3,37 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class FullscreenMenu extends StatelessWidget {
-  const FullscreenMenu({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
-
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Web Downloads'),
-              Tab(text: 'Torrents'),
-              Tab(text: 'Usenet'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            AddWebDownloadsTab(apiService: apiService),
-            AddTorrentsTab(),
-            AddUsenetTab(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class AddWebDownloadsTab extends StatefulWidget {
   final torbox.TorboxAPI apiService;
 
@@ -50,78 +19,124 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: urlsController,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              labelText: 'URLs to Download',
-              border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Web Downloads'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Enter one or more URLs to download, separated by new lines.',
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: passwordController,
-            decoration: const InputDecoration(
-              labelText: 'Password (optional)',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 16),
+            TextField(
+              controller: urlsController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'URLs',
+                hintText:
+                    'http://example.com/file1.zip\nhttp://example.com/file2.rar',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _isLoading
-              ? const CircularProgressIndicator()
-              : ElevatedButton(
-                  onPressed: () async {
-                    setState(() {
-                      _isLoading = true;
-                    });
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(
+                labelText: 'Password (optional)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Downloads'),
+                    onPressed: () async {
+                      if (urlsController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enter at least one URL.'),
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() {
+                        _isLoading = true;
+                      });
 
-                    final urls = urlsController.text.split('\n');
-                    final password = passwordController.text.isNotEmpty
-                        ? passwordController.text
-                        : null;
+                      final urls = urlsController.text
+                          .split('\n')
+                          .where((s) => s.trim().isNotEmpty)
+                          .toList();
+                      final password = passwordController.text.isNotEmpty
+                          ? passwordController.text
+                          : null;
 
-                    for (var url in urls) {
-                      var response = await widget.apiService.makeRequest(
-                          'api/webdl/createwebdownload',
-                          method: 'post',
-                          body: {
-                            "link": url.trim(),
-                            "password": password,
-                          });
-                      if (response.success != true) {
+                      int successCount = 0;
+                      for (var url in urls) {
+                        var response =
+                            await widget.apiService.makeRequest(
+                                'api/webdl/createwebdownload',
+                                method: 'post',
+                                body: {
+                              "link": url.trim(),
+                              "password": password,
+                            });
+                        if (response.success == true) {
+                          successCount++;
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Failed to add $url: ${response.detail}'),
+                            ),
+                          );
+                        }
+                      }
+
+                      setState(() {
+                        _isLoading = false;
+                      });
+
+                      if (successCount > 0 && successCount == urls.length) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content:
-                                Text('Failed to add $url: ${response.detail}'),
+                            content: Text(
+                                '$successCount download(s) added successfully.'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      } else if (successCount > 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                '$successCount out of ${urls.length} download(s) added successfully.'),
                           ),
                         );
                       }
-                    }
-
-                    setState(() {
-                      _isLoading = false;
-                    });
-                  },
-                  child: const Text('Add'),
-                ),
-        ],
+                    },
+                  ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class AddTorrentsTab extends StatefulWidget {
-  const AddTorrentsTab({super.key});
+class AddMagnetTab extends StatefulWidget {
+  const AddMagnetTab({super.key});
 
   @override
-  _AddTorrentsTabState createState() => _AddTorrentsTabState();
+  _AddMagnetTabState createState() => _AddMagnetTabState();
 }
 
-class _AddTorrentsTabState extends State<AddTorrentsTab> {
+class _AddMagnetTabState extends State<AddMagnetTab> {
   final TextEditingController magnetLinkController = TextEditingController();
   bool _isLoading = false;
 
@@ -129,132 +144,233 @@ class _AddTorrentsTabState extends State<AddTorrentsTab> {
   Widget build(BuildContext context) {
     final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: magnetLinkController,
-            decoration: const InputDecoration(
-              labelText: 'Magnet Link',
-              border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Magnet Links'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Paste one or more magnet links to start new torrent downloads.',
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles(
-                type: FileType.custom,
-                allowedExtensions: ['torrent'],
-              );
+            const SizedBox(height: 16),
+            TextField(
+              controller: magnetLinkController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Magnet Links',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Torrents'),
+                    onPressed: () async {
+                      if (magnetLinkController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enter at least one magnet link.'),
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() {
+                        _isLoading = true;
+                      });
 
-              if (result != null) {
-                PlatformFile file = result.files.first;
+                      final magnetLinks = magnetLinkController.text
+                          .split('\n')
+                          .where((s) => s.trim().isNotEmpty)
+                          .toList();
 
-                setState(() {
-                  _isLoading = true;
-                });
+                      int successCount = 0;
+                      for (var magnetLink in magnetLinks) {
+                        var response = await apiService.makeRequest(
+                          'api/torrents/createtorrent',
+                          method: 'post',
+                          body: {
+                            "magnet": magnetLink.trim(),
+                            "seed": null,
+                            "allow_zip": null,
+                            "name": null,
+                            "as_queued": null,
+                          },
+                        );
+                        if (response.success) {
+                          successCount++;
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Failed to add torrent: ${response.detailOrUnknown}'),
+                            ),
+                          );
+                        }
+                      }
 
-                var response = await apiService.makeRequest(
-                  'api/torrents/createtorrent',
-                  method: 'post',
-                  body: {
-                    "file": file, // file is handled on api side
-                    "magnet": null,
-                    "seed": null,
-                    "allow_zip": null,
-                    "name": file.name,
-                    "as_queued": null,
-                  },
-                );
+                      setState(() {
+                        _isLoading = false;
+                      });
 
-                if (response.success == true) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Torrent added successfully'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Failed to add torrent: ${response.detailOrUnknown}'),
-                    ),
-                  );
-                }
-
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            },
-            child: const Text('Upload .torrent file'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              // Handle search via Torbox API
-            },
-            child: const Text('Search via Torbox API'),
-          ),
-          const SizedBox(height: 16),
-          _isLoading
-              ? const CircularProgressIndicator()
-              : ElevatedButton(
-                  onPressed: () async {
-                    setState(() {
-                      _isLoading = true;
-                    });
-
-                    final magnetLink = magnetLinkController.text.trim();
-
-                    var response = await apiService.makeRequest(
-                      'api/torrents/createtorrent',
-                      method: 'post',
-                      body: {
-                        "magnet": magnetLink,
-                        "seed": null,
-                        "allow_zip": null,
-                        "name": null,
-                        "as_queued": null,
-                      },
-                    );
-
-                    if (response.success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Torrent added successfully'),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Failed to add torrent: ${response.detailOrUnknown}'),
-                        ),
-                      );
-                    }
-
-                    setState(() {
-                      _isLoading = false;
-                    });
-                  },
-                  child: const Text('Add'),
-                ),
-        ],
+                      if (successCount > 0 && successCount == magnetLinks.length) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                '$successCount torrent(s) added successfully.'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      } else if (successCount > 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                '$successCount out of ${magnetLinks.length} torrent(s) added successfully.'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class AddUsenetTab extends StatefulWidget {
-  const AddUsenetTab({super.key});
+class AddTorrentFileTab extends StatefulWidget {
+  const AddTorrentFileTab({super.key});
 
   @override
-  _AddUsenetTabState createState() => _AddUsenetTabState();
+  _AddTorrentFileTabState createState() => _AddTorrentFileTabState();
 }
 
-class _AddUsenetTabState extends State<AddUsenetTab> {
+class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
+  bool _isLoading = false;
+  String? _fileName;
+
+  @override
+  Widget build(BuildContext context) {
+    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Torrent File'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Select a .torrent file from your device to start a new download.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Select .torrent file'),
+              onPressed: () async {
+                FilePickerResult? result =
+                    await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['torrent'],
+                );
+
+                if (result != null) {
+                  PlatformFile file = result.files.first;
+                  setState(() {
+                    _fileName = file.name;
+                  });
+
+                  setState(() {
+                    _isLoading = true;
+                  });
+
+                  var response = await apiService.makeRequest(
+                    'api/torrents/createtorrent',
+                    method: 'post',
+                    body: {
+                      "file": file, // file is handled on api side
+                      "magnet": null,
+                      "seed": null,
+                      "allow_zip": null,
+                      "name": file.name,
+                      "as_queued": null,
+                    },
+                  );
+
+                  setState(() {
+                    _isLoading = false;
+                  });
+
+                  if (response.success == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Torrent added successfully'),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'Failed to add torrent: ${response.detailOrUnknown}'),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            if (_fileName != null)
+              Text('Selected file: $_fileName', textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            if (_isLoading) const Center(child: CircularProgressIndicator()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AddSearchTorrentTab extends StatelessWidget {
+  const AddSearchTorrentTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Search Torrents'),
+      ),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Search for torrents directly within the app (coming soon).',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AddNzbLinkTab extends StatefulWidget {
+  const AddNzbLinkTab({super.key});
+
+  @override
+  _AddNzbLinkTabState createState() => _AddNzbLinkTabState();
+}
+
+class _AddNzbLinkTabState extends State<AddNzbLinkTab> {
   final TextEditingController linkController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
@@ -263,123 +379,230 @@ class _AddUsenetTabState extends State<AddUsenetTab> {
   Widget build(BuildContext context) {
     final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: linkController,
-            decoration: const InputDecoration(
-              labelText: 'NZB File URL',
-              border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Usenet from URL'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Enter a URL to an NZB file to start a new Usenet download.',
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: passwordController,
-            decoration: const InputDecoration(
-              labelText: 'Password (optional)',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 16),
+            TextField(
+              controller: linkController,
+              decoration: const InputDecoration(
+                labelText: 'NZB File URL',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles(
-                type: FileType.any,
-              );
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(
+                labelText: 'Password (optional)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add from URL'),
+                    onPressed: () async {
+                      if (linkController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enter a URL.'),
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() {
+                        _isLoading = true;
+                      });
 
-              if (result != null) {
-                PlatformFile file = result.files.first;
+                      final link = linkController.text.trim();
+                      final password = passwordController.text.isNotEmpty
+                          ? passwordController.text
+                          : null;
 
-                setState(() {
-                  _isLoading = true;
-                });
-
-                var response = await apiService.makeRequest(
-                  'api/usenet/createusenetdownload',
-                  method: 'post',
-                  body: {
-                    "file": file, // file is handled on api side
-                    "link": null,
-                    "name": file.name,
-                    "password": passwordController.text.isNotEmpty
-                        ? passwordController.text
-                        : null,
-                    "post_processing": null,
-                  },
-                );
-
-                if (response.success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Usenet download added successfully'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Failed to add Usenet download: ${response.detailOrUnknown}'),
-                    ),
-                  );
-                }
-
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            },
-            child: const Text('Upload .nzb file'),
-          ),
-          const SizedBox(height: 16),
-          _isLoading
-              ? const CircularProgressIndicator()
-              : ElevatedButton(
-                  onPressed: () async {
-                    setState(() {
-                      _isLoading = true;
-                    });
-
-                    final link = linkController.text.trim();
-                    final password = passwordController.text.isNotEmpty
-                        ? passwordController.text
-                        : null;
-
-                    var response = await apiService.makeRequest(
-                      'api/usenet/createusenetdownload',
-                      method: 'post',
-                      body: {
-                        "file": null,
-                        "link": link,
-                        "name": null,
-                        "password": password,
-                        "post_processing": null,
-                      },
-                    );
-
-                    if (response.success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Usenet download added successfully'),
-                        ),
+                      var response = await apiService.makeRequest(
+                        'api/usenet/createusenetdownload',
+                        method: 'post',
+                        body: {
+                          "file": null,
+                          "link": link,
+                          "name": null,
+                          "password": password,
+                          "post_processing": null,
+                        },
                       );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Failed to add Usenet download: ${response.detailOrUnknown}'),
-                        ),
-                      );
-                    }
 
-                    setState(() {
-                      _isLoading = false;
-                    });
-                  },
-                  child: const Text('Add'),
-                ),
-        ],
+                      setState(() {
+                        _isLoading = false;
+                      });
+
+                      if (response.success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('Usenet download added successfully'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Failed to add Usenet download: ${response.detailOrUnknown}'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AddNzbFileTab extends StatefulWidget {
+  const AddNzbFileTab({super.key});
+
+  @override
+  _AddNzbFileTabState createState() => _AddNzbFileTabState();
+}
+
+class _AddNzbFileTabState extends State<AddNzbFileTab> {
+  final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _fileName;
+
+  @override
+  Widget build(BuildContext context) {
+    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Usenet from File'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Select an .nzb file from your device to start a new Usenet download.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(
+                labelText: 'Password (optional)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Select .nzb file'),
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      FilePickerResult? result =
+                          await FilePicker.platform.pickFiles(
+                        type: FileType.any, // Should be more specific if possible
+                      );
+
+                      if (result != null) {
+                        PlatformFile file = result.files.first;
+                        setState(() {
+                          _fileName = file.name;
+                        });
+
+                        setState(() {
+                          _isLoading = true;
+                        });
+
+                        var response = await apiService.makeRequest(
+                          'api/usenet/createusenetdownload',
+                          method: 'post',
+                          body: {
+                            "file": file, // file is handled on api side
+                            "link": null,
+                            "name": file.name,
+                            "password": passwordController.text.isNotEmpty
+                                ? passwordController.text
+                                : null,
+                            "post_processing": null,
+                          },
+                        );
+
+                        setState(() {
+                          _isLoading = false;
+                        });
+
+                        if (response.success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Usenet download added successfully'),
+                            ),
+                          );
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Failed to add Usenet download: ${response.detailOrUnknown}'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+            ),
+            const SizedBox(height: 16),
+            if (_fileName != null)
+              Text('Selected file: $_fileName',
+                  textAlign: TextAlign.center),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AddUsenetSearchTab extends StatelessWidget {
+  const AddUsenetSearchTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Search Usenet'),
+      ),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Search for NZB files directly within the app (coming soon).',
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
