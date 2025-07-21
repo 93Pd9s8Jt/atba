@@ -242,42 +242,59 @@ class Torrent extends DownloadableItem {
   }
 }
 
-class QueuedTorrent {
-  final int id;
-  final DateTime createdAt;
+class QueuedTorrent extends DownloadableItem {
   final String magnet;
-  final String? torrentFile;
+  final String? torrentFileLink;
   final String hash;
-  final String name;
   final String type;
   TorrentStatus status = TorrentStatus.idle;
+  @override
   String? errorMessage;
 
   QueuedTorrent({
-    required this.id,
-    required this.createdAt,
+    required super.id,
+    required super.name,
+    required super.createdAt,
     required this.magnet,
-    required this.torrentFile,
+    required this.torrentFileLink,
     required this.hash,
-    required this.name,
     required this.type,
-  });
+  }) : super(
+          updatedAt: createdAt,
+          size: 0,
+          active: false,
+          authId: '',
+          downloadState: '',
+          progress: 0,
+          downloadSpeed: 0,
+          uploadSpeed: 0,
+          eta: 0,
+          torrentFile: null,
+          expiresAt: null,
+          downloadPresent: false,
+          downloadFinished: false,
+          files: [],
+          inactiveCheck: null,
+          availability: null,
+        );
 
   factory QueuedTorrent.fromJson(Map<String, dynamic> json) {
     return QueuedTorrent(
       id: json['id'] as int,
       createdAt: DateTime.parse(json['created_at'] as String),
       magnet: json['magnet'] as String,
-      torrentFile: json['torrent_file'] as String?,
+      torrentFileLink: json['torrent_file'] as String?,
       hash: json['hash'] as String,
       name: json['name'] as String,
       type: json['type'] as String,
     );
   }
 
+  @override
   Future<TorboxAPIResponse> delete() async {
     status = TorrentStatus.loading;
-    final response = await Torrent.apiService.controlQueuedItem(QueuedItemOperation.delete, queuedId: id);
+    final response = await DownloadableItem.apiService
+        .controlQueuedItem(QueuedItemOperation.delete, queuedId: id);
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -289,7 +306,8 @@ class QueuedTorrent {
 
   Future<TorboxAPIResponse> start() async {
     status = TorrentStatus.loading;
-    final response = await Torrent.apiService.controlQueuedItem(QueuedItemOperation.start, queuedId: id);
+    final response = await DownloadableItem.apiService
+        .controlQueuedItem(QueuedItemOperation.start, queuedId: id);
     if (response.success) {
       status = TorrentStatus.success;
     } else {

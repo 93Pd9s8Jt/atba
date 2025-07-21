@@ -2,6 +2,7 @@ import 'package:atba/models/widgets/torrentlist.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 RefreshIndicator buildTorrentsTab(
     DownloadsPageState state, BuildContext context) {
@@ -40,14 +41,20 @@ RefreshIndicator buildTorrentsTab(
                                   },
                                 )
                               : SizedBox(),
-                              
                         ],
                       )));
                 }
 
-                return state.activeTorrents.isNotEmpty || state.inactiveTorrents.isNotEmpty || state.queuedTorrents.isNotEmpty ?  TorrentsList() : const Center(
-                    child: Text('No torrents available'),
-                  );
+                return state.activeTorrents.isNotEmpty ||
+                        state.inactiveTorrents.isNotEmpty ||
+                        state.queuedTorrents.isNotEmpty
+                    ? ChangeNotifierProvider.value(
+                        value: state,
+                        child: TorrentsList(),
+                      )
+                    : const Center(
+                        child: Text('No torrents available'),
+                      );
               } else if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
               } else {
@@ -60,4 +67,3 @@ RefreshIndicator buildTorrentsTab(
     ),
   );
 }
-

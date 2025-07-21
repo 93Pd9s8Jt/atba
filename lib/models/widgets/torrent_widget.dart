@@ -89,197 +89,167 @@ class TorrentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DownloadsPageState>(builder: (context, state, child) {
-      PTN ptn = PTN();
-      final isCensored =
-          Provider.of<DownloadsPageState>(context).isTorrentNamesCensored;
-      final isSelected = Provider.of<DownloadsPageState>(context)
-          .selectedItems
-          .contains(torrent);
-      final torrentState = torrent.active
-          ? torrent.downloadState
-          : torrent.downloadState == "uploading"
-              ? "cached"
-              : torrent.downloadState;
+    final state = Provider.of<DownloadsPageState>(context);
+    PTN ptn = PTN();
+    final isCensored = state.isTorrentNamesCensored;
+    final isSelected = state.selectedItems.contains(torrent);
+    final torrentState = torrent.active
+        ? torrent.downloadState
+        : torrent.downloadState == "uploading"
+            ? "cached"
+            : torrent.downloadState;
 
-      return Container(
-        color:
-            isSelected ? Theme.of(context).highlightColor : Colors.transparent,
-        child: ListTile(
-          leading: () {
-            switch (torrent.status) {
-              case TorrentStatus.loading:
-                return CircularProgressIndicator();
-              case TorrentStatus.success:
-                return Icon(Icons.check, color: Colors.green);
-              case TorrentStatus.error:
-                return Icon(Icons.error, color: Colors.red);
-              default:
-                return Icon(
-                  torrentStatuses[torrentState]?['icon'] ?? Icons.question_mark,
-                  color: torrentStatuses[torrentState]?['color'] ?? Colors.grey,
-                );
-            }
-          }(),
-          title: Text(
-            Settings.getValue<bool>("key-use-torrent-name-parsing",
-                    defaultValue: false)!
-                ? ptn.parse(torrent.name)['title']
-                : torrent.name
-          ).animate(target: isCensored ? 1 : 0).blur(),
-          subtitle: () {
-            switch (torrent.status) {
-              case TorrentStatus.loading:
-                return Text('Loading...');
-              case TorrentStatus.success:
-                return Text('Success');
-              case TorrentStatus.error:
-                return Text('Error: ${torrent.errorMessage}');
-              default:
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Text(torrentState),
+    return Container(
+      color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
+      child: ListTile(
+        leading: () {
+          switch (torrent.status) {
+            case TorrentStatus.loading:
+              return CircularProgressIndicator();
+            case TorrentStatus.success:
+              return Icon(Icons.check, color: Colors.green);
+            case TorrentStatus.error:
+              return Icon(Icons.error, color: Colors.red);
+            default:
+              return Icon(
+                torrentStatuses[torrentState]?['icon'] ?? Icons.question_mark,
+                color: torrentStatuses[torrentState]?['color'] ?? Colors.grey,
+              );
+          }
+        }(),
+        title: Text(
+          Settings.getValue<bool>("key-use-torrent-name-parsing",
+                  defaultValue: false)!
+              ? ptn.parse(torrent.name)['title']
+              : torrent.name,
+        ).animate(target: isCensored ? 1 : 0).blur(),
+        subtitle: () {
+          switch (torrent.status) {
+            case TorrentStatus.loading:
+              return Text('Loading...');
+            case TorrentStatus.success:
+              return Text('Success');
+            case TorrentStatus.error:
+              return Text('Error: ${torrent.errorMessage}');
+            default:
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8.0),
                         ),
-                        torrent.ratio == 0
-                            ? Container()
-                            : Row(
-                                children: [
-                                  SizedBox(width: 4.0),
-                                  Container(
-                                    padding: const EdgeInsets.all(4.0),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                    child:
-                                        Text(torrent.ratio.toStringAsFixed(2)),
-                                  ),
-                                ],
-                              ),
-                        torrent.active
-                            ? Row(
-                                children: [
-                                  SizedBox(width: 4.0),
-                                  Container(
-                                    padding: const EdgeInsets.all(4.0),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                    child: Text(_formatTimeDifference(
-                                        DateTime.now()
-                                            .difference(torrent.createdAt))),
-                                  ),
-                                ],
-                              )
-                            : Container()
-                      ],
-                    ),
-                    if (torrentState.toLowerCase() == 'downloading')
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: LinearProgressIndicator(value: torrent.progress),
+                        child: Text(torrentState),
                       ),
-                    // works, but needs live update to be decent
-                    // SizedBox(height: 4.0),
-                    // if (torrent.active)
-                    //   Padding(
-                    //     padding: const EdgeInsets.only(top: 4.0),
-                    //     child: Text(
-                    //         '↓ ${getReadableSize(torrent.downloadSpeed)}/s | ↑ ${getReadableSize(torrent.uploadSpeed)}/s'),
-                    //   ),
-                  ],
-                );
-            }
-          }(),
-          trailing: Text(getReadableSize(torrent.size)),
-          // TODO: fully implement
-          onTap: () {
-            if (Provider.of<DownloadsPageState>(context, listen: false)
-                .isSelecting) {
-              Provider.of<DownloadsPageState>(context, listen: false)
-                  .toggleSelection(torrent);
-            } //else {
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => TorrentDetailScreen(torrent: torrent),
-            //       ),
-            //     );
-            //   }
-          },
-          onLongPress: () {
-            Provider.of<DownloadsPageState>(context, listen: false)
-                .startSelection(torrent);
-          },
-        ),
-      );
-    });
+                      torrent.ratio == 0
+                          ? Container()
+                          : Row(
+                              children: [
+                                SizedBox(width: 4.0),
+                                Container(
+                                  padding: const EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: Text(torrent.ratio.toStringAsFixed(2)),
+                                ),
+                              ],
+                            ),
+                      torrent.active
+                          ? Row(
+                              children: [
+                                SizedBox(width: 4.0),
+                                Container(
+                                  padding: const EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: Text(_formatTimeDifference(
+                                      DateTime.now().difference(torrent.createdAt))),
+                                ),
+                              ],
+                            )
+                          : Container(),
+                    ],
+                  ),
+                  if (torrentState.toLowerCase() == 'downloading')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: LinearProgressIndicator(value: torrent.progress),
+                    ),
+                ],
+              );
+          }
+        }(),
+        trailing: Text(getReadableSize(torrent.size)),
+        onTap: () {
+          if (state.isSelecting) {
+            state.toggleSelection(torrent);
+          }
+        },
+        onLongPress: () {
+          state.startSelection(torrent);
+        },
+      ),
+    );
   }
 }
 
 class QueuedTorrentWidget extends StatelessWidget {
   final QueuedTorrent torrent;
   const QueuedTorrentWidget({super.key, required this.torrent});
-  
 
   @override
   Widget build(BuildContext context) {
-    final isCensored =
-        Provider.of<DownloadsPageState>(context).isTorrentNamesCensored;
-    final isSelected = Provider.of<DownloadsPageState>(context)
-        .selectedItems
-        .contains(torrent);
+    final state = Provider.of<DownloadsPageState>(context);
+    final isCensored = state.isTorrentNamesCensored;
+    final isSelected = state.selectedItems.contains(torrent);
     PTN ptn = PTN();
 
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
         title: Text(
-            Settings.getValue<bool>("key-use-torrent-name-parsing",
-                    defaultValue: false)!
-                ? ptn.parse(torrent.name)['title']
-                : torrent.name).animate(target: isCensored ? 1 : 0).blur(),
+          Settings.getValue<bool>("key-use-torrent-name-parsing",
+                  defaultValue: false)!
+              ? ptn.parse(torrent.name)['title']
+              : torrent.name,
+        ).animate(target: isCensored ? 1 : 0).blur(),
         leading: () {
-            switch (torrent.status) {
-              case TorrentStatus.loading:
-                return CircularProgressIndicator();
-              case TorrentStatus.success:
-                return Icon(Icons.check, color: Colors.green);
-              case TorrentStatus.error:
-                return Icon(Icons.error, color: Colors.red);
-              default:
-                return null;
-            }
+          switch (torrent.status) {
+            case TorrentStatus.loading:
+              return CircularProgressIndicator();
+            case TorrentStatus.success:
+              return Icon(Icons.check, color: Colors.green);
+            case TorrentStatus.error:
+              return Icon(Icons.error, color: Colors.red);
+            default:
+              return null;
+          }
         }(),
         subtitle: () {
-            switch (torrent.status) {
-              case TorrentStatus.loading:
-                return Text('Loading...');
-              case TorrentStatus.success:
-                return Text('Success');
-              case TorrentStatus.error:
-                return Text('Error: ${torrent.errorMessage}');
-              default:
-                return null;
-            }
+          switch (torrent.status) {
+            case TorrentStatus.loading:
+              return Text('Loading...');
+            case TorrentStatus.success:
+              return Text('Success');
+            case TorrentStatus.error:
+              return Text('Error: ${torrent.errorMessage}');
+            default:
+              return null;
+          }
         }(),
         onLongPress: () {
-            Provider.of<DownloadsPageState>(context, listen: false)
-                .startSelection(torrent);
-          },
+          state.startSelection(torrent);
+        },
         onTap: () {
-          Provider.of<DownloadsPageState>(context, listen: false)
-              .toggleSelection(torrent);
+          state.toggleSelection(torrent);
         },
       ),
     );
@@ -301,8 +271,7 @@ class TorrentDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Status: ${torrent.downloadState}',
-                style: TextStyle(fontSize: 18)),
+            Text('Status: ${torrent.downloadState}', style: TextStyle(fontSize: 18)),
             if (torrent.progress < 1)
               Column(
                 children: [
@@ -311,11 +280,11 @@ class TorrentDetailScreen extends StatelessWidget {
                 ],
               ),
             SizedBox(height: 10),
-            Text('Size: ${getReadableSize(torrent.size)}',
-                style: TextStyle(fontSize: 18)),
+            Text('Size: ${getReadableSize(torrent.size)}', style: TextStyle(fontSize: 18)),
           ],
         ),
       ),
     );
   }
 }
+

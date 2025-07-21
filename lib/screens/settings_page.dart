@@ -177,20 +177,6 @@ class SettingsPage extends StatelessWidget {
             title: 'Use internal video player (very buggy)',
             defaultValue: false,
           ),
-          TextInputSettingsTile(
-              title: "Maximum height for collapsible sections",
-              settingKey: "collapsible-sections-max-height",
-              keyboardType: TextInputType.number,
-              initialValue: "350",
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Invalid height';
-                final double? height = double.tryParse(value);
-                if (height == null || height <= 0) {
-                  return 'Invalid height';
-                }
-                return null;
-              }
-              ),
           SettingsGroup(title: 'Torrentio', children: <Widget>[
             ExpandableSettingsTile(
               title: "Providers",

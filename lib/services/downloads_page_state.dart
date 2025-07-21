@@ -35,32 +35,6 @@ class DownloadsPageState extends ChangeNotifier {
   late List<Torrent> filteredSortedActiveTorrents;
   late List<Torrent> filteredSortedInactiveTorrents;
 
-  final GlobalKey<AnimatedListState> animatedActiveTorrentsListKey =
-      GlobalKey<AnimatedListState>(debugLabel: 'activeTorrentsListKey');
-  final GlobalKey<AnimatedListState> animatedQueuedTorrentsListKey =
-      GlobalKey<AnimatedListState>(debugLabel: 'queuedTorrentsListKey');
-  final GlobalKey<AnimatedListState> animatedInactiveTorrentsListKey =
-      GlobalKey<AnimatedListState>(debugLabel: 'inactiveTorrentsListKey');
-      
-
-  void addItemToAnimatedList(Torrent torrent) {
-    final listItems = torrent.active
-        ? filteredSortedActiveTorrents
-        : filteredSortedInactiveTorrents;
-    listItems.add(torrent);
-    sortAndFilterTorrents();
-    notifyListeners();
-  }
-
-  void removeItemFromAnimatedList(Either<QueuedTorrent, Torrent> torrent) {
-    torrent.either(
-        (queuedTorrent) => queuedTorrents.remove(queuedTorrent),
-        (torrent) => (torrent.active ? activeTorrents : inactiveTorrents)
-            .remove(torrent));
-    sortAndFilterTorrents();
-    notifyListeners();
-  }
-
   late Future<Map<String, dynamic>> _torrentsFuture;
   late Future<Map<String, dynamic>> _webDownloadsFuture;
   late Future<Map<String, dynamic>> _usenetFuture;
@@ -335,7 +309,18 @@ class DownloadsPageState extends ChangeNotifier {
       switch (item.runtimeType) {
         case Usenet:
           item = item as Usenet;
-
+          item.itemStatus = DownloadableItemStatus.loading;
+          notifyListeners();
+          final response = await action(item);
+          if (response!.success) {
+            item.itemStatus = DownloadableItemStatus.success;
+            if (actionIsDelete) {
+              webDownloads.remove(item); // not an animated list like below
+            }
+          } else {
+            item.itemStatus = DownloadableItemStatus.error;
+            item.errorMessage = "${response.detail} (${response.error})";
+          }
           break;
         case WebDownload:
           item = item as WebDownload;
@@ -360,8 +345,9 @@ class DownloadsPageState extends ChangeNotifier {
           if (response!.success) {
             torrent.status = TorrentStatus.success;
             if (actionIsDelete) {
-              removeItemFromAnimatedList(
-                  Right<QueuedTorrent, Torrent>(torrent));
+              (torrent.active ? activeTorrents : inactiveTorrents)
+                  .remove(torrent);
+              sortAndFilterTorrents();
             }
           } else {
             torrent.status = TorrentStatus.error;
@@ -377,8 +363,8 @@ class DownloadsPageState extends ChangeNotifier {
           if (response!.success) {
             queuedTorrent.status = TorrentStatus.success;
             if (actionIsDelete) {
-              removeItemFromAnimatedList(
-                  Left<QueuedTorrent, Torrent>(queuedTorrent));
+              queuedTorrents.remove(queuedTorrent);
+              sortAndFilterTorrents();
             }
           } else {
             queuedTorrent.status = TorrentStatus.error;
@@ -456,19 +442,40 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
-  void handleReorder(GlobalKey listKey, Either<Torrent, QueuedTorrent> item, int from, int to, List<Either<Torrent, QueuedTorrent>> newItems) {
-    if (listKey == animatedActiveTorrentsListKey) {
-        activeTorrents.remove(item.left);
-        activeTorrents.insert(to, item.left);
-    } else if (listKey == animatedQueuedTorrentsListKey) {
-      queuedTorrents.remove(item.right);
-      queuedTorrents.insert(to, item.right);
-    } else if (listKey == animatedInactiveTorrentsListKey) {
-      inactiveTorrents.remove(item.left);
-      inactiveTorrents.insert(to, item.left);
+  void handleActiveReorder(int oldIndex, int newIndex) {
+    if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = activeTorrents.removeAt(oldIndex);
+      activeTorrents.insert(newIndex, item);
+      sortAndFilterTorrents();
+      notifyListeners();
     }
-    // sortAndFilterTorrents();
-    notifyListeners();
+  }
+
+  void handleInactiveReorder(int oldIndex, int newIndex) {
+    if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = inactiveTorrents.removeAt(oldIndex);
+      inactiveTorrents.insert(newIndex, item);
+      sortAndFilterTorrents();
+      notifyListeners();
+    }
+  }
+
+  void handleQueuedReorder(int oldIndex, int newIndex) {
+    if (_selectedSortingOption == "Default") {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = queuedTorrents.removeAt(oldIndex);
+      queuedTorrents.insert(newIndex, item);
+      sortAndFilterTorrents();
+      notifyListeners();
+    }
   }
 
   static final Map<String, bool? Function(Torrent)> filters = {
