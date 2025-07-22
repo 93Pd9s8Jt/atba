@@ -223,7 +223,7 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '$successCount torrent(s) added successfully.'),
+                                '$successCount torrent${successCount != 1 ? "s" : ""} added successfully.'),
                           ),
                         );
                         Navigator.pop(context);

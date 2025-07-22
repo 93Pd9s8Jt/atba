@@ -49,9 +49,9 @@ class UsenetTab extends StatelessWidget {
             }
 
             return state.usenetDownloads.isNotEmpty ? ListView.builder(
-              itemCount: state.usenetDownloads.length,
+              itemCount: state.filteredSortedUsenetDownloads.length,
               itemBuilder: (context, index) {
-                final download = state.usenetDownloads[index];
+                final download = state.filteredSortedUsenetDownloads[index];
                 return DownloadableItemWidget(
                   item: download,
                 );

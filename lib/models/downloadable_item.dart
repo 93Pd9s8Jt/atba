@@ -114,5 +114,5 @@ class DownloadableFile {
 typedef SelectableItem = Object /* DownloadableItem | QueuedTorrent */;
 
 enum DownloadableItemStatus {
-  loading, success, error
+  idle, loading, success, error
 }

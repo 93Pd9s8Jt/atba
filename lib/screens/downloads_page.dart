@@ -6,7 +6,6 @@ import 'package:atba/models/widgets/downloads_page_tabs/web_downloads_tab.dart';
 import 'package:atba/models/widgets/downloads_page_tabs/usenet_tab.dart';
 import 'package:atba/models/widgets/downloads_page_tabs/add_tabs.dart';
 import 'package:atba/services/torbox_service.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -67,7 +66,7 @@ class _DownloadsPageState extends State<DownloadsPage>
                         IconButton(
                           icon: Icon(Icons.select_all),
                           onPressed: () {
-                            state.selectAllTorrents();
+                            state.selectAllItems();
                           },
                         ),
                         IconButton(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:collection/collection.dart';
 
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
@@ -21,26 +22,28 @@ class DownloadsPageState extends ChangeNotifier {
       Settings.getValue<String>("key-selected-main-filters",
           defaultValue: "[]")!)); // probably code be improved
 
-  late List<Usenet> usenetDownloads;
-  late List<WebDownload> webDownloads;
+  // late List<Usenet> usenetDownloads;
+  // late List<WebDownload> webDownloads;
 
-  late List<Torrent> activeTorrents;
-  late List<QueuedTorrent> queuedTorrents;
-  late List<Torrent> inactiveTorrents;
+  // late List<Torrent> activeTorrents;
+  // late List<QueuedTorrent> queuedTorrents;
+  // late List<Torrent> inactiveTorrents;
 
-  late List<Torrent> sortedActiveTorrents;
-  late List<Torrent> sortedInactiveTorrents;
-  late List<QueuedTorrent> sortedQueuedTorrents;
+  // late List<Torrent> sortedActiveTorrents;
+  // late List<Torrent> sortedInactiveTorrents;
+  // late List<QueuedTorrent> sortedQueuedTorrents;
 
-  late List<Torrent> filteredSortedActiveTorrents;
-  late List<Torrent> filteredSortedInactiveTorrents;
+  // late List<Torrent> filteredSortedActiveTorrents;
+  // late List<Torrent> filteredSortedInactiveTorrents;
+
+  List<DownloadableItem> _downloads = [];
 
   late Future<Map<String, dynamic>> _torrentsFuture;
   late Future<Map<String, dynamic>> _webDownloadsFuture;
   late Future<Map<String, dynamic>> _usenetFuture;
 
   bool isSelecting = false;
-  List<SelectableItem> selectedItems = [];
+  List<DownloadableItem> selectedItems = [];
   final BuildContext context;
 
   DownloadsPageState(this.context) {
@@ -55,6 +58,77 @@ class DownloadsPageState extends ChangeNotifier {
   Future<Map<String, dynamic>> get torrentsFuture => _torrentsFuture;
   Future<Map<String, dynamic>> get webDownloadsFuture => _webDownloadsFuture;
   Future<Map<String, dynamic>> get usenetFuture => _usenetFuture;
+
+  List<T> _getDownloads<T extends DownloadableItem>() =>
+      _downloads.whereType<T>().toList();
+
+  List<Torrent> get activeTorrents =>
+      _getDownloads<Torrent>().where((torrent) => torrent.active).toList();
+  List<Torrent> get inactiveTorrents =>
+      _getDownloads<Torrent>().where((torrent) => !torrent.active).toList();
+  List<QueuedTorrent> get queuedTorrents => _getDownloads<QueuedTorrent>();
+  List<WebDownload> get webDownloads => _getDownloads<WebDownload>();
+  List<Usenet> get usenetDownloads => _getDownloads<Usenet>();
+
+  
+  static bool _areQueuedTorrents(dynamic a, dynamic b) {
+    return a is QueuedTorrent && b is QueuedTorrent;
+  }
+
+  static Map<String, int? Function(DownloadableItem, DownloadableItem)> sortingOptions = {
+    "Default": (a, b) => null,
+    "A to Z": (a, b) => (handleTorrentName(a.name))
+        .toLowerCase()
+        .compareTo(handleTorrentName(b.name).toLowerCase()),
+    "Z to A": (a, b) => -(handleTorrentName(a.name))
+        .toLowerCase()
+        .compareTo(handleTorrentName(b.name).toLowerCase()),
+    "Largest": (a, b) =>
+        _areQueuedTorrents(a, b) ? null : -a.size.compareTo(b.size),
+    "Smallest": (a, b) =>
+        _areQueuedTorrents(a, b) ? null : a.size.compareTo(b.size),
+    "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
+    "Newest": (a, b) => -a.createdAt.compareTo(b.createdAt),
+    "Recently updated": (a, b) =>
+        _areQueuedTorrents(a, b) ? null : a.updatedAt.compareTo(b.updatedAt)
+  };
+
+  static final Map<String, bool? Function(DownloadableItem)> filters = {
+    "Download Ready": (torrent) => torrent.downloadFinished,
+    "Uploading": (torrent) => (torrent.uploadSpeed ?? 0) > 0 && torrent.active,
+    "Downloading": (torrent) =>
+        (torrent.downloadSpeed ?? 0) > 0 && torrent.active,
+    "Cached": (torrent) => torrent is Torrent ? torrent.cached : null,
+  };
+
+  List<T> _sortAndFilter<T extends DownloadableItem>(List<T> items) {
+    var sortedList = List<T>.from(items);
+    final sortingFunction = sortingOptions[_selectedSortingOption];
+    if (sortingFunction != null) {
+      sortedList.sort((a, b) => sortingFunction(a, b) ?? 0);
+    }
+    if (_selectedMainFilters.isEmpty) {
+      return sortedList;
+    }
+
+    return sortedList.where((item) {
+      return _selectedMainFilters.every((filterName) {
+        final filter = filters[filterName];
+        return filter != null ? filter(item) ?? true : true;
+      });
+    }).toList();
+  }
+
+  List<Torrent> get filteredSortedActiveTorrents =>
+      _sortAndFilter(activeTorrents);
+  List<Torrent> get filteredSortedInactiveTorrents =>
+      _sortAndFilter(inactiveTorrents);
+  List<QueuedTorrent> get filteredSortedQueuedTorrents =>
+      _sortAndFilter(queuedTorrents);
+  List<WebDownload> get filteredSortedWebDownloads =>
+      _sortAndFilter(webDownloads);
+  List<Usenet> get filteredSortedUsenetDownloads =>
+      _sortAndFilter(usenetDownloads);
 
   Future<void> refreshTorrents({bool bypassCache = false}) async {
     _torrentsFuture = _fetchTorrents(context);
@@ -81,7 +155,6 @@ class DownloadsPageState extends ChangeNotifier {
 
   void updateSortingOption(String option) {
     _selectedSortingOption = option;
-    sortAndFilterTorrents();
     notifyListeners();
     Future.microtask(() async {
       await Settings.setValue<String>(
@@ -116,19 +189,18 @@ class DownloadsPageState extends ChangeNotifier {
         };
       }
 
-      final postQueuedTorrents = (responses[0].data as List)
+      final List<Torrent> postQueuedTorrents = (responses[0].data as List)
           .map((json) => Torrent.fromJson(json))
           .toList();
 
-      queuedTorrents = (responses[1].data as List)
+      final List<QueuedTorrent> queuedTorrents = (responses[1].data as List)
           .map((json) => QueuedTorrent.fromJson(json))
           .toList();
-
-      activeTorrents =
-          postQueuedTorrents.where((torrent) => torrent.active).toList();
-      inactiveTorrents =
-          postQueuedTorrents.where((torrent) => !torrent.active).toList();
-      sortAndFilterTorrents();
+      _downloads.removeWhere((item) => item is Torrent || item is QueuedTorrent);
+      _downloads.addAll([
+        ...postQueuedTorrents,
+        ...queuedTorrents,
+      ]);
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -153,9 +225,11 @@ class DownloadsPageState extends ChangeNotifier {
           "detail": response.detail,
         };
       }
-      webDownloads = (response.data as List)
+      final List<WebDownload> webDownloads = (response.data as List)
           .map((json) => WebDownload.fromJson(json))
           .toList();
+      _downloads.removeWhere((item) => item is WebDownload);
+      _downloads.addAll(webDownloads);
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -180,8 +254,10 @@ class DownloadsPageState extends ChangeNotifier {
           "detail": response.detail,
         };
       }
-      usenetDownloads =
+      final List<Usenet> usenetDownloads =
           (response.data as List).map((json) => Usenet.fromJson(json)).toList();
+      _downloads.removeWhere((item) => item is Usenet);
+      _downloads.addAll(usenetDownloads);
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -195,38 +271,13 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  void _filterTorrents(List<Torrent> data) {
-    Map<String, Function> filtersCopy = Map.from(filters);
-    filtersCopy
-        .removeWhere((key, value) => !_selectedMainFilters.contains(key));
-    data.removeWhere(
-        (value) => !filtersCopy.values.every((element) => element(value)));
-  }
-
-  void applyFilters(List<Torrent> torrents) {
-    _filterTorrents(torrents);
-    notifyListeners();
-  }
-
-  void startSelection(SelectableItem item) {
-    assert(
-        item is QueuedTorrent ||
-            item is Torrent ||
-            item is Usenet ||
-            item is WebDownload,
-        'Item must be a valid selectable type');
+  void startSelection(DownloadableItem item) {
     selectedItems.add(item);
     isSelecting = true;
     notifyListeners();
   }
 
-  void toggleSelection(SelectableItem item) {
-    assert(
-        item is QueuedTorrent ||
-            item is Torrent ||
-            item is Usenet ||
-            item is WebDownload,
-        'Item must be a valid selectable type');
+  void toggleSelection(DownloadableItem item) {
     if (selectedItems.contains(item)) {
       selectedItems.remove(item);
       if (selectedItems.isEmpty) {
@@ -244,68 +295,143 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortAndFilterTorrents() {
-    sortedActiveTorrents = List<Torrent>.from(activeTorrents);
-    sortedInactiveTorrents = List<Torrent>.from(inactiveTorrents);
-    sortedQueuedTorrents = List<QueuedTorrent>.from(queuedTorrents);
-    _sortTorrents(sortedActiveTorrents);
-    _sortTorrents(sortedInactiveTorrents);
-    _sortQueuedTorrents(sortedQueuedTorrents);
-    filteredSortedActiveTorrents = List<Torrent>.from(sortedActiveTorrents);
-    filteredSortedInactiveTorrents = List<Torrent>.from(sortedInactiveTorrents);
-    _filterTorrents(filteredSortedActiveTorrents);
-    _filterTorrents(filteredSortedInactiveTorrents);
-  }
 
-  void _sortTorrents(List<Torrent> torrents) {
-    final sortingFunction = sortingOptions[_selectedSortingOption];
-    if (sortingFunction != null) {
-      torrents.sort((a, b) => sortingFunction(a, b) ?? 0);
+  // make sure only visible items are selected
+  void selectAllItems() {
+    // If only one type of item is selected, select all items of that type
+    // unless all items of that type are selected, then select all items
+    // types are inactive, active, queued, usenet, web download
+
+    // first, check if only one type of item is selected
+    final selectedTypes = selectedItems.map((item) {
+      if (item is Torrent) {
+        return item.active ? 'active' : 'inactive';
+      } else if (item is QueuedTorrent) {
+        return 'queued';
+      } else if (item is Usenet) {
+        return 'usenet';
+      } else if (item is WebDownload) {
+        return 'web';
+      } else {
+        throw Exception('Invalid selectable type');
+      }
+    }).toSet();
+
+    if (selectedTypes.length == 1) {
+      final type = selectedTypes.first;
+      late final List<DownloadableItem> newSelectedItems;
+      switch (type) {
+        case 'active':
+          newSelectedItems =
+              List<DownloadableItem>.from(filteredSortedActiveTorrents);
+          break;
+        case 'inactive':
+          newSelectedItems =
+              List<DownloadableItem>.from(filteredSortedInactiveTorrents);
+          break;
+        case 'queued':
+          newSelectedItems =
+              List<DownloadableItem>.from(filteredSortedQueuedTorrents);
+          break;
+        case 'usenet':
+          newSelectedItems =
+              List<DownloadableItem>.from(filteredSortedUsenetDownloads);
+          break;
+        case 'web':
+          newSelectedItems =
+              List<DownloadableItem>.from(filteredSortedWebDownloads);
+          break;
+      }
+      if (ListEquality().equals(newSelectedItems, selectedItems)) {
+        // If all items of that type are already selected, select all items
+        selectedItems = [
+          ...filteredSortedInactiveTorrents,
+          ...filteredSortedActiveTorrents,
+          ...filteredSortedQueuedTorrents,
+          ...filteredSortedUsenetDownloads,
+          ...filteredSortedWebDownloads,
+        ];
+      } else {
+        // Otherwise, select all items of that type
+        selectedItems = List<DownloadableItem>.from(newSelectedItems);
+      }
+    } else {
+      // If multiple types are selected, select all items of all types
+      selectedItems = [
+        ...filteredSortedInactiveTorrents,
+        ...filteredSortedActiveTorrents,
+        ...filteredSortedQueuedTorrents,
+        ...filteredSortedUsenetDownloads,
+        ...filteredSortedWebDownloads,
+      ];
     }
-  }
-
-  void _sortQueuedTorrents(List<QueuedTorrent> torrents) {
-    final sortingFunction = queuedSortingOptions[_selectedSortingOption];
-    if (sortingFunction != null) {
-      torrents.sort((a, b) => sortingFunction(a, b) ?? 0);
-    }
-  }
-
-  void selectAllTorrents() {
-    selectedItems = selectedItems = [
-      ...filteredSortedInactiveTorrents
-          .map((torrent) => Right<QueuedTorrent, Torrent>(torrent)),
-      ...filteredSortedActiveTorrents
-          .map((torrent) => Right<QueuedTorrent, Torrent>(torrent)),
-      ...sortedQueuedTorrents
-          .map((queuedTorrent) => Left<QueuedTorrent, Torrent>(queuedTorrent))
-    ];
     notifyListeners();
   }
 
   void invertSelection() {
-    selectedItems = [
-      ...filteredSortedInactiveTorrents
-          .map((torrent) => Right<QueuedTorrent, Torrent>(torrent)),
-      ...filteredSortedActiveTorrents
-          .map((torrent) => Right<QueuedTorrent, Torrent>(torrent)),
-      ...sortedQueuedTorrents
-          .map((queuedTorrent) => Left<QueuedTorrent, Torrent>(queuedTorrent))
-    ].where((torrent) => !selectedItems.contains(torrent)).toList();
+    // see above function - if constrained to just one set
+    final selectedTypes = selectedItems.map((item) {
+      if (item is Torrent) {
+        return item.active ? 'active' : 'inactive';
+      } else if (item is QueuedTorrent) {
+        return 'queued';
+      } else if (item is Usenet) {
+        return 'usenet';
+      } else if (item is WebDownload) {
+        return 'web';
+      } else {
+        throw Exception('Invalid selectable type');
+      }
+    }).toSet();
+    if (selectedTypes.length == 1) {
+      final type = selectedTypes.first;
+      switch (type) {
+        case 'active':
+          selectedItems = filteredSortedActiveTorrents
+              .where((item) => !selectedItems.contains(item))
+              .toList();
+          break;
+        case 'inactive':
+          selectedItems = filteredSortedInactiveTorrents
+              .where((item) => !selectedItems.contains(item))
+              .toList();
+          break;
+        case 'queued':
+          selectedItems = filteredSortedQueuedTorrents
+              .where((item) => !selectedItems.contains(item))
+              .toList();
+          break;
+        case 'usenet':
+          selectedItems = filteredSortedUsenetDownloads
+              .where((item) => !selectedItems.contains(item))
+              .toList();
+          break;
+        case 'web':
+          selectedItems = filteredSortedWebDownloads
+              .where((item) => !selectedItems.contains(item))
+              .toList();
+          break;
+      }
+    } else {
+      // If multiple types are selected, invert selection across all items
+      final allItems = [
+        ...filteredSortedInactiveTorrents,
+        ...filteredSortedActiveTorrents,
+        ...filteredSortedQueuedTorrents,
+        ...filteredSortedUsenetDownloads,
+        ...filteredSortedWebDownloads,
+      ];
+      selectedItems = allItems.where((item) => !selectedItems.contains(item)).toList();
+    }
     notifyListeners();
   }
 
   Future<void> _handleSelectedItems(
-      Future<TorboxAPIResponse>? Function(SelectableItem) action,
+      Future<TorboxAPIResponse>? Function(DownloadableItem) action,
       {bool actionIsDelete = false}) async {
     // Iterate over a copy to avoid concurrent modification errors
-    for (var item in List<SelectableItem>.from(selectedItems)) {
-      assert(
-          item is QueuedTorrent ||
-              item is Torrent ||
-              item is Usenet ||
-              item is WebDownload,
-          'Item must be a valid selectable type');
+    for (var item in List<DownloadableItem>.from(selectedItems)) {
+
       switch (item.runtimeType) {
         case Usenet:
           item = item as Usenet;
@@ -315,7 +441,7 @@ class DownloadsPageState extends ChangeNotifier {
           if (response!.success) {
             item.itemStatus = DownloadableItemStatus.success;
             if (actionIsDelete) {
-              webDownloads.remove(item); // not an animated list like below
+              _downloads.remove(item); 
             }
           } else {
             item.itemStatus = DownloadableItemStatus.error;
@@ -330,7 +456,7 @@ class DownloadsPageState extends ChangeNotifier {
           if (response!.success) {
             item.itemStatus = DownloadableItemStatus.success;
             if (actionIsDelete) {
-              webDownloads.remove(item); // not an animated list like below
+              _downloads.remove(item); // not an animated list like below
             }
           } else {
             item.itemStatus = DownloadableItemStatus.error;
@@ -345,9 +471,8 @@ class DownloadsPageState extends ChangeNotifier {
           if (response!.success) {
             torrent.status = TorrentStatus.success;
             if (actionIsDelete) {
-              (torrent.active ? activeTorrents : inactiveTorrents)
-                  .remove(torrent);
-              sortAndFilterTorrents();
+              _downloads.remove(torrent);
+              notifyListeners(); // refresh the getter
             }
           } else {
             torrent.status = TorrentStatus.error;
@@ -359,12 +484,12 @@ class DownloadsPageState extends ChangeNotifier {
           queuedTorrent.status = TorrentStatus.loading;
           notifyListeners();
           final response =
-              await action(Left<QueuedTorrent, Torrent>(queuedTorrent));
+              await action(queuedTorrent);
           if (response!.success) {
             queuedTorrent.status = TorrentStatus.success;
             if (actionIsDelete) {
               queuedTorrents.remove(queuedTorrent);
-              sortAndFilterTorrents();
+              notifyListeners(); // refresh the getter
             }
           } else {
             queuedTorrent.status = TorrentStatus.error;
@@ -376,8 +501,9 @@ class DownloadsPageState extends ChangeNotifier {
           throw Exception('Invalid selectable type');
       }
       notifyListeners();
-      clearSelection();
+      
     }
+    clearSelection();
   }
 
   Future<void> deleteSelectedItems() async {
@@ -442,49 +568,38 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
-  void handleActiveReorder(int oldIndex, int newIndex) {
-    if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-      final item = activeTorrents.removeAt(oldIndex);
-      activeTorrents.insert(newIndex, item);
-      sortAndFilterTorrents();
-      notifyListeners();
-    }
-  }
+  // void _handleActiveReorder(int oldIndex, int newIndex) {
+  //   if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
+  //     if (newIndex > oldIndex) {
+  //       newIndex -= 1;
+  //     }
+  //     final item = activeTorrents.removeAt(oldIndex);
+  //     activeTorrents.insert(newIndex, item);
+  //     notifyListeners();
+  //   }
+  // }
 
-  void handleInactiveReorder(int oldIndex, int newIndex) {
-    if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-      final item = inactiveTorrents.removeAt(oldIndex);
-      inactiveTorrents.insert(newIndex, item);
-      sortAndFilterTorrents();
-      notifyListeners();
-    }
-  }
+  // void _handleInactiveReorder(int oldIndex, int newIndex) {
+  //   if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
+  //     if (newIndex > oldIndex) {
+  //       newIndex -= 1;
+  //     }
+  //     final item = inactiveTorrents.removeAt(oldIndex);
+  //     inactiveTorrents.insert(newIndex, item);
+  //     notifyListeners();
+  //   }
+  // }
 
-  void handleQueuedReorder(int oldIndex, int newIndex) {
-    if (_selectedSortingOption == "Default") {
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-      final item = queuedTorrents.removeAt(oldIndex);
-      queuedTorrents.insert(newIndex, item);
-      sortAndFilterTorrents();
-      notifyListeners();
-    }
-  }
-
-  static final Map<String, bool? Function(Torrent)> filters = {
-    "Download Ready": (torrent) => torrent.downloadFinished,
-    "Uploading": (torrent) => (torrent.uploadSpeed ?? 0) > 0 && torrent.active,
-    "Downloading": (torrent) =>
-        (torrent.downloadSpeed ?? 0) > 0 && torrent.active,
-    "Cached": (torrent) => torrent.cached,
-  };
+  // void _handleQueuedReorder(int oldIndex, int newIndex) {
+  //   if (_selectedSortingOption == "Default") {
+  //     if (newIndex > oldIndex) {
+  //       newIndex -= 1;
+  //     }
+  //     final item = queuedTorrents.removeAt(oldIndex);
+  //     queuedTorrents.insert(newIndex, item);
+  //     notifyListeners();
+  //   }
+  // }
 
   static String handleTorrentName(String name) {
     if (Settings.getValue<bool>('key-use-torrent-name-parsing',
@@ -496,27 +611,6 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  static Map<String, int? Function(Torrent, Torrent)> sortingOptions = {
-    "Default": (a, b) => null,
-    "A to Z": (a, b) => (handleTorrentName(a.name))
-        .toLowerCase()
-        .compareTo(handleTorrentName(b.name).toLowerCase()),
-    "Z to A": (a, b) => -(handleTorrentName(a.name))
-        .toLowerCase()
-        .compareTo(handleTorrentName(b.name).toLowerCase()),
-    "Largest": (a, b) => -a.size.compareTo(b.size),
-    "Smallest": (a, b) => a.size.compareTo(b.size),
-    "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
-    "Newest": (a, b) => -a.createdAt.compareTo(b.createdAt),
-    "Recently updated": (a, b) => a.updatedAt.compareTo(b.updatedAt)
-  };
 
-  static Map<String, int? Function(QueuedTorrent, QueuedTorrent)>
-      queuedSortingOptions = {
-    "Default": (a, b) => null,
-    "A to Z": (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    "Z to A": (a, b) => -a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    "Oldest": (a, b) => a.createdAt.compareTo(b.createdAt),
-    "Newest": (a, b) => -a.createdAt.compareTo(b.createdAt),
-  };
+
 }

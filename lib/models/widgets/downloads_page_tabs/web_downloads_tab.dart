@@ -49,9 +49,9 @@ class WebDownloadsTab extends StatelessWidget {
             }
 
             return state.webDownloads.isNotEmpty ? ListView.builder(
-              itemCount: state.webDownloads.length,
+              itemCount: state.filteredSortedWebDownloads.length,
               itemBuilder: (context, index) {
-                final download = state.webDownloads[index];
+                final download = state.filteredSortedWebDownloads[index];
                 return DownloadableItemWidget(item: download);
               },
             ) : const Center(child: Text('No web downloads available'));

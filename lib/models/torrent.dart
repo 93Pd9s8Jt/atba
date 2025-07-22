@@ -242,7 +242,7 @@ class Torrent extends DownloadableItem {
   }
 }
 
-class QueuedTorrent extends DownloadableItem {
+class QueuedTorrent extends DownloadableItem { // Technically not downloadable though
   final String magnet;
   final String? torrentFileLink;
   final String hash;
