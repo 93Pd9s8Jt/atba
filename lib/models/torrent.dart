@@ -82,6 +82,9 @@ class Torrent extends DownloadableItem {
   final String? trackerMessage;
   TorrentStatus status = TorrentStatus.idle;
   @override
+  DownloadableItemStatus? itemStatus;
+  @override
+  @override
   String? errorMessage;
 
   Torrent({
@@ -175,6 +178,7 @@ class Torrent extends DownloadableItem {
     return response;
   }
 
+  @override
   Future<TorboxAPIResponse> reannounce() async {
     status = TorrentStatus.loading;
     final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.reannounce);
@@ -187,6 +191,7 @@ class Torrent extends DownloadableItem {
     return response;
   }
 
+  @override
   Future<TorboxAPIResponse> pause() async {
     status = TorrentStatus.loading;
     final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.pause);
@@ -199,6 +204,7 @@ class Torrent extends DownloadableItem {
     return response;
   }
 
+  @override
   Future<TorboxAPIResponse> resume() async {
     status = TorrentStatus.loading;
     final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.resume);
@@ -248,6 +254,9 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
   final String hash;
   final String type;
   TorrentStatus status = TorrentStatus.idle;
+  @override
+  DownloadableItemStatus? itemStatus;
+  @override
   @override
   String? errorMessage;
 
@@ -304,7 +313,8 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
     return response;
   }
 
-  Future<TorboxAPIResponse> start() async {
+  @override
+  Future<TorboxAPIResponse> resume() async {
     status = TorrentStatus.loading;
     final response = await DownloadableItem.apiService
         .controlQueuedItem(QueuedItemOperation.start, queuedId: id);

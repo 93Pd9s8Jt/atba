@@ -59,6 +59,10 @@ abstract class DownloadableItem {
   }
 
   Future<TorboxAPIResponse> delete();
+  Future<TorboxAPIResponse?> pause() async => null;
+  Future<TorboxAPIResponse?> resume() async => null;
+  Future<TorboxAPIResponse?> start() async => null;
+  Future<TorboxAPIResponse?> reannounce() async => null;
 
   Future<TorboxAPIResponse> download() async {
     final folderPath = Settings.getValue<String>("folder_path");

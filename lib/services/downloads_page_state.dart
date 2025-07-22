@@ -427,145 +427,50 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   Future<void> _handleSelectedItems(
-      Future<TorboxAPIResponse>? Function(DownloadableItem) action,
+      Future<TorboxAPIResponse?>? Function(DownloadableItem) action,
       {bool actionIsDelete = false}) async {
     // Iterate over a copy to avoid concurrent modification errors
     for (var item in List<DownloadableItem>.from(selectedItems)) {
-
-      switch (item.runtimeType) {
-        case Usenet:
-          item = item as Usenet;
-          item.itemStatus = DownloadableItemStatus.loading;
-          notifyListeners();
-          final response = await action(item);
-          if (response!.success) {
-            item.itemStatus = DownloadableItemStatus.success;
-            if (actionIsDelete) {
-              _downloads.remove(item); 
-            }
-          } else {
-            item.itemStatus = DownloadableItemStatus.error;
-            item.errorMessage = "${response.detail} (${response.error})";
-          }
-          break;
-        case WebDownload:
-          item = item as WebDownload;
-          item.itemStatus = DownloadableItemStatus.loading;
-          notifyListeners();
-          final response = await action(item);
-          if (response!.success) {
-            item.itemStatus = DownloadableItemStatus.success;
-            if (actionIsDelete) {
-              _downloads.remove(item); // not an animated list like below
-            }
-          } else {
-            item.itemStatus = DownloadableItemStatus.error;
-            item.errorMessage = "${response.detail} (${response.error})";
-          }
-          break;
-        case Torrent:
-          Torrent torrent = item as Torrent;
-          torrent.status = TorrentStatus.loading;
-          notifyListeners();
-          final response = await action(torrent);
-          if (response!.success) {
-            torrent.status = TorrentStatus.success;
-            if (actionIsDelete) {
-              _downloads.remove(torrent);
-              notifyListeners(); // refresh the getter
-            }
-          } else {
-            torrent.status = TorrentStatus.error;
-            torrent.errorMessage = "${response.detail} (${response.error})";
-          }
-          break;
-        case QueuedTorrent:
-          QueuedTorrent queuedTorrent = item as QueuedTorrent;
-          queuedTorrent.status = TorrentStatus.loading;
-          notifyListeners();
-          final response =
-              await action(queuedTorrent);
-          if (response!.success) {
-            queuedTorrent.status = TorrentStatus.success;
-            if (actionIsDelete) {
-              queuedTorrents.remove(queuedTorrent);
-              notifyListeners(); // refresh the getter
-            }
-          } else {
-            queuedTorrent.status = TorrentStatus.error;
-            queuedTorrent.errorMessage =
-                "${response.detail} (${response.error})";
-          }
-          break;
-        default:
-          throw Exception('Invalid selectable type');
-      }
+      item.itemStatus = DownloadableItemStatus.loading;
       notifyListeners();
-      
+      final response = await action(item);
+      if (response != null) {
+        if (response.success) {
+          item.itemStatus = DownloadableItemStatus.success;
+          if (actionIsDelete) {
+            _downloads.remove(item);
+          }
+        } else {
+          item.itemStatus = DownloadableItemStatus.error;
+          item.errorMessage = "${response.detail} (${response.error})";
+        }
+      } else {
+        item.itemStatus = DownloadableItemStatus.idle;
+      }
+
+      notifyListeners();
     }
     clearSelection();
   }
 
   Future<void> deleteSelectedItems() async {
-    await _handleSelectedItems((item) {
-      if (item is Usenet) {
-        return (item).delete();
-      } else if (item is WebDownload) {
-        return (item).delete();
-      } else if (item is QueuedTorrent) {
-        return (item).delete();
-      } else if (item is Torrent) {
-        return (item).delete();
-      } else {
-        throw Exception('Invalid selectable type');
-      }
-    }, actionIsDelete: true);
+    await _handleSelectedItems((item) => item.delete(), actionIsDelete: true);
   }
 
   Future<void> pauseSelectedItems() async {
-    await _handleSelectedItems((item) {
-      if (item is Torrent) {
-        return item.pause();
-      } else {
-        return null;
-      }
-    });
+    await _handleSelectedItems((item) => item.pause());
   }
 
   Future<void> resumeSelectedItems() async {
-    await _handleSelectedItems((item) {
-      if (item is Torrent) {
-        return item.resume();
-      } else if (item is QueuedTorrent) {
-        return item.start();
-      } else {
-        return null;
-      }
-    });
+    await _handleSelectedItems((item) => item.resume());
   }
 
   Future<void> reannounceSelectedItems() async {
-    await _handleSelectedItems((item) {
-      if (item is Torrent) {
-        return item.reannounce();
-      } else {
-        return null;
-      }
-    });
+    await _handleSelectedItems((item) => item.reannounce());
   }
 
   Future<void> downloadSelectedItems() async {
-    await _handleSelectedItems((item) {
-      if (item is Torrent) {
-        return item.download();
-      } else if (item is Usenet) {
-        return item.download();
-      } else if (item is WebDownload) {
-        return item.download();
-      } else {
-        return null;
-      }
-    });
+    await _handleSelectedItems((item) => item.download());
   }
 
   // void _handleActiveReorder(int oldIndex, int newIndex) {
