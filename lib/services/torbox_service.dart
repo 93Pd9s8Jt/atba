@@ -12,6 +12,7 @@ class TorboxAPI {
   final SecureStorageService secureStorageService;
 
   static const api_base = 'https://api.torbox.app';
+  static const search_api_base = 'https://search-api.torbox.app';
   static const api_version = 'v1';
 
   String? apiKey;
@@ -31,7 +32,10 @@ class TorboxAPI {
   Future<TorboxAPIResponse> makeRequest(String endpoint,
       {String method = "get",
       SuccessReturnType returnType = SuccessReturnType.jsonResponse,
-      Map<String, dynamic> body = const {}}) async {
+      Map<String, dynamic> body = const {},
+      String? baseUrl,
+      bool useMultipartRequestStream = false}) async {
+    baseUrl ??= this.baseUrl;
     apiKey ??= await secureStorageService.read('api_key');
     if (apiKey == null) {
       throw Exception(
@@ -59,7 +63,7 @@ class TorboxAPI {
             });
         break;
       case 'post':
-        if (body.values.any((value) => value is PlatformFile)) {
+        if (body.values.any((value) => value is PlatformFile) || useMultipartRequestStream) {
           var request = http.MultipartRequest('POST', url);
           for (String? key in body.keys) {
             if (key == null || body[key] == null || body[key] == "") continue;
@@ -112,7 +116,7 @@ class TorboxAPI {
 
     if (response.statusCode == 200) {
       if (returnType == SuccessReturnType.file) {
-        // todo: detect from content type
+        // TODO: detect from content type
         final directory = await getApplicationDocumentsDirectory();
         final filePath = '${directory.path}/torrent_${body['id']}.torrent';
         final file = File(filePath);
@@ -170,12 +174,12 @@ class TorboxAPI {
       String? torrentName,
       bool? asQueued}) async {
     assert(dotTorrentFile != null || magnetLink != null,
-        'Either dorTorrentFile or magnetLink must be provided');
+        'Either dotTorrentFile or magnetLink must be provided');
     assert(dotTorrentFile == null || magnetLink == null,
-        'Only one of dorTorrentFile or magnetLink can be provided');
-    return makeRequest('api/torrents/createtorrent', method: 'post', body: {
+        'Only one of dotTorrentFile or magnetLink can be provided');
+    return makeRequest('api/torrents/createtorrent', useMultipartRequestStream: true, method: 'post', body: {
       'file': dotTorrentFile,
-      'magnet_link': magnetLink,
+      'magnet': magnetLink,
       'seeding_preference': seedingPreference?.index,
       'allow_zipping': allowZipping,
       'torrent_name': torrentName,
@@ -273,6 +277,7 @@ class TorboxAPI {
         'Only one of nzbFile or link can be provided');
     return makeRequest('api/usenet/createusenetdownload',
         method: 'post',
+        useMultipartRequestStream: true,
         body: {
           'file': nzbFile,
           'link': link,
@@ -584,6 +589,122 @@ class TorboxAPI {
     });
   }
 
+  // #Search API
+
+  Future<TorboxAPIResponse> getMetadata(IdType idType, String id) async {
+    return makeRequest(
+      'meta/${idType.name}:$id',
+      method: 'get',
+      baseUrl: search_api_base,
+    );
+  }
+
+  Future<TorboxAPIResponse> searchMetadata(String query,
+      {SearchType? type}) async {
+    return makeRequest(
+      'search/$query',
+      method: 'get',
+      baseUrl: search_api_base,
+      body: {
+        'type': type?.name,
+      },
+    );
+  }
+
+  Future<TorboxAPIResponse> getTorrentsById(
+      IdType idType,
+      String id, {
+        bool? metadata,
+        int? season,
+        int? episode,
+        bool? checkCache,
+        bool? checkOwned,
+        bool? searchUserEngines,
+      }) async {
+    return makeRequest(
+      'torrents/${idType.name}:$id',
+      method: 'get',
+      baseUrl: search_api_base,
+      body: {
+        'metadata': metadata,
+        'season': season,
+        'episode': episode,
+        'check_cache': checkCache,
+        'check_owned': checkOwned,
+        'search_user_engines': searchUserEngines,
+      },
+    );
+  }
+
+  Future<TorboxAPIResponse> searchTorrents(
+      String query, {
+        bool? metadata,
+        bool? checkCache,
+        bool? checkOwned,
+        bool? searchUserEngines,
+      }) async {
+    return makeRequest(
+      'torrents/search/$query',
+      method: 'get',
+      baseUrl: search_api_base,
+      body: {
+        'metadata': metadata,
+        'check_cache': checkCache,
+        'check_owned': checkOwned,
+        'search_user_engines': searchUserEngines,
+      },
+    );
+  }
+
+  Future<TorboxAPIResponse> getUsenetById(
+      IdType idType,
+      String id, {
+        bool? metadata,
+        int? season,
+        int? episode,
+        bool? checkCache,
+        bool? checkOwned,
+        bool? searchUserEngines,
+      }) async {
+    return makeRequest(
+      'usenet/${idType.name}:$id',
+      method: 'get',
+      baseUrl: search_api_base,
+      body: {
+        'metadata': metadata,
+        'season': season,
+        'episode': episode,
+        'check_cache': checkCache,
+        'check_owned': checkOwned,
+        'search_user_engines': searchUserEngines,
+      },
+    );
+  }
+
+  Future<TorboxAPIResponse> searchUsenet(
+      String query, {
+        bool? metadata,
+        int? season,
+        int? episode,
+        bool? checkCache,
+        bool? checkOwned,
+        bool? searchUserEngines,
+      }) async {
+    return makeRequest(
+      'usenet/search/$query',
+      method: 'get',
+      baseUrl: search_api_base,
+      body: {
+        'metadata': metadata,
+        'season': season,
+        'episode': episode,
+        'check_cache': checkCache,
+        'check_owned': checkOwned,
+        'search_user_engines': searchUserEngines,
+      },
+    );
+  }
+
   Future<TorboxAPIResponse> controlQueuedItem(QueuedItemOperation operation,
       {int? queuedId, bool? all}) async {
     assert(queuedId != null || all != null,
@@ -833,6 +954,36 @@ extension QueuedItemOperationExtension on QueuedItemOperation {
         return 'delete';
       case QueuedItemOperation.start:
         return 'start';
+    }
+  }
+}
+
+enum IdType { imdb, tmdb, tvdb, mal }
+
+extension IdTypeExtension on IdType {
+  String get name {
+    switch (this) {
+      case IdType.imdb:
+        return 'imdb';
+      case IdType.tmdb:
+        return 'tmdb';
+      case IdType.tvdb:
+        return 'tvdb';
+      case IdType.mal:
+        return 'mal';
+    }
+  }
+}
+
+enum SearchType { media, file }
+
+extension SearchTypeExtension on SearchType {
+  String get name {
+    switch (this) {
+      case SearchType.media:
+        return 'media';
+      case SearchType.file:
+        return 'file';
     }
   }
 }

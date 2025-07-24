@@ -12,7 +12,7 @@ class WebDownloadsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        await state.refreshWebDownloads();
+        await state.refreshWebDownloads(bypassCache: true);
       },
       child: FutureBuilder(
         future: state.webDownloadsFuture,

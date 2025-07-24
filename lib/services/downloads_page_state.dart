@@ -4,7 +4,6 @@ import 'package:collection/collection.dart';
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torrent_name_parser.dart';
-import 'package:either_dart/either.dart';
 import 'package:flutter/material.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/webdownload.dart';
@@ -36,7 +35,7 @@ class DownloadsPageState extends ChangeNotifier {
   // late List<Torrent> filteredSortedActiveTorrents;
   // late List<Torrent> filteredSortedInactiveTorrents;
 
-  List<DownloadableItem> _downloads = [];
+  final List<DownloadableItem> _downloads = [];
 
   late Future<Map<String, dynamic>> _torrentsFuture;
   late Future<Map<String, dynamic>> _webDownloadsFuture;
@@ -131,19 +130,19 @@ class DownloadsPageState extends ChangeNotifier {
       _sortAndFilter(usenetDownloads);
 
   Future<void> refreshTorrents({bool bypassCache = false}) async {
-    _torrentsFuture = _fetchTorrents(context);
+    _torrentsFuture = _fetchTorrents(context, bypassCache: bypassCache);
     await _torrentsFuture;
     notifyListeners();
   }
 
   Future<void> refreshWebDownloads({bool bypassCache = false}) async {
-    _webDownloadsFuture = _fetchWebDownloads(context);
+    _webDownloadsFuture = _fetchWebDownloads(context, bypassCache: bypassCache);
     await _webDownloadsFuture;
     notifyListeners();
   }
 
   Future<void> refreshUsenet({bool bypassCache = false}) async {
-    _usenetFuture = _fetchUsenet(context);
+    _usenetFuture = _fetchUsenet(context, bypassCache: bypassCache);
     await _usenetFuture;
     notifyListeners();
   }
@@ -175,11 +174,11 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
-  Future<Map<String, dynamic>> _fetchTorrents(BuildContext context) async {
+  Future<Map<String, dynamic>> _fetchTorrents(BuildContext context, {bool bypassCache = false}) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
       final responses = await Future.wait(
-          [apiService.getTorrentsList(), apiService.getQueuedItemsList()]);
+          [apiService.getTorrentsList(bypassCache: bypassCache), apiService.getQueuedItemsList(bypassCache: bypassCache)]);
 
       if (!responses[0].success || !responses[1].success) {
         return {
@@ -214,10 +213,10 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> _fetchWebDownloads(BuildContext context) async {
+  Future<Map<String, dynamic>> _fetchWebDownloads(BuildContext context, {bool bypassCache = false}) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
-      final response = await apiService.getWebDownloadsList();
+      final response = await apiService.getWebDownloadsList(bypassCache: bypassCache);
 
       if (!response.success) {
         return {
@@ -243,10 +242,10 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> _fetchUsenet(BuildContext context) async {
+  Future<Map<String, dynamic>> _fetchUsenet(BuildContext context, {bool bypassCache = false}) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
-      final response = await apiService.getUsenetDownloadsList();
+      final response = await apiService.getUsenetDownloadsList(bypassCache: bypassCache);
 
       if (!response.success) {
         return {

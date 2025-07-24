@@ -373,14 +373,14 @@ class _DownloadsPageState extends State<DownloadsPage>
 
                         return SpeedDial(
                           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+                          activeChild: const Icon(Icons.close),
+                          direction: SpeedDialDirection.up,
+                          children: getSpeedDialChildren(),
                           child: IconCraft(
                             const Icon(Icons.add),
                             getFabIcon(),
                             alignment: const Alignment(1.5, 1.5),
                           ),
-                          activeChild: const Icon(Icons.close),
-                          direction: SpeedDialDirection.up,
-                          children: getSpeedDialChildren(),
                         );
                       },
                     ));

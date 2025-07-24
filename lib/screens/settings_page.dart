@@ -144,9 +144,7 @@ class SettingsPage extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                             content: Text(apiKey.isNotEmpty
-                                ? (response.detail.isNotEmpty
-                                    ? response.detail
-                                    : "unknown error")
+                                ? (response.detailOrUnknown)
                                 : 'API Key is required!')),
                       );
                     }

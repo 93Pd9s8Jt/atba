@@ -1,3 +1,5 @@
+import 'package:atba/models/torbox_api_response.dart';
+import 'package:atba/models/torrent.dart';
 import 'package:atba/services/torbox_service.dart' as torbox;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -80,11 +82,10 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
 
                       int successCount = 0;
                       for (var url in urls) {
-                        var response =
-                            await widget.apiService.makeRequest(
-                                'api/webdl/createwebdownload',
-                                method: 'post',
-                                body: {
+                        var response = await widget.apiService.makeRequest(
+                            'api/webdl/createwebdownload',
+                            method: 'post',
+                            body: {
                               "link": url.trim(),
                               "password": password,
                             });
@@ -176,7 +177,8 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                       if (magnetLinkController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Please enter at least one magnet link.'),
+                            content:
+                                Text('Please enter at least one magnet link.'),
                           ),
                         );
                         return;
@@ -192,16 +194,8 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
 
                       int successCount = 0;
                       for (var magnetLink in magnetLinks) {
-                        var response = await apiService.makeRequest(
-                          'api/torrents/createtorrent',
-                          method: 'post',
-                          body: {
-                            "magnet": magnetLink.trim(),
-                            "seed": null,
-                            "allow_zip": null,
-                            "name": null,
-                            "as_queued": null,
-                          },
+                        var response = await apiService.createTorrent(
+                          magnetLink: magnetLink.trim(),
                         );
                         if (response.success) {
                           successCount++;
@@ -219,7 +213,8 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                         _isLoading = false;
                       });
 
-                      if (successCount > 0 && successCount == magnetLinks.length) {
+                      if (successCount > 0 &&
+                          successCount == magnetLinks.length) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
@@ -278,8 +273,7 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
               icon: const Icon(Icons.upload_file),
               label: const Text('Select .torrent file'),
               onPressed: () async {
-                FilePickerResult? result =
-                    await FilePicker.platform.pickFiles(
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
                   type: FileType.custom,
                   allowedExtensions: ['torrent'],
                 );
@@ -294,17 +288,9 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
                     _isLoading = true;
                   });
 
-                  var response = await apiService.makeRequest(
-                    'api/torrents/createtorrent',
-                    method: 'post',
-                    body: {
-                      "file": file, // file is handled on api side
-                      "magnet": null,
-                      "seed": null,
-                      "allow_zip": null,
-                      "name": file.name,
-                      "as_queued": null,
-                    },
+                  var response = await apiService.createTorrent(
+                    dotTorrentFile: file, // file is handled on api side
+                    torrentName: file.name,
                   );
 
                   setState(() {
@@ -341,25 +327,17 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
   }
 }
 
-class AddSearchTorrentTab extends StatelessWidget {
+class AddSearchTorrentTab extends StatefulWidget {
   const AddSearchTorrentTab({super.key});
 
   @override
+  _AddSearchTorrentTabState createState() => _AddSearchTorrentTabState();
+}
+
+class _AddSearchTorrentTabState extends State<AddSearchTorrentTab> {
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Torrents'),
-      ),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            'Search for torrents directly within the app (coming soon).',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
+    return AddSearchTab(type: SearchTabType.torrent);
   }
 }
 
@@ -451,8 +429,7 @@ class _AddNzbLinkTabState extends State<AddNzbLinkTab> {
                       if (response.success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Usenet download added successfully'),
+                            content: Text('Usenet download added successfully'),
                           ),
                         );
                         Navigator.pop(context);
@@ -520,7 +497,8 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
                   : () async {
                       FilePickerResult? result =
                           await FilePicker.platform.pickFiles(
-                        type: FileType.any, // Should be more specific if possible
+                        type:
+                            FileType.any, // Should be more specific if possible
                       );
 
                       if (result != null) {
@@ -572,8 +550,7 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
             ),
             const SizedBox(height: 16),
             if (_fileName != null)
-              Text('Selected file: $_fileName',
-                  textAlign: TextAlign.center),
+              Text('Selected file: $_fileName', textAlign: TextAlign.center),
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.only(top: 16.0),
@@ -586,22 +563,138 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
   }
 }
 
-class AddUsenetSearchTab extends StatelessWidget {
+class AddUsenetSearchTab extends StatefulWidget {
   const AddUsenetSearchTab({super.key});
 
   @override
+  _AddUsenetSearchTabState createState() => _AddUsenetSearchTabState();
+}
+
+class _AddUsenetSearchTabState extends State<AddUsenetSearchTab> {
+  @override
   Widget build(BuildContext context) {
+    return AddSearchTab(type: SearchTabType.usenet);
+  }
+}
+
+class AddSearchTab extends StatefulWidget {
+  final SearchTabType type;
+  const AddSearchTab({super.key, required this.type});
+
+  @override
+  _AddSearchTabState createState() => _AddSearchTabState();
+}
+
+class _AddSearchTabState extends State<AddSearchTab> {
+  final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = false;
+  List<dynamic> _results = [];
+
+  @override
+  Widget build(BuildContext context) {
+    final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Usenet'),
+        title: Text('Search ${widget.type.pluralName}'),
       ),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            'Search for NZB files directly within the app (coming soon).',
-            textAlign: TextAlign.center,
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Search for ${widget.type.pluralName.toLowerCase()}',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () async {
+                    if (_searchController.text.isEmpty) {
+                      return;
+                    }
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    final response = await (widget.type == SearchTabType.torrent
+                        ? apiService.searchTorrents(
+                            _searchController.text,
+                          )
+                        : apiService.searchUsenet(
+                            _searchController.text,
+                          ));
+                    if (response.success) {
+                      setState(() {
+                        _results = response.data[widget.type.searchResultType];
+                        _isLoading = false;
+                      });
+                    } else {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Failed to search: ${response.detailOrUnknown}'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+            if (_isLoading)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _results.length,
+                  itemBuilder: (context, index) {
+                    final result =
+                        TorrentSearchResult.fromJson(_results[index]);
+                    return ListTile(
+                      title: Text(result.rawTitle),
+                      subtitle: Text(result.searchResultType ==
+                              SearchTabType.torrent
+                          ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
+                          : "${result.readableSize}"),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () async {
+                          final response = await (result.searchResultType ==
+                                  SearchTabType.torrent
+                              ? apiService.createTorrent(
+                                  magnetLink: result.magnetLink,
+                                  torrentName: result.title,
+                                )
+                              : apiService.createUsenetDownload(
+                                  link: result.nzbLink,
+                                  name: result.title,
+                                ));
+                          if (response.success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    '${result.searchResultType.name} added successfully'),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}'),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );

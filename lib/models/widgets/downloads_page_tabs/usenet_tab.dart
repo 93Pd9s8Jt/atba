@@ -12,7 +12,7 @@ class UsenetTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        await state.refreshUsenet();
+        await state.refreshUsenet(bypassCache: true);
       },
       child: FutureBuilder(
         future: state.usenetFuture,

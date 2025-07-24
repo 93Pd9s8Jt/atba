@@ -1,3 +1,4 @@
+import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/usenet.dart';
 import 'package:atba/models/webdownload.dart';
 import 'package:flutter/foundation.dart';
@@ -39,9 +40,7 @@ Future<void> main() async {
   final apiService = TorboxAPI(
     secureStorageService: secureStorageService,
   );
-  Torrent.initApiService(apiService);
-  WebDownload.initApiService(apiService);
-  Usenet.initApiService(apiService);
+  DownloadableItem.initApiService(apiService);
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
 
