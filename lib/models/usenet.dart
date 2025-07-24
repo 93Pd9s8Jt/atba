@@ -13,11 +13,6 @@ enum UsenetPostProcessing {
 }
 
 class Usenet extends DownloadableItem {
-  static late TorboxAPI apiService;
-
-  static void initApiService(TorboxAPI apiServicee) {
-    apiService = apiServicee;
-  }
 
   Usenet({
     required super.id,
@@ -69,7 +64,7 @@ class Usenet extends DownloadableItem {
 
   @override
   Future<TorboxAPIResponse> delete() async {
-    return await apiService.controlUsenetDownload(ControlUsenetType.delete, usenetId: id);
+    return await DownloadableItem.apiService.controlUsenetDownload(ControlUsenetType.delete, usenetId: id);
   }
 
   @override
@@ -78,7 +73,7 @@ class Usenet extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await apiService.getUsenetDownloadUrl(id, zipLink: true);
+    final response = await DownloadableItem.apiService.getUsenetDownloadUrl(id, zipLink: true);
     await FlutterDownloader.enqueue(
       url: response.data as String,
       savedDir: folderPath,

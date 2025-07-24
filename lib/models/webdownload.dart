@@ -44,11 +44,6 @@ import 'downloadable_item.dart';
 enum WebDownloadState { downloading, finished, error, unknown }
 
 class WebDownload extends DownloadableItem {
-  static late TorboxAPI apiService;
-
-  static void initApiService(TorboxAPI apiServicee) {
-    apiService = apiServicee;
-  }
 
   final WebDownloadState state;
   final String error;
@@ -110,7 +105,7 @@ class WebDownload extends DownloadableItem {
 
   @override
   Future<TorboxAPIResponse> delete() async {
-    return await apiService.controlWebDownload(ControlWebdlType.delete, webId: id);
+    return await DownloadableItem.apiService.controlWebDownload(ControlWebdlType.delete, webId: id);
   }
 
   @override
@@ -119,7 +114,7 @@ class WebDownload extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await apiService.getWebDownloadUrl(id, zipLink: true);
+    final response = await DownloadableItem.apiService.getWebDownloadUrl(id, zipLink: true);
     await FlutterDownloader.enqueue(
       url: response.data as String,
       savedDir: folderPath,

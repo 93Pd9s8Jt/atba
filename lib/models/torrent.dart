@@ -59,11 +59,6 @@ String getReadableSize(int size) {
 enum TorrentStatus { idle, loading, success, error }
 
 class Torrent extends DownloadableItem {
-  static late TorboxAPI apiService;
-
-  static void initApiService(TorboxAPI apiServicee) {
-    apiService = apiServicee;
-  }
 
   final String hash;
   final String? magnet;
@@ -168,7 +163,7 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> delete() async {
     status = TorrentStatus.loading;
-    final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.delete);
+    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.delete);
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -181,7 +176,7 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> reannounce() async {
     status = TorrentStatus.loading;
-    final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.reannounce);
+    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.reannounce);
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -194,7 +189,7 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> pause() async {
     status = TorrentStatus.loading;
-    final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.pause);
+    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.pause);
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -207,7 +202,7 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> resume() async {
     status = TorrentStatus.loading;
-    final response = await apiService.controlTorrent(torrentId: id, ControlTorrentType.resume);
+    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.resume);
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -218,12 +213,12 @@ class Torrent extends DownloadableItem {
   }
 
   Future<TorboxAPIResponse> exportAsMagnet() async {
-    final response = await apiService.exportTorrentData(id, ExportTorrentDataType.magnet);
+    final response = await DownloadableItem.apiService.exportTorrentData(id, ExportTorrentDataType.magnet);
     return response;
   }
 
   Future<TorboxAPIResponse> exportAsTorrent() async {
-    final response = await apiService.exportTorrentData(id, ExportTorrentDataType.torrentFile);
+    final response = await DownloadableItem.apiService.exportTorrentData(id, ExportTorrentDataType.torrentFile);
     return response; // data has path to file
   }
 
@@ -233,7 +228,7 @@ class Torrent extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await apiService.getTorrentDownloadUrl(id, zipLink: true);
+    final response = await DownloadableItem.apiService.getTorrentDownloadUrl(id, zipLink: true);
     if (!response.success) {
       return response; // Return early if the response is not successful
     }
