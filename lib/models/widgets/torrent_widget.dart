@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
@@ -103,12 +106,12 @@ class TorrentWidget extends StatelessWidget {
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
         leading: () {
-          switch (torrent.status) {
-            case TorrentStatus.loading:
+          switch (torrent.itemStatus) {
+            case DownloadableItemStatus.loading:
               return CircularProgressIndicator();
-            case TorrentStatus.success:
+            case DownloadableItemStatus.success:
               return Icon(Icons.check, color: Colors.green);
-            case TorrentStatus.error:
+            case DownloadableItemStatus.error:
               return Icon(Icons.error, color: Colors.red);
             default:
               return Icon(
@@ -117,19 +120,27 @@ class TorrentWidget extends StatelessWidget {
               );
           }
         }(),
-        title: Text(
-          Settings.getValue<bool>("key-use-torrent-name-parsing",
-                  defaultValue: false)!
-              ? ptn.parse(torrent.name)['title']
-              : torrent.name,
-        ).animate(target: isCensored ? 1 : 0).blur(),
+        title: ImageFiltered(
+          enabled: isCensored,
+          imageFilter: ImageFilter.blur(
+            sigmaX: 6,
+            sigmaY: 6,
+            tileMode: TileMode.decal,
+          ),
+          child: Text(
+            Settings.getValue<bool>("key-use-torrent-name-parsing",
+                    defaultValue: false)!
+                ? ptn.parse(torrent.name)['title']
+                : torrent.name,
+          ),
+        ),
         subtitle: () {
-          switch (torrent.status) {
-            case TorrentStatus.loading:
+          switch (torrent.itemStatus) {
+            case DownloadableItemStatus.loading:
               return Text('Loading...');
-            case TorrentStatus.success:
+            case DownloadableItemStatus.success:
               return Text('Success');
-            case TorrentStatus.error:
+            case DownloadableItemStatus.error:
               return Text('Error: ${torrent.errorMessage}');
             default:
               return Column(
@@ -171,7 +182,8 @@ class TorrentWidget extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   child: Text(_formatTimeDifference(
-                                      DateTime.now().difference(torrent.createdAt))),
+                                      DateTime.now()
+                                          .difference(torrent.createdAt))),
                                 ),
                               ],
                             )
@@ -271,7 +283,8 @@ class TorrentDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Status: ${torrent.downloadState}', style: TextStyle(fontSize: 18)),
+            Text('Status: ${torrent.downloadState}',
+                style: TextStyle(fontSize: 18)),
             if (torrent.progress < 1)
               Column(
                 children: [
@@ -280,11 +293,11 @@ class TorrentDetailScreen extends StatelessWidget {
                 ],
               ),
             SizedBox(height: 10),
-            Text('Size: ${getReadableSize(torrent.size)}', style: TextStyle(fontSize: 18)),
+            Text('Size: ${getReadableSize(torrent.size)}',
+                style: TextStyle(fontSize: 18)),
           ],
         ),
       ),
     );
   }
 }
-

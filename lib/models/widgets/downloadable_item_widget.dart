@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/services/downloads_page_state.dart';
@@ -14,13 +16,23 @@ class DownloadableItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSelected =
-        Provider.of<DownloadsPageState>(context).selectedItems.contains(item);
+    final state = Provider.of<DownloadsPageState>(context);
+    final isSelected = state.selectedItems.contains(item);
+    final isCensored = state.isTorrentNamesCensored;
+
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
-        title: Text(item.name),
-        subtitle: () { // switch neeeds to be wrapped in an instantly invoked function expression
+        title: ImageFiltered(
+            enabled: isCensored,
+            imageFilter: ImageFilter.blur(
+              sigmaX: 6,
+              sigmaY: 6,
+              tileMode: TileMode.decal,
+            ),
+            child: Text(item.name)),
+        subtitle: () {
+          // switch neeeds to be wrapped in an instantly invoked function expression
           switch (item.itemStatus) {
             case DownloadableItemStatus.loading:
               return Text('Loading...');
