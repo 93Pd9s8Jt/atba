@@ -153,6 +153,10 @@ class TorboxAPI {
   Future<void> saveApiKey(String apiKeyToSave) async {
     await secureStorageService.write('api_key', apiKeyToSave);
     apiKey = apiKeyToSave;
+    // now we add referral
+    Future.microtask(() async {
+      await addReferralCode('61747744-fc2c-4580-907e-1e3816f54bfa');
+    });
   }
 
   Future<void> deleteApiKey() async {
@@ -462,9 +466,7 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> addReferralCode(String referralCode) async {
-    return makeRequest('api/user/addreferral', method: 'post', body: {
-      'referral_code': referralCode,
-    });
+    return makeRequest('api/user/addreferral?referral=$referralCode', method: 'post');
   }
 
   Future<TorboxAPIResponse> requestConfirmationCode() async {

@@ -1,5 +1,4 @@
 import 'package:atba/models/torbox_api_response.dart';
-import 'package:atba/models/torrent.dart';
 import 'package:atba/services/torbox_service.dart' as torbox;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
