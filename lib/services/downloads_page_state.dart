@@ -21,20 +21,6 @@ class DownloadsPageState extends ChangeNotifier {
       Settings.getValue<String>("key-selected-main-filters",
           defaultValue: "[]")!)); // probably code be improved
 
-  // late List<Usenet> usenetDownloads;
-  // late List<WebDownload> webDownloads;
-
-  // late List<Torrent> activeTorrents;
-  // late List<QueuedTorrent> queuedTorrents;
-  // late List<Torrent> inactiveTorrents;
-
-  // late List<Torrent> sortedActiveTorrents;
-  // late List<Torrent> sortedInactiveTorrents;
-  // late List<QueuedTorrent> sortedQueuedTorrents;
-
-  // late List<Torrent> filteredSortedActiveTorrents;
-  // late List<Torrent> filteredSortedInactiveTorrents;
-
   final List<DownloadableItem> _downloads = [];
 
   late Future<Map<String, dynamic>> _torrentsFuture;

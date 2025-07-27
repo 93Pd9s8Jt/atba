@@ -26,7 +26,7 @@ class TorboxAPIResponse {
       detail != null && detail!.isNotEmpty ? detail! : 'Unknown error.';
 }
 
-class TorrentSearchResult {
+class SearchResult {
   final String hash;
   final String rawTitle;
   final String title;
@@ -44,7 +44,7 @@ class TorrentSearchResult {
   final String age; // XXd
   final bool userSearch; // whether it is returned by byoi
 
-  TorrentSearchResult({
+  SearchResult({
     required this.hash,
     required this.rawTitle,
     required this.title,
@@ -63,8 +63,8 @@ class TorrentSearchResult {
     required this.userSearch,
   });
 
-  factory TorrentSearchResult.fromJson(Map<String, dynamic> json) {
-    return TorrentSearchResult(
+  factory SearchResult.fromJson(Map<String, dynamic> json) {
+    return SearchResult(
       hash: json['hash'],
       rawTitle: json['raw_title'],
       title: json['title'],
@@ -84,8 +84,16 @@ class TorrentSearchResult {
     );
   }
 
-  get readableSize {
+  String get readableSize {
     return getReadableSize(size);
+  }
+
+  int get parsedAge {
+    // age is of form XXXXd
+    if (age.isEmpty) return 0;
+    assert(age.endsWith('d'), 'Age must end with "d"');
+    final days = int.tryParse(age.substring(0, age.length - 1)) ?? 0;
+    return days;
   }
 }
 

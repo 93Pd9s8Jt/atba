@@ -1,7 +1,9 @@
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart' as torbox;
+import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
 
 class AddWebDownloadsTab extends StatefulWidget {
@@ -587,7 +589,275 @@ class AddSearchTab extends StatefulWidget {
 class _AddSearchTabState extends State<AddSearchTab> {
   final TextEditingController _searchController = TextEditingController();
   bool _isLoading = false;
-  List<dynamic> _results = [];
+  bool _hasSearched = false;
+  List<SearchResult> _results = [];
+  List<SearchResult> _filteredResults = [];
+  List<SearchResult> _sortedFilteredResults = [];
+  late String _selectedSortingOption;
+  Map<String, List<dynamic>> _selectedFilters = {};
+  Set<String> _hasListItemFilters = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSortingOption = Settings.getValue<String>(
+      'search_${widget.type.name}_sorting',
+      defaultValue: 'Default',
+    )!;
+  }
+
+  static Map<String, int Function(SearchResult, SearchResult)> sortingOptions =
+      {
+    "Default": (a, b) => 0,
+    "A to Z": (a, b) =>
+        (a.rawTitle).toLowerCase().compareTo(b.rawTitle.toLowerCase()),
+    "Z to A": (a, b) =>
+        -(a.rawTitle).toLowerCase().compareTo(b.rawTitle.toLowerCase()),
+    "Largest": (a, b) => -a.size.compareTo(b.size),
+    "Smallest": (a, b) => a.size.compareTo(b.size),
+    "Most Seeders": (a, b) => -a.lastKnownSeeders.compareTo(b.lastKnownSeeders),
+    "Least Seeders": (a, b) => a.lastKnownSeeders.compareTo(b.lastKnownSeeders),
+    "Most Peers": (a, b) => -a.lastKnownPeers.compareTo(b.lastKnownPeers),
+    "Least Peers": (a, b) => a.lastKnownPeers.compareTo(b.lastKnownPeers),
+    "Oldest": (a, b) => a.age.compareTo(b.age),
+    "Newest": (a, b) => -a.age.compareTo(b.age),
+  };
+  void _applyFilters() {
+    _filteredResults = _results.where((result) {
+      for (var entry in _selectedFilters.entries) {
+        final filterType = entry.key;
+        final filterValues = entry.value;
+        final resultValue = result.titleParsedData[filterType];
+
+        if (_hasListItemFilters.contains(filterType)) {
+          // If the filter is a list, check if all of the values match
+          if (resultValue is List) {
+            if (!resultValue
+                .toSet()
+                .containsAll(filterValues.toSet())
+                ) {
+              return false;
+            }
+          } else if (!(resultValue == filterValues.first &&
+              filterValues.length == 1)) {
+            return false;
+          }
+        } else if (resultValue is List) {
+          if (resultValue.toSet().difference(filterValues.toSet()).isNotEmpty) {
+            return false;
+          }
+        } else if (!filterValues.contains(resultValue)) {
+          // if there are multiple values, AND will always return nothing, so we use OR
+          // For non-list values, perform a direct check
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+    _updateSortingOption(_selectedSortingOption, save: false);
+  }
+
+  void _updateSortingOption(String option, {bool save = true}) async {
+    final sortingFunction = sortingOptions[option];
+
+    setState(() {
+      _selectedSortingOption = option;
+      if (option != "Default") {
+        _sortedFilteredResults = List.from(_filteredResults);
+        _sortedFilteredResults.sort(sortingFunction);
+      } else {
+        _sortedFilteredResults = List.from(_filteredResults);
+      }
+    });
+
+    if (save) {
+      Future.microtask(() => {
+            Settings.setValue<String>(
+              'search_${widget.type.name}_sorting',
+              option,
+            )
+          });
+    }
+  }
+
+  Future<void> onSearch(torbox.TorboxAPI apiService) async {
+    if (_searchController.text.isEmpty) {
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+    });
+    final response = await (widget.type == SearchTabType.torrent
+        ? apiService.searchTorrents(
+            _searchController.text,
+          )
+        : apiService.searchUsenet(
+            _searchController.text,
+          ));
+    setState(() {
+      _hasSearched = true;
+    });
+
+    if (response.success) {
+      setState(() {
+        _results =
+            (response.data[widget.type.searchResultType] as List<dynamic>)
+                .where(
+                  (item) => [
+                    item["magnet"],
+                    item["nzb"],
+                    item["hash"],
+                    item["torrent"]
+                  ].any((link) => link != null),
+                )
+                .map((item) => SearchResult.fromJson(
+                      item,
+                    ))
+                .toList();
+        _applyFilters();
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to search: ${response.detailOrUnknown}'),
+        ),
+      );
+    }
+  }
+
+  void _showFilterBottomSheet(
+      BuildContext context,
+      void Function(Map<String, List<dynamic>>, Set<String>)
+          onFiltersChanged) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      builder: (context2) {
+        return Theme(
+          data: Theme.of(context).copyWith(),
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _buildFilters(context, setState, onFiltersChanged),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildFilters(
+      BuildContext context,
+      StateSetter setState,
+      void Function(
+              Map<String, List<dynamic>> filters, Set<String> listItemFilters)
+          onFiltersChanged) {
+    // we build the filters dynamically based on the parsed names
+    if (_results.isEmpty) {
+      return [
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text('No results to filter'),
+        ),
+      ];
+    }
+    final List<String> filterBlacklist = ["title", "excess", "size"];
+    final filterTypes = _results
+        .map((e) => e.titleParsedData.keys)
+        .expand((x) => x)
+        .toSet()
+        .where((x) => !filterBlacklist.contains(x))
+        .toList();
+    final Map<String, List<dynamic>> filterValues = {};
+    filterTypes.forEach((type) {
+      filterValues[type] = _results
+          .map((e) => e.titleParsedData[type])
+          .where((value) => value != null)
+          .toSet()
+          .toList();
+    });
+    return filterValues.entries.map((entry) {
+      final String type = entry.key;
+      final List<dynamic> values = entry.value;
+      final Set<Type> valuesTypes = values.map((e) => e.runtimeType).toSet();
+      if (const SetEquality().equals(valuesTypes, const {bool})) {
+        return CheckboxListTile(
+          title: Text(type.fromCamelCase(),
+              style: TextStyle(
+                  color: (_selectedFilters[type]?.isNotEmpty ?? false)
+                      ? Theme.of(context).colorScheme.primary
+                      : null)),
+          value: _selectedFilters[type]?.isNotEmpty ?? false,
+          onChanged: (bool? selected) {
+            setState(() {
+              if (selected == true) {
+                _selectedFilters[type] = [true];
+              } else {
+                _selectedFilters.remove(type);
+              }
+              onFiltersChanged(_selectedFilters, _hasListItemFilters);
+            });
+          },
+        );
+      } else {
+        bool hasListItems = false;
+        if (const SetEquality()
+            .equals(valuesTypes, const {List<dynamic>, String})) {
+          hasListItems = true;
+          _hasListItemFilters.add(type);
+        }
+        return ExpansionTile(
+          title: Text(type.fromCamelCase(),
+              style: TextStyle(
+                  color: (_selectedFilters[type]?.isNotEmpty ?? false)
+                      ? Theme.of(context).colorScheme.primary
+                      : null)),
+          children: [
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: (hasListItems
+                      ? values
+                          .map((x) => x is Iterable ? x : [x])
+                          .expand((x) => x)
+                          .toSet()
+                      : values)
+                  .map((value) {
+                return FilterChip(
+                  label: Text(value.toString()),
+                  selected: _selectedFilters[type]?.contains(value) ?? false,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        if (_selectedFilters[type] == null) {
+                          _selectedFilters[type] = [];
+                        }
+                        _selectedFilters[type]!.add(value);
+                      } else {
+                        _selectedFilters[type]?.remove(value);
+                        if (_selectedFilters[type]?.isEmpty ?? true) {
+                          _selectedFilters.remove(type);
+                        }
+                      }
+                    });
+                    onFiltersChanged(_selectedFilters, _hasListItemFilters);
+                  },
+                );
+              }).toList(),
+            ),
+          ],
+        );
+      }
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -595,7 +865,61 @@ class _AddSearchTabState extends State<AddSearchTab> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Search ${widget.type.pluralName}'),
+        title: Text(
+            'Search ${widget.type.pluralName}${_results.isNotEmpty ? ' (${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results)' : ''}'),
+        actions: [
+          MenuAnchor(
+            builder: (BuildContext context, MenuController controlller,
+                Widget? child) {
+              return IconButton(
+                icon: const Icon(Icons.sort),
+                onPressed: () {
+                  if (controlller.isOpen) {
+                    controlller.close();
+                  } else {
+                    controlller.open();
+                  }
+                },
+                tooltip: "Sort search results",
+              );
+            },
+            menuChildren: List<MenuItemButton>.generate(
+              sortingOptions.length,
+              (int index) => MenuItemButton(
+                onPressed: () {
+                  _updateSortingOption(sortingOptions.keys.elementAt(index));
+                  // Navigator.pop(context);
+                },
+                child: Row(
+                  children: [
+                    Text(sortingOptions.keys.elementAt(index)),
+                    if (_selectedSortingOption ==
+                        sortingOptions.keys.elementAt(index))
+                      Row(
+                        children: [
+                          SizedBox(width: 4),
+                          Icon(Icons.check,
+                              color: Theme.of(context).colorScheme.primary),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              _showFilterBottomSheet(context, (filters, listItemFilters) {
+                setState(() {
+                  _selectedFilters = filters;
+                  _hasListItemFilters = listItemFilters;
+                  _applyFilters();
+                });
+              });
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -603,42 +927,12 @@ class _AddSearchTabState extends State<AddSearchTab> {
           children: [
             TextField(
               controller: _searchController,
+              onSubmitted: (value) => onSearch(apiService),
               decoration: InputDecoration(
                 labelText: 'Search for ${widget.type.pluralName.toLowerCase()}',
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () async {
-                    if (_searchController.text.isEmpty) {
-                      return;
-                    }
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    final response = await (widget.type == SearchTabType.torrent
-                        ? apiService.searchTorrents(
-                            _searchController.text,
-                          )
-                        : apiService.searchUsenet(
-                            _searchController.text,
-                          ));
-                    if (response.success) {
-                      setState(() {
-                        _results = response.data[widget.type.searchResultType];
-                        _isLoading = false;
-                      });
-                    } else {
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Failed to search: ${response.detailOrUnknown}'),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                    icon: const Icon(Icons.search),
+                    onPressed: () => onSearch(apiService)),
               ),
             ),
             if (_isLoading)
@@ -647,55 +941,76 @@ class _AddSearchTabState extends State<AddSearchTab> {
                 child: const Center(child: CircularProgressIndicator()),
               )
             else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _results.length,
-                  itemBuilder: (context, index) {
-                    final result =
-                        TorrentSearchResult.fromJson(_results[index]);
-                    return ListTile(
-                      title: Text(result.rawTitle),
-                      subtitle: Text(result.searchResultType ==
-                              SearchTabType.torrent
-                          ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
-                          : "${result.readableSize}"),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () async {
-                          final response = await (result.searchResultType ==
-                                  SearchTabType.torrent
-                              ? apiService.createTorrent(
-                                  magnetLink: result.magnetLink,
-                                  torrentName: result.title,
-                                )
-                              : apiService.createUsenetDownload(
-                                  link: result.nzbLink,
-                                  name: result.title,
-                                ));
-                          if (response.success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    '${result.searchResultType.name} added successfully'),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}'),
-                              ),
-                            );
-                          }
+              (_hasSearched && _results.isNotEmpty)
+                  ? Expanded(
+                      child: ListView.builder(
+                        itemCount: _sortedFilteredResults.length,
+                        itemBuilder: (context, index) {
+                          final result = _sortedFilteredResults[index];
+                          return ListTile(
+                            title: Text(result.rawTitle),
+                            subtitle: Text(result.searchResultType ==
+                                    SearchTabType.torrent
+                                ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
+                                : "${result.readableSize}"),
+                            onTap: () async {
+                              final response = await (result.searchResultType ==
+                                      SearchTabType.torrent
+                                  ? apiService.createTorrent(
+                                      magnetLink: result.magnetLink ??
+                                          "magnet:?xt=urn:btih:${result.hash}&dn=${result.rawTitle}",
+                                      torrentName: result.title,
+                                    )
+                                  : apiService.createUsenetDownload(
+                                      link: result.nzbLink,
+                                      name: result.title,
+                                    ));
+                              if (response.success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        '${result.searchResultType.name} added successfully'),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}'),
+                                  ),
+                                );
+                              }
+                            },
+                          );
                         },
                       ),
-                    );
-                  },
-                ),
-              ),
+                    )
+                  : Center(
+                      child: Text(
+                        _hasSearched
+                            ? 'No results found for "${_searchController.text}"'
+                            : '',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
           ],
         ),
       ),
     );
+  }
+}
+
+extension StringExtension on String {
+  String capitalise() {
+    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+  }
+
+  String fromCamelCase() {
+    return this
+        .replaceAllMapped(
+          RegExp(r'([a-z])([A-Z])'),
+          (Match m) => "${m[1]} ${m[2]!.toLowerCase()}",
+        )
+        .capitalise();
   }
 }
