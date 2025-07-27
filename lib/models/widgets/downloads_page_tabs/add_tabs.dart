@@ -1001,16 +1001,22 @@ class _AddSearchTabState extends State<AddSearchTab> {
 }
 
 extension StringExtension on String {
+  static const Map<String, String> corrections = {
+    "Directors cut": "Director's cut",
+    "Fps": "FPS",
+    "Hdr": "HDR",
+  };
   String capitalise() {
     return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
   }
 
   String fromCamelCase() {
-    return this
+    final result = this
         .replaceAllMapped(
           RegExp(r'([a-z])([A-Z])'),
           (Match m) => "${m[1]} ${m[2]!.toLowerCase()}",
         )
         .capitalise();
+    return corrections[result] ?? result;
   }
 }
