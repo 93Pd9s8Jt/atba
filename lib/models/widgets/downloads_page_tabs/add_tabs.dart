@@ -777,13 +777,13 @@ class _AddSearchTabState extends State<AddSearchTab> {
         .where((x) => !filterBlacklist.contains(x))
         .toList();
     final Map<String, List<dynamic>> filterValues = {};
-    filterTypes.forEach((type) {
+    for (var type in filterTypes) {
       filterValues[type] = _results
           .map((e) => e.titleParsedData[type])
           .where((value) => value != null)
           .toSet()
           .toList();
-    });
+    }
     return filterValues.entries.map((entry) {
       final String type = entry.key;
       final List<dynamic> values = entry.value;
@@ -952,7 +952,7 @@ class _AddSearchTabState extends State<AddSearchTab> {
                             subtitle: Text(result.searchResultType ==
                                     SearchTabType.torrent
                                 ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
-                                : "${result.readableSize}"),
+                                : result.readableSize),
                             onTap: () async {
                               final response = await (result.searchResultType ==
                                       SearchTabType.torrent
@@ -1007,12 +1007,11 @@ extension StringExtension on String {
     "Hdr": "HDR",
   };
   String capitalise() {
-    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 
   String fromCamelCase() {
-    final result = this
-        .replaceAllMapped(
+    final result = replaceAllMapped(
           RegExp(r'([a-z])([A-Z])'),
           (Match m) => "${m[1]} ${m[2]!.toLowerCase()}",
         )
