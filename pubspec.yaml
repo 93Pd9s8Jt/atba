@@ -19,7 +19,7 @@ dependencies:
     sdk: flutter
   flutter_animate: ^4.5.2
   flutter_downloader: ^1.12.0
-  flutter_launcher_icons: ^0.14.3
+  flutter_launcher_icons: ^0.14.4
   flutter_screenutil: ^5.9.3
   flutter_secure_storage: ^9.2.4
   flutter_settings_screens: ^0.3.4
