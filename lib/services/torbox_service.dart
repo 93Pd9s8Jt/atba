@@ -131,17 +131,14 @@ class TorboxAPI {
           'data': response.body
         });
       } else {
-        final asciiBytes = response.bodyBytes;
-        final decodedData = utf8.decode(asciiBytes);
-        final responseData = jsonDecode(decodedData);
+        final responseData = jsonDecode(response.body);
         return TorboxAPIResponse.fromJson(responseData);
       }
     } else {
       // first attempt to parse as torbox response:
       try {
-        final asciiBytes = response.bodyBytes;
-        final decodedData = utf8.decode(asciiBytes);
-        final responseData = jsonDecode(decodedData);
+
+        final responseData = jsonDecode(response.body);
         return TorboxAPIResponse.fromJson(responseData);
       } catch (e) {
         // if parsing fails, return as http error
