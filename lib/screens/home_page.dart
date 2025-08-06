@@ -71,7 +71,11 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     initDeepLinks();
-    initHandleIntent();
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Only initialize sharing intent on mobile platforms
+       initHandleIntent();
+    }
+   
   }
 
   @override
