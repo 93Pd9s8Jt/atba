@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   android_intent_plus: ^5.3.0
+  app_links: ^6.4.0
   chewie: ^1.12.1
   collection: ^1.19.0
   crypto: ^3.0.6
@@ -27,6 +28,7 @@ dependencies:
   http: ^1.4.0
   icon_craft: ^0.1.1
   implicitly_animated_reorderable_list_2: ^0.6.0
+  listen_sharing_intent: ^1.9.2
   package_info_plus: ^8.3.0
   path_provider: ^2.1.5
   permission_handler: ^12.0.1
