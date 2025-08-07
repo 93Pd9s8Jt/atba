@@ -866,7 +866,7 @@ class _AddSearchTabState extends State<AddSearchTab> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            'Search ${widget.type.pluralName}${_results.isNotEmpty ? ' (${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results)' : ''}'),
+            _results.isNotEmpty ? ' ${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results' : ''),
         actions: [
           MenuAnchor(
             builder: (BuildContext context, MenuController controlller,
