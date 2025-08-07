@@ -1,3 +1,4 @@
+import 'package:atba/models/widgets/multi_value_change_observer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/services/torbox_service.dart';
@@ -106,7 +107,6 @@ class SettingsPage extends StatelessWidget {
         body: ListView(children: [
           SimpleSettingsTile(
             title: 'Account',
-            subtitle: 'Change or delete API key',
             leading: Icon(Icons.account_circle),
             child: SettingsScreen(
               title: 'Account settings',
@@ -165,18 +165,42 @@ class SettingsPage extends StatelessWidget {
               ],
             ),
           ),
-          CheckboxSettingsTile(
-            settingKey: 'key-use-torrent-name-parsing',
-            title: 'Use torrent name parsing',
-            defaultValue: true,
+          SimpleSettingsTile(
+            title: "Appearance",
+            leading: Icon(Icons.color_lens),
+            child: SettingsScreen(
+              title: 'Appearance settings',
+              children: <Widget>[
+                DropDownSettingsTile<String>(
+                  title: 'Theme',
+                  settingKey: 'key-theme',
+                  values: <String, String>{
+                    'system': 'System default',
+                    'light': 'Light',
+                    'dark': 'Dark',
+                  },
+                  selected: 'system',
+                ),
+                CheckboxSettingsTile(
+                  settingKey: 'key-use-material-3',
+                  title: 'Use Material3 theming',
+                  defaultValue: true,
+                ),
+                CheckboxSettingsTile(
+                  settingKey: 'key-use-torbox-font-family',
+                  title: 'Use torbox\'s dotted font',
+                  defaultValue: false,
+                ),
+              ],
+            ),
           ),
-          CheckboxSettingsTile(
-            settingKey: 'key-use-internal-video-player',
-            title: 'Use internal video player (very buggy)',
-            defaultValue: false,
-          ),
-          SettingsGroup(title: 'Torrentio', children: <Widget>[
-            ExpandableSettingsTile(
+          SimpleSettingsTile(
+            title: "Torrentio",
+            leading: Icon(Icons.language),
+            child: SettingsScreen(
+              title: 'Torrentio settings',
+              children: <Widget>[
+              ExpandableSettingsTile(
               title: "Providers",
               children: [
                 for (var provider in providers.keys)
@@ -249,7 +273,19 @@ class SettingsPage extends StatelessWidget {
                   }
                   return null;
                 }),
-          ]),
+          ],
+            ),
+          ),
+          CheckboxSettingsTile(
+            settingKey: 'key-use-torrent-name-parsing',
+            title: 'Use torrent name parsing',
+            defaultValue: true,
+          ),
+          CheckboxSettingsTile(
+            settingKey: 'key-use-internal-video-player',
+            title: 'Use internal video player (very buggy)',
+            defaultValue: false,
+          ),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {

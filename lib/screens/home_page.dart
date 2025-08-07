@@ -1,11 +1,13 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
 
+import 'package:atba/models/widgets/multi_value_change_observer.dart';
 import 'package:atba/services/torbox_service.dart' show TorboxAPI;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:app_links/app_links.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
 import 'package:listen_sharing_intent/listen_sharing_intent.dart';
 
@@ -18,36 +20,51 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        ColorScheme lightColorScheme;
-        ColorScheme darkColorScheme;
+    return MultiValueChangeObserver(
+      cacheKeysWithDefaultValues: {
+        "key-use-material-3": true,
+        "key-use-torbox-font-family": true,
+        "key-theme": "system", 
+      },
+      builder: (context, values) {
+        return DynamicColorBuilder(
+          builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+            ColorScheme lightColorScheme;
+            ColorScheme darkColorScheme;
 
-        if (lightDynamic != null && darkDynamic != null) {
-          lightColorScheme = lightDynamic;
-          darkColorScheme = darkDynamic;
-        } else {
-          lightColorScheme = ColorScheme.fromSeed(
-            seedColor: const Color.fromRGBO(0, 246, 33, 1),
-          );
-          darkColorScheme = ColorScheme.fromSeed(
-            seedColor: const Color.fromRGBO(0, 246, 33, 1),
-            brightness: Brightness.dark,
-          );
-        }
+            if (lightDynamic != null && darkDynamic != null) {
+              lightColorScheme = lightDynamic;
+              darkColorScheme = darkDynamic;
+            } else {
+              lightColorScheme = ColorScheme.fromSeed(
+                seedColor: const Color.fromRGBO(0, 246, 33, 1),
+              );
+              darkColorScheme = ColorScheme.fromSeed(
+                seedColor: const Color.fromRGBO(0, 246, 33, 1),
+                brightness: Brightness.dark,
+              );
+            }
 
-        return MaterialApp(
-          title: 'TorBox',
-          theme: ThemeData(
-            colorScheme: lightColorScheme,
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: darkColorScheme,
-            useMaterial3: true,
-          ),
-          themeMode: ThemeMode.system, // Use system theme (light or dark)
-          home: const MyHomePage(),
+            return MaterialApp(
+              title: 'TorBox',
+              theme: ThemeData(
+                colorScheme: lightColorScheme,
+                useMaterial3: values["key-use-material-3"],
+                fontFamily: (values["key-use-torbox-font-family"])
+                    ? 'torbox-dotted-all'
+                    : null,
+              ),
+              darkTheme: ThemeData(
+                colorScheme: darkColorScheme,
+                useMaterial3: values["key-use-material-3"],
+                fontFamily: (values["key-use-torbox-font-family"])
+                    ? 'torbox-dotted-all'
+                    : null,
+              ),
+              themeMode: ThemeMode.values[["system", "light", "dark"].indexOf(values["key-theme"])],
+              home: const MyHomePage(),
+            );
+          },
         );
       },
     );
@@ -73,9 +90,8 @@ class _MyHomePageState extends State<MyHomePage> {
     initDeepLinks();
     if (Platform.isAndroid || Platform.isIOS) {
       // Only initialize sharing intent on mobile platforms
-       initHandleIntent();
+      initHandleIntent();
     }
-   
   }
 
   @override
@@ -97,7 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
         size: await File(file.path).length(),
         bytes: await File(file.path).readAsBytes(),
       );
-      final response = await apiService.createTorrent(dotTorrentFile: platformFile);
+      final response =
+          await apiService.createTorrent(dotTorrentFile: platformFile);
       if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Torrent added successfully!')),
@@ -111,11 +128,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> initHandleIntent() async {
-    _intentSubscription = ReceiveSharingIntent.instance
-        .getMediaStream()
-        .listen((value) async {
-          await handleTorrentFiles(value);
-        }, onError: (err) {
+    _intentSubscription =
+        ReceiveSharingIntent.instance.getMediaStream().listen((value) async {
+      await handleTorrentFiles(value);
+    }, onError: (err) {
       print("getIntentDataStream error: $err");
     });
 
@@ -131,7 +147,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> initDeepLinks() async {
     // Handle links
     _linkSubscription = AppLinks().uriLinkStream.listen((uri) async {
-      if (uri.scheme != "magnet") return; // this will also catch opening files, but not sharing files, so we only use it for links
+      if (uri.scheme != "magnet")
+        return; // this will also catch opening files, but not sharing files, so we only use it for links
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Adding torrent from link: ${uri.toString()}')),

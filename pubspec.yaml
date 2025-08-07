@@ -23,7 +23,11 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_screenutil: ^5.9.3
   flutter_secure_storage: ^9.2.4
-  flutter_settings_screens: ^0.3.4
+  # TODO: Can use official release after merge of https://github.com/GAM3RG33K/flutter_settings_screens/pull/126, but library is unmaintained
+  flutter_settings_screens: 
+    git:
+      url: https://github.com/agersant/flutter_settings_screens.git
+      ref: nested
   flutter_speed_dial: ^7.0.0
   http: ^1.4.0
   icon_craft: ^0.1.1
@@ -51,3 +55,13 @@ flutter:
   assets:
     - assets/icons/
   uses-material-design: true
+  fonts:
+  - family: inter
+    fonts:
+      - asset: fonts/inter-Regular.ttf
+  - family: torbox-dotted
+    fonts:
+      - asset: fonts/torbox-dotted-Regular.ttf
+  - family: torbox-dotted-all
+    fonts:
+      - asset: fonts/torbox-dotted-all-Regular.ttf

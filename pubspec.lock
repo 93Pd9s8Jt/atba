@@ -321,10 +321,11 @@ packages:
   flutter_settings_screens:
     dependency: "direct main"
     description:
-      name: flutter_settings_screens
-      sha256: b9e5ff87537fceeb67012560db6ef4bb0ff7d7a031e8184e1689538756ca99a0
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: nested
+      resolved-ref: b795ae30565eb4c499a66abeb0fe8dd665b0b756
+      url: "https://github.com/agersant/flutter_settings_screens.git"
+    source: git
     version: "0.3.4"
   flutter_shaders:
     dependency: transitive
