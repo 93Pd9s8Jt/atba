@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
     return MultiValueChangeObserver(
       cacheKeysWithDefaultValues: {
         "key-use-material-3": true,
-        "key-use-torbox-font-family": true,
+        "key-use-torbox-font-family": false,
         "key-theme": "system", 
       },
       builder: (context, values) {
