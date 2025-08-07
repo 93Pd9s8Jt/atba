@@ -498,8 +498,8 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
                   : () async {
                       FilePickerResult? result =
                           await FilePicker.platform.pickFiles(
-                        type:
-                            FileType.any, // Should be more specific if possible
+                        type: FileType.custom,
+                        allowedExtensions: ['nzb'],
                       );
 
                       if (result != null) {
@@ -632,10 +632,7 @@ class _AddSearchTabState extends State<AddSearchTab> {
         if (_hasListItemFilters.contains(filterType)) {
           // If the filter is a list, check if all of the values match
           if (resultValue is List) {
-            if (!resultValue
-                .toSet()
-                .containsAll(filterValues.toSet())
-                ) {
+            if (!resultValue.toSet().containsAll(filterValues.toSet())) {
               return false;
             }
           } else if (!(resultValue == filterValues.first &&
@@ -729,10 +726,8 @@ class _AddSearchTabState extends State<AddSearchTab> {
     }
   }
 
-  void _showFilterBottomSheet(
-      BuildContext context,
-      void Function(Map<String, List<dynamic>>, Set<String>)
-          onFiltersChanged) {
+  void _showFilterBottomSheet(BuildContext context,
+      void Function(Map<String, List<dynamic>>, Set<String>) onFiltersChanged) {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -865,8 +860,9 @@ class _AddSearchTabState extends State<AddSearchTab> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            _results.isNotEmpty ? ' ${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results' : ''),
+        title: Text(_results.isNotEmpty
+            ? ' ${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results'
+            : ''),
         actions: [
           MenuAnchor(
             builder: (BuildContext context, MenuController controlller,
@@ -1012,10 +1008,9 @@ extension StringExtension on String {
 
   String fromCamelCase() {
     final result = replaceAllMapped(
-          RegExp(r'([a-z])([A-Z])'),
-          (Match m) => "${m[1]} ${m[2]!.toLowerCase()}",
-        )
-        .capitalise();
+      RegExp(r'([a-z])([A-Z])'),
+      (Match m) => "${m[1]} ${m[2]!.toLowerCase()}",
+    ).capitalise();
     return corrections[result] ?? result;
   }
 }
