@@ -44,7 +44,7 @@ jobs:
       - name: Update Version in pubspec.yaml
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          sed -i "s/^version:.*/version: $VERSION/" pubspec.yaml
+          sed -i "s/^version:.*/version: $VERSION+2001/" pubspec.yaml
 
       - name: Build split APKs
         run: flutter build apk --release --split-per-abi
