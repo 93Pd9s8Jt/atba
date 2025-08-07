@@ -3,6 +3,7 @@
     <application
         android:label="ATBA (debug)"
         android:name="${applicationName}"
+        android:banner="@drawable/banner"
         android:icon="@mipmap/ic_launcher"
         tools:replace="android:label">
         <provider
@@ -34,6 +35,7 @@
             />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- See https://github.com/llfbandit/app_links/blob/master/doc/README_android.md
@@ -105,4 +107,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-feature android:name="android.software.leanback"
+        android:required="false" /> <!-- doesn't only run on android tv -->
+    <uses-feature android:name="android.hardware.touchscreen"
+        android:required="false" />
 </manifest>

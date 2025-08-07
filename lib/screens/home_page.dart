@@ -7,7 +7,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:app_links/app_links.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
 import 'package:listen_sharing_intent/listen_sharing_intent.dart';
 
@@ -147,8 +146,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> initDeepLinks() async {
     // Handle links
     _linkSubscription = AppLinks().uriLinkStream.listen((uri) async {
-      if (uri.scheme != "magnet")
+      if (uri.scheme != "magnet") {
         return; // this will also catch opening files, but not sharing files, so we only use it for links
+      }
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Adding torrent from link: ${uri.toString()}')),
