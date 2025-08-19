@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   android_intent_plus: ^5.3.0
-  app_links: ^6.4.0
+  app_links: ^6.4.1
   chewie: ^1.12.1
   collection: ^1.19.0
   crypto: ^3.0.6
