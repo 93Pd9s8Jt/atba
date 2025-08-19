@@ -33,7 +33,7 @@ dependencies:
   icon_craft: ^0.1.1
   implicitly_animated_reorderable_list_2: ^0.6.0
   listen_sharing_intent: ^1.9.2
-  package_info_plus: ^8.3.0
+  package_info_plus: ^8.3.1
   path_provider: ^2.1.5
   permission_handler: ^12.0.1
   provider: ^6.1.5
