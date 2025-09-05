@@ -87,7 +87,7 @@ class PermissionModel {
   }
 
   Future<bool> isPathOnSdCard(String path) async {
-    // only works on Android - todo: make cross platform
+    // only works on Android - TODO: make cross platform
     return !path.startsWith("/storage/emulated/0/");
   }
 }

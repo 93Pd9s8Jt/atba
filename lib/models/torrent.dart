@@ -241,6 +241,26 @@ class Torrent extends DownloadableItem {
     );
     return response;
   }
+
+  @override
+  Future<TorboxAPIResponse> downloadFile(DownloadableFile file) async {
+    final folderPath = Settings.getValue<String>("folder_path");
+    if (folderPath == null) {
+      throw Exception('Folder path not set');
+    }
+    final response = await DownloadableItem.apiService.getTorrentDownloadUrl(id, fileId: file.id);
+    if (!response.success) {
+      return response;
+    }
+    await FlutterDownloader.enqueue(
+      url: response.data as String,
+      savedDir: folderPath,
+      fileName: file.name.split('/').last,
+      showNotification: true,
+      openFileFromNotification: true,
+    );
+    return response;
+  }
 }
 
 class QueuedTorrent extends DownloadableItem { // Technically not downloadable though

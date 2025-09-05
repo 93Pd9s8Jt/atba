@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart' show Settings;
 import 'package:http/http.dart' as http;
 import 'secure_storage_service.dart';
 import '../models/torbox_api_response.dart';
@@ -161,6 +162,19 @@ class TorboxAPI {
     apiKey = null;
   }
 
+  Future<void> saveGoogleToken(String token, String UnixExpiryDate) async {
+    await secureStorageService.write('google_drive_token', token);
+    await Settings.setValue('google_drive_token_expiry', UnixExpiryDate);
+  }
+
+  Future<String?> getGoogleToken() async {
+    return await secureStorageService.read('google_drive_token');
+  }
+
+  Future<void> deleteGoogleToken() async {
+    await secureStorageService.delete('google_drive_token');
+  }
+
   // Wrapper for the api calls
 
   // MAIN
@@ -250,7 +264,7 @@ class TorboxAPI {
             ? SuccessReturnType.file
             : SuccessReturnType.jsonResponse,
         body: {
-          'id': torrentId,
+          'torrent_id': torrentId,
           'type': exportType.name,
         });
   }

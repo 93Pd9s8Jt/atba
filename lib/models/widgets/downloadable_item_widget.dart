@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
+import 'package:atba/models/widgets/downloadable_item_detail_screen.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -46,12 +47,19 @@ class DownloadableItemWidget extends StatelessWidget {
         }(),
         trailing: Text(getReadableSize(item.size)),
         onLongPress: () {
-          Provider.of<DownloadsPageState>(context, listen: false)
-              .startSelection(item);
+          state.startSelection(item);
         },
         onTap: () {
-          Provider.of<DownloadsPageState>(context, listen: false)
-              .toggleSelection(item);
+          if (state.isSelecting) {
+            state.toggleSelection(item);
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DownloadableItemDetailScreen(item: item),
+              ),
+            );
+          }
         },
       ),
     );

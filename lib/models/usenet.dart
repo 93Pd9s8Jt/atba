@@ -13,7 +13,6 @@ enum UsenetPostProcessing {
 }
 
 class Usenet extends DownloadableItem {
-
   Usenet({
     required super.id,
     required super.name,
@@ -51,7 +50,9 @@ class Usenet extends DownloadableItem {
       uploadSpeed: json['upload_speed'],
       eta: json['eta'],
       torrentFile: json['torrent_file'],
-      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'])
+          : null,
       downloadPresent: json['download_present'],
       downloadFinished: json['download_finished'],
       files: (json['files'] as List)
@@ -64,7 +65,8 @@ class Usenet extends DownloadableItem {
 
   @override
   Future<TorboxAPIResponse> delete() async {
-    return await DownloadableItem.apiService.controlUsenetDownload(ControlUsenetType.delete, usenetId: id);
+    return await DownloadableItem.apiService
+        .controlUsenetDownload(ControlUsenetType.delete, usenetId: id);
   }
 
   @override
@@ -73,11 +75,33 @@ class Usenet extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await DownloadableItem.apiService.getUsenetDownloadUrl(id, zipLink: true);
+    final response = await DownloadableItem.apiService
+        .getUsenetDownloadUrl(id, zipLink: true);
     await FlutterDownloader.enqueue(
       url: response.data as String,
       savedDir: folderPath,
       fileName: "$name.zip",
+      showNotification: true,
+      openFileFromNotification: true,
+    );
+    return response;
+  }
+
+  @override
+  Future<TorboxAPIResponse> downloadFile(DownloadableFile file) async {
+    final folderPath = Settings.getValue<String>("folder_path");
+    if (folderPath == null) {
+      throw Exception('Folder path not set');
+    }
+    final response = await DownloadableItem.apiService
+        .getUsenetDownloadUrl(id, fileId: file.id);
+    if (!response.success) {
+      return response;
+    }
+    await FlutterDownloader.enqueue(
+      url: response.data as String,
+      savedDir: folderPath,
+      fileName: file.name,
       showNotification: true,
       openFileFromNotification: true,
     );

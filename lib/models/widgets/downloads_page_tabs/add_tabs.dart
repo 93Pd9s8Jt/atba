@@ -961,20 +961,22 @@ class _AddSearchTabState extends State<AddSearchTab> {
                                       link: result.nzbLink,
                                       name: result.title,
                                     ));
-                              if (response.success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        '${result.searchResultType.name} added successfully'),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}'),
-                                  ),
-                                );
+                              if (mounted) { // TODO: fix properly - currently nothing will be shown if the user navigates away too soon
+                                if (response.success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          '${result.searchResultType.name} added successfully'),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}'),
+                                    ),
+                                  );
+                                }
                               }
                             },
                           );

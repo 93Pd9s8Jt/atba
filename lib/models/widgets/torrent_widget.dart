@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
+import 'package:atba/models/widgets/torrent_detail_screen.dart';
 import 'package:atba/services/downloads_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
 import 'package:flutter/material.dart';
@@ -203,6 +204,13 @@ class TorrentWidget extends StatelessWidget {
         onTap: () {
           if (state.isSelecting) {
             state.toggleSelection(torrent);
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TorrentDetailScreen(torrent: torrent),
+              ),
+            );
           }
         },
         onLongPress: () {
@@ -261,43 +269,12 @@ class QueuedTorrentWidget extends StatelessWidget {
           state.startSelection(torrent);
         },
         onTap: () {
-          state.toggleSelection(torrent);
+          if (state.isSelecting) {
+            state.toggleSelection(torrent);
+          } // tapping should do nothing, there are no details to show
         },
       ),
     );
   }
 }
 
-class TorrentDetailScreen extends StatelessWidget {
-  final Torrent torrent;
-  const TorrentDetailScreen({super.key, required this.torrent});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(torrent.name),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Status: ${torrent.downloadState}',
-                style: TextStyle(fontSize: 18)),
-            if (torrent.progress < 1)
-              Column(
-                children: [
-                  SizedBox(height: 10),
-                  LinearProgressIndicator(value: torrent.progress),
-                ],
-              ),
-            SizedBox(height: 10),
-            Text('Size: ${getReadableSize(torrent.size)}',
-                style: TextStyle(fontSize: 18)),
-          ],
-        ),
-      ),
-    );
-  }
-}

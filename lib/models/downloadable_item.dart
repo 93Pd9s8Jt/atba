@@ -1,7 +1,5 @@
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 abstract class DownloadableItem {
   static late TorboxAPI apiService;
@@ -64,22 +62,11 @@ abstract class DownloadableItem {
   Future<TorboxAPIResponse?> start() async => null;
   Future<TorboxAPIResponse?> reannounce() async => null;
 
-  Future<TorboxAPIResponse> download() async {
-    final folderPath = Settings.getValue<String>("folder_path");
-    if (folderPath == null) {
-      throw Exception('Folder path not set');
-    }
-    final response = await apiService.getWebDownloadUrl(id, zipLink: true);
-    await FlutterDownloader.enqueue(
-      url: response.data as String,
-      savedDir: folderPath,
-      fileName: "$name.zip",
-      showNotification: true,
-      openFileFromNotification: true,
-    );
-    return response;
-  }
+  Future<TorboxAPIResponse?> download() async => null;
+  Future<TorboxAPIResponse?> downloadFile(DownloadableFile file) async => null;
+
 }
+
 
 class DownloadableFile {
   final int id;
@@ -112,10 +99,6 @@ class DownloadableFile {
     );
   }
 }
-
-/// Union type for selectable items in the UI.
-/// Add more types as needed.
-typedef SelectableItem = Object /* DownloadableItem | QueuedTorrent */;
 
 enum DownloadableItemStatus {
   idle, loading, success, error
