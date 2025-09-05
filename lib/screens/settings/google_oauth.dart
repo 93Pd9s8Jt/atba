@@ -26,15 +26,8 @@ class _GoogleDriveIntegrationSectionState
 
   @override
   void initState() {
+    googleToken = widget.apiService.googleToken ?? "";
     super.initState();
-    _loadGoogleToken();
-  }
-
-  Future<void> _loadGoogleToken() async {
-    final token = (await widget.apiService.getGoogleToken()) ?? "";
-    setState(() {
-      googleToken = token;
-    });
   }
 
   void _onTokenChanged(String token) {
@@ -48,9 +41,7 @@ class _GoogleDriveIntegrationSectionState
     return ExpandableSettingsTile(
       title: "Google Drive",
       leading: Icon(Icons.drive_file_move),
-      subtitle: googleToken == null
-          ? "Loading..."
-          : (googleToken!.isNotEmpty ? "Connected" : "Not connected"),
+      subtitle: (googleToken == null || googleToken!.isEmpty) ? "Not connected" : "Connected",
       children: [
         ListTile(
             title: Text((googleToken == null || googleToken!.isEmpty)
@@ -74,7 +65,7 @@ class _GoogleDriveIntegrationSectionState
                     ),
                     initialUrlRequest: URLRequest(
                         url: WebUri(
-                            'https://api.torbox.app/v1/api/integration/oauth/google')),
+                            'https://api.torbox.app/v1/api/integration/oauth/google')), // TODO: store in apiService as a const
                     onUpdateVisitedHistory: (controller, url, isReload) async {
                       if (url == null) return;
                       if (url.host == "torbox.app" &&

@@ -17,6 +17,7 @@ class TorboxAPI {
   static const api_version = 'v1';
 
   String? apiKey;
+  String? googleToken;
 
   final String baseUrl;
 
@@ -28,6 +29,7 @@ class TorboxAPI {
 
   Future<void> init() async {
     apiKey = await secureStorageService.read('api_key');
+    googleToken = await getGoogleToken();
   }
 
   Future<TorboxAPIResponse> makeRequest(String endpoint,
@@ -165,6 +167,7 @@ class TorboxAPI {
   Future<void> saveGoogleToken(String token, String UnixExpiryDate) async {
     await secureStorageService.write('google_drive_token', token);
     await Settings.setValue('google_drive_token_expiry', UnixExpiryDate);
+    googleToken = token;
   }
 
   Future<String?> getGoogleToken() async {
@@ -173,6 +176,8 @@ class TorboxAPI {
 
   Future<void> deleteGoogleToken() async {
     await secureStorageService.delete('google_drive_token');
+    await Settings.setValue('google_drive_token_expiry', null);
+    googleToken = null;
   }
 
   // Wrapper for the api calls

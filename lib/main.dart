@@ -32,11 +32,15 @@ Future<void> main() async {
   final secureStorageService = SecureStorageService();
 
   final isFirstRun = sharedPrefsService.getString('isFirstRun') == null;
-  final apiKey = await secureStorageService.read('api_key');
+  
 
   final apiService = TorboxAPI(
     secureStorageService: secureStorageService,
   );
+  await apiService.init();
+
+  final hasApiKey = apiService.apiKey != null;
+
   DownloadableItem.initApiService(apiService);
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
@@ -57,7 +61,7 @@ Future<void> main() async {
           )..initializeApp(),
         ),
       ],
-      child: AtbaApp(isFirstRun: isFirstRun, apiKey: apiKey),
+      child: AtbaApp(isFirstRun: isFirstRun, hasApiKey: hasApiKey),
     ),
   );
 }
@@ -70,8 +74,8 @@ Future<void> initSettings() async {
 
 class AtbaApp extends StatelessWidget {
   final bool isFirstRun;
-  final String? apiKey;
-  const AtbaApp({required this.isFirstRun, required this.apiKey, super.key});
+  final bool hasApiKey;
+  const AtbaApp({required this.isFirstRun, required this.hasApiKey, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +123,7 @@ class AtbaApp extends StatelessWidget {
                   ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
               themeMode: ThemeMode.system,
               home: isFirstRun
-                  ? (apiKey == null ? ApiKeyScreen() : const HomeScreen())
+                  ? (hasApiKey ? const HomeScreen() : ApiKeyScreen())
                   : const HomeScreen(),
             );
           },
