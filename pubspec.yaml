@@ -30,7 +30,7 @@ dependencies:
       url: https://github.com/agersant/flutter_settings_screens.git
       ref: nested
   flutter_speed_dial: ^7.0.0
-  http: ^1.4.0
+  http: ^1.5.0
   icon_craft: ^0.1.1
   implicitly_animated_reorderable_list_2: ^0.6.0
   listen_sharing_intent: ^1.9.2
