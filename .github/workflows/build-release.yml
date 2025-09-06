@@ -77,6 +77,7 @@ jobs:
           prerelease: false
 
   build-and-release-ios:
+    if: false  
     name: Build and Release iOS IPA (Experimental)
     runs-on: macos-latest
 
