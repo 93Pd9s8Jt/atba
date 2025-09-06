@@ -1,8 +1,10 @@
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
+import 'package:atba/services/torbox_service.dart';
 import 'package:atba/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class TorrentDetailScreen extends StatelessWidget {
   final Torrent torrent;
@@ -10,6 +12,7 @@ class TorrentDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final apiService = Provider.of<TorboxAPI>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text("Details"),
@@ -119,6 +122,35 @@ class TorrentDetailScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                       ],
+                      // Download with integrations (google drive, etc)
+                      if (apiService.googleToken != null &&
+                          apiService.googleToken!.isNotEmpty) ...[
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                                icon: Icon(Icons.drive_file_move),
+                                label: Text("Download with Google Drive"),
+                                onPressed: () async {
+                                  final response =
+                                      await apiService.queueIntegration(
+                                          QueueableIntegration.google,
+                                          torrent.id,
+                                          zip: true,
+                                          type: IntegrationFileType.torrent);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(response.success
+                                            ? 'Torrent queued for Google Drive'
+                                            : 'Failed to queue torrent: ${response.detailOrUnknown}'),
+                                      ),
+                                    );
+                                  }
+                                })
+                          ],
+                        )
+                      ]
                     ],
                   ),
                 ),
@@ -148,36 +180,69 @@ class TorrentDetailScreen extends StatelessWidget {
                               children: [
                                 Text(getReadableSize(file.size)),
                                 SizedBox(height: 8),
-                                ElevatedButton.icon(
-                                  icon: Icon(Icons.download),
-                                  label: Text("Download"),
-                                  onPressed: () async {
-                                    // Implement your file download logic here
-                                    // For example:
-                                    final bool storageGranted =
-                                        await showPermissionDialog(context);
-                                    if (!storageGranted) {
-                                      if (context.mounted) {
+                                FittedBox(
+                                  child: Row(children: [
+                                    ElevatedButton.icon(
+                                      icon: Icon(Icons.download),
+                                      label: Text("Download"),
+                                      onPressed: () async {
+                                        // Implement your file download logic here
+                                        // For example:
+                                        final bool storageGranted =
+                                            await showPermissionDialog(context);
+                                        if (!storageGranted) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'Storage permission is required to download files.'),
+                                              ),
+                                            );
+                                          }
+                                          return;
+                                        }
+                                        final result =
+                                            await torrent.downloadFile(file);
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
-                                            content: Text(
-                                                'Storage permission is required to download files.'),
+                                            content: Text(result.data != null
+                                                ? 'File download started'
+                                                : 'Failed to start download'),
                                           ),
                                         );
-                                      }
-                                      return;
-                                    }
-                                    final result =
-                                        await torrent.downloadFile(file);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(result.data != null
-                                            ? 'File download started'
-                                            : 'Failed to start download'),
-                                      ),
-                                    );
-                                  },
+                                      },
+                                    ),
+                                    if (apiService.googleToken != null &&
+                                        apiService.googleToken!.isNotEmpty) ...[
+                                      SizedBox(width: 8),
+                                      ElevatedButton.icon(
+                                        icon: Icon(Icons.drive_file_move),
+                                        label: Text("Google Drive"),
+                                        onPressed: () async {
+                                          final response =
+                                              await apiService.queueIntegration(
+                                                  QueueableIntegration.google,
+                                                  torrent.id,
+                                                  fileId: file.id,
+                                                  zip: false,
+                                                  type: IntegrationFileType
+                                                      .torrent);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(response.success
+                                                    ? 'File queued for Google Drive'
+                                                    : 'Failed to queue file: ${response.detailOrUnknown}'),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      )
+                                    ]
+                                  ]),
                                 ),
                               ],
                             ),

@@ -28,8 +28,12 @@ class TorboxAPI {
   });
 
   Future<void> init() async {
-    apiKey = await secureStorageService.read('api_key');
-    googleToken = await getGoogleToken();
+    final results = await Future.wait([
+      secureStorageService.read('api_key'),
+      getGoogleToken(),
+    ]);
+    apiKey = results[0];
+    googleToken = results[1];
   }
 
   Future<TorboxAPIResponse> makeRequest(String endpoint,
@@ -565,16 +569,25 @@ class TorboxAPI {
       {int? fileId, bool? zip, IntegrationFileType? type}) async {
     assert(
         fileId != null || zip != null, 'Either fileId or zip must be provided');
-    throw UnimplementedError();
+    String? token;
+    switch (integration) {
+      case QueueableIntegration.google:
+        token = googleToken;
+        break;
+      default:
+        token = null;
+    }
+    assert(token != null && token.isNotEmpty,
+        'Token for ${integration.name} is not available');
     return makeRequest("api/integration/${integration.name}",
-        method: 'get',
+        method: 'post',
         body: {
           'id': id,
           'file_id': fileId,
           'zip': zip,
           'type': type?.name,
           integration.tokenName:
-              null, // needs oauth token for google & onedrive, api key for 1fichier and gofile
+              token, // needs oauth token for google & onedrive, api key for 1fichier and gofile
         });
   }
 
@@ -929,6 +942,7 @@ extension QueueableIntegrationExtension on QueueableIntegration {
         return 'onefichier_token';
     }
   }
+
 }
 
 enum IntegrationFileType { torrent, usenet, webdownload }

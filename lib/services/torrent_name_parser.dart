@@ -3,7 +3,7 @@ import 'dart:core';
 // Original python code by Divij Bindlish, see https://github.com/divijbindlish/parse-torrent-name
 class PTN {
   final Map<String, String> patterns = {
-    'season': r'(s?([0-9]{1,2}))[ex]', // doesn't handle full season bundles e.g. S01
+    'season': r'((?<![0-9])s?([0-9]{1,2}))[ex](?=[0-9])', // doesn't handle full season bundles e.g. S01
     'episode': r'([ex]([0-9]{2})(?:[^0-9]|$))',
     'year': r'([\[\(]?((?:19[0-9]|20[012])[0-9])[\]\)]?)', // [012] bit needs to be updated if we make it to 2030 
     'resolution': r'([0-9]{3,4}p)',
@@ -134,6 +134,9 @@ class PTN {
 
     String rawTitle = torrent['name']!;
     if (end != null) {
+      if (end! < start!) {
+        end = rawTitle.length;
+      }
       rawTitle = rawTitle.substring(start!, end!).split('(')[0];
     }
 
