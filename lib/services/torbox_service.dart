@@ -3,7 +3,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart' show Settings;
+import 'package:flutter_settings_screens/flutter_settings_screens.dart'
+    show Settings;
 import 'package:http/http.dart' as http;
 import 'secure_storage_service.dart';
 import '../models/torbox_api_response.dart';
@@ -41,7 +42,15 @@ class TorboxAPI {
       SuccessReturnType returnType = SuccessReturnType.jsonResponse,
       Map<String, dynamic> body = const {},
       String? baseUrl,
-      bool useMultipartRequestStream = false}) async {
+      }) async {
+    const multiPartRequestStreamEndpoints = [
+      'api/torrents/createtorrent',
+      'api/usenet/createusenetdownload',
+      'api/webdl/createwebdownload',
+    ];
+    final useMultipartRequestStream =
+        multiPartRequestStreamEndpoints.contains(endpoint);
+    print(useMultipartRequestStream);
     baseUrl ??= this.baseUrl;
     apiKey ??= await secureStorageService.read('api_key');
     if (apiKey == null) {
@@ -57,20 +66,23 @@ class TorboxAPI {
 
     switch (method) {
       case 'get':
-      Map<String, dynamic> queryParameters = body;
-      queryParameters.removeWhere((key, value) => value == null);
-      queryParameters = queryParameters.map((key, value) => MapEntry(key, value.toString()));
+        Map<String, dynamic> queryParameters = body;
+        queryParameters.removeWhere((key, value) => value == null);
+        queryParameters = queryParameters
+            .map((key, value) => MapEntry(key, value.toString()));
         final requestUrl = Uri.https(
-                url.authority, url.path, queryParameters.cast<String, dynamic>()); // adds body as query parameters
-        response = await http.get(
-            requestUrl,
-            headers: {
-              HttpHeaders.authorizationHeader: 'Bearer $apiKey',
-              HttpHeaders.contentTypeHeader: 'application/json',
-            });
+            url.authority,
+            url.path,
+            queryParameters
+                .cast<String, dynamic>()); // adds body as query parameters
+        response = await http.get(requestUrl, headers: {
+          HttpHeaders.authorizationHeader: 'Bearer $apiKey',
+          HttpHeaders.contentTypeHeader: 'application/json',
+        });
         break;
       case 'post':
-        if (body.values.any((value) => value is PlatformFile) || useMultipartRequestStream) {
+        if (body.values.any((value) => value is PlatformFile) ||
+            useMultipartRequestStream) {
           var request = http.MultipartRequest('POST', url);
           for (String? key in body.keys) {
             if (key == null || body[key] == null || body[key] == "") continue;
@@ -144,12 +156,16 @@ class TorboxAPI {
     } else {
       // first attempt to parse as torbox response:
       try {
-
         final responseData = jsonDecode(response.body);
         return TorboxAPIResponse.fromJson(responseData);
       } catch (e) {
         // if parsing fails, return as http error
-        return TorboxAPIResponse.fromJson({"success": false, "error": "HTTP ${response.statusCode.toString()}", "detail": "HTTP ${response.statusCode.toString()} - ${response.reasonPhrase}"});
+        return TorboxAPIResponse.fromJson({
+          "success": false,
+          "error": "HTTP ${response.statusCode.toString()}",
+          "detail":
+              "HTTP ${response.statusCode.toString()} - ${response.reasonPhrase}"
+        });
       }
     }
   }
@@ -201,14 +217,16 @@ class TorboxAPI {
         'Either dotTorrentFile or magnetLink must be provided');
     assert(dotTorrentFile == null || magnetLink == null,
         'Only one of dotTorrentFile or magnetLink can be provided');
-    return makeRequest('api/torrents/createtorrent', useMultipartRequestStream: true, method: 'post', body: {
-      'file': dotTorrentFile,
-      'magnet': magnetLink,
-      'seeding_preference': seedingPreference?.index,
-      'allow_zipping': allowZipping,
-      'torrent_name': torrentName,
-      'as_queued': asQueued,
-    });
+    return makeRequest('api/torrents/createtorrent',
+        method: 'post',
+        body: {
+          'file': dotTorrentFile,
+          'magnet': magnetLink,
+          'seeding_preference': seedingPreference?.index,
+          'allow_zipping': allowZipping,
+          'torrent_name': torrentName,
+          'as_queued': asQueued,
+        });
   }
 
   Future<TorboxAPIResponse> controlTorrent(ControlTorrentType operation,
@@ -301,7 +319,6 @@ class TorboxAPI {
         'Only one of nzbFile or link can be provided');
     return makeRequest('api/usenet/createusenetdownload',
         method: 'post',
-        useMultipartRequestStream: true,
         body: {
           'file': nzbFile,
           'link': link,
@@ -374,12 +391,16 @@ class TorboxAPI {
 
   Future<TorboxAPIResponse> createWebDownload(String link,
       {String? name, String? password, bool? asQueued}) async {
-    return makeRequest('api/webdl/createwebdownload', method: 'post', body: {
-      'link': link,
-      'name': name,
-      'password': password,
-      'as_queued': asQueued,
-    });
+    return makeRequest(
+      'api/webdl/createwebdownload',
+      method: 'post',
+      body: {
+        'link': link,
+        'name': name,
+        'password': password,
+        'as_queued': asQueued,
+      },
+    );
   }
 
   Future<TorboxAPIResponse> controlWebDownload(ControlWebdlType operation,
@@ -486,7 +507,8 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> addReferralCode(String referralCode) async {
-    return makeRequest('api/user/addreferral?referral=$referralCode', method: 'post');
+    return makeRequest('api/user/addreferral?referral=$referralCode',
+        method: 'post');
   }
 
   Future<TorboxAPIResponse> requestConfirmationCode() async {
@@ -643,15 +665,15 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getTorrentsById(
-      IdType idType,
-      String id, {
-        bool? metadata,
-        int? season,
-        int? episode,
-        bool? checkCache,
-        bool? checkOwned,
-        bool? searchUserEngines,
-      }) async {
+    IdType idType,
+    String id, {
+    bool? metadata,
+    int? season,
+    int? episode,
+    bool? checkCache,
+    bool? checkOwned,
+    bool? searchUserEngines,
+  }) async {
     return makeRequest(
       'torrents/${idType.name}:$id',
       method: 'get',
@@ -668,12 +690,12 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> searchTorrents(
-      String query, {
-        bool? metadata,
-        bool? checkCache,
-        bool? checkOwned,
-        bool? searchUserEngines,
-      }) async {
+    String query, {
+    bool? metadata,
+    bool? checkCache,
+    bool? checkOwned,
+    bool? searchUserEngines,
+  }) async {
     return makeRequest(
       'torrents/search/$query',
       method: 'get',
@@ -688,15 +710,15 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getUsenetById(
-      IdType idType,
-      String id, {
-        bool? metadata,
-        int? season,
-        int? episode,
-        bool? checkCache,
-        bool? checkOwned,
-        bool? searchUserEngines,
-      }) async {
+    IdType idType,
+    String id, {
+    bool? metadata,
+    int? season,
+    int? episode,
+    bool? checkCache,
+    bool? checkOwned,
+    bool? searchUserEngines,
+  }) async {
     return makeRequest(
       'usenet/${idType.name}:$id',
       method: 'get',
@@ -713,14 +735,14 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> searchUsenet(
-      String query, {
-        bool? metadata,
-        int? season,
-        int? episode,
-        bool? checkCache,
-        bool? checkOwned,
-        bool? searchUserEngines,
-      }) async {
+    String query, {
+    bool? metadata,
+    int? season,
+    int? episode,
+    bool? checkCache,
+    bool? checkOwned,
+    bool? searchUserEngines,
+  }) async {
     return makeRequest(
       'usenet/search/$query',
       method: 'get',
@@ -942,7 +964,6 @@ extension QueueableIntegrationExtension on QueueableIntegration {
         return 'onefichier_token';
     }
   }
-
 }
 
 enum IntegrationFileType { torrent, usenet, webdownload }

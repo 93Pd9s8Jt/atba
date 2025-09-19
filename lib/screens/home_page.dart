@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
       cacheKeysWithDefaultValues: {
         "key-use-material-3": true,
         "key-use-torbox-font-family": false,
-        "key-theme": "system", 
+        "key-theme": "system",
       },
       builder: (context, values) {
         return DynamicColorBuilder(
@@ -60,7 +60,8 @@ class HomeScreen extends StatelessWidget {
                     ? 'torbox-dotted-all'
                     : null,
               ),
-              themeMode: ThemeMode.values[["system", "light", "dark"].indexOf(values["key-theme"])],
+              themeMode: ThemeMode.values[
+                  ["system", "light", "dark"].indexOf(values["key-theme"])],
               home: const MyHomePage(),
             );
           },
@@ -103,25 +104,68 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> handleTorrentFiles(List<SharedMediaFile> value) async {
     final apiService = Provider.of<TorboxAPI>(context, listen: false);
     for (final file in value) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Adding torrent from file: ${file.path}')),
-      );
-      final platformFile = PlatformFile(
-        name: file.path.split(Platform.pathSeparator).last,
-        path: file.path,
-        size: await File(file.path).length(),
-        bytes: await File(file.path).readAsBytes(),
-      );
-      final response =
-          await apiService.createTorrent(dotTorrentFile: platformFile);
-      if (response.success) {
+      if (file.type == SharedMediaType.file) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Torrent added successfully!')),
+          SnackBar(content: Text('Adding torrent from file: ${file.path}')),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.detailOrUnknown)),
+        final platformFile = PlatformFile(
+          name: file.path.split(Platform.pathSeparator).last,
+          path: file.path,
+          size: await File(file.path).length(),
+          bytes: await File(file.path).readAsBytes(),
         );
+        final response =
+            await apiService.createTorrent(dotTorrentFile: platformFile);
+        if (response.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Torrent added successfully!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.detailOrUnknown)),
+          );
+        }
+      } else if (file.type == SharedMediaType.text) {
+        final uri = Uri.tryParse(file.path);
+        if (uri == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Invalid link: ${file.path}')),
+          );
+          continue;
+        };
+        // Handle text sharing (for links)
+        if (uri.scheme == "magnet") {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Adding torrent from link: ${file.path}')),
+          );
+          final response =
+              await apiService.createTorrent(magnetLink: file.path);
+          if (response.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Torrent added successfully!')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to add torrent: ${response.error}')),
+            );
+          }
+        } else {
+          // add as web download
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Adding download from link: ${file.path}')),
+          );
+          final response =
+              await apiService.createWebDownload(uri.toString());
+          if (response.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Download added successfully!')),
+            ); 
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to add download: ${response.error}')),
+            );
+          }
+        }
       }
     }
   }
