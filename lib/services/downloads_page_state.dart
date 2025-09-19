@@ -28,13 +28,27 @@ class DownloadsPageState extends ChangeNotifier {
   late Future<Map<String, dynamic>> _usenetFuture;
 
   bool isSelecting = false;
+  bool isSearching = false;
+  String _searchQuery = "";
+  final TextEditingController searchController = TextEditingController();
   List<DownloadableItem> selectedItems = [];
   final BuildContext context;
+
 
   DownloadsPageState(this.context) {
     _torrentsFuture = _fetchTorrents(context);
     _webDownloadsFuture = _fetchWebDownloads(context);
     _usenetFuture = _fetchUsenet(context);
+    searchController.addListener(() {
+      setSearchQuery(searchController.text);
+    });
+  }
+
+  // Optionally, add this if you ever dispose DownloadsPageState manually:
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   bool get isTorrentNamesCensored => _isTorrentNamesCensored;
@@ -87,12 +101,15 @@ class DownloadsPageState extends ChangeNotifier {
   };
 
   List<T> _sortAndFilter<T extends DownloadableItem>(List<T> items) {
+    if (items.isEmpty) {
+      return [];
+    }
     var sortedList = List<T>.from(items);
     final sortingFunction = sortingOptions[_selectedSortingOption];
     if (sortingFunction != null) {
       sortedList.sort((a, b) => sortingFunction(a, b) ?? 0);
     }
-    if (_selectedMainFilters.isEmpty) {
+    if (_selectedMainFilters.isEmpty && _searchQuery.isEmpty) {
       return sortedList;
     }
 
@@ -100,7 +117,7 @@ class DownloadsPageState extends ChangeNotifier {
       return _selectedMainFilters.every((filterName) {
         final filter = filters[filterName];
         return filter != null ? filter(item) ?? true : true;
-      });
+      }) && (_searchQuery.isEmpty || handleTorrentName(item.name).toLowerCase().contains(_searchQuery.toLowerCase()));
     }).toList();
   }
 
@@ -158,6 +175,16 @@ class DownloadsPageState extends ChangeNotifier {
       await Settings.setValue<String>(
           "key-selected-main-filters", jsonEncode(_selectedMainFilters));
     });
+  }
+
+  void toggleSearch() {
+    isSearching = !isSearching;
+    notifyListeners();
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
   }
 
   Future<Map<String, dynamic>> _fetchTorrents(BuildContext context, {bool bypassCache = false}) async {
@@ -458,38 +485,6 @@ class DownloadsPageState extends ChangeNotifier {
     await _handleSelectedItems((item) => item.download());
   }
 
-  // void _handleActiveReorder(int oldIndex, int newIndex) {
-  //   if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
-  //     if (newIndex > oldIndex) {
-  //       newIndex -= 1;
-  //     }
-  //     final item = activeTorrents.removeAt(oldIndex);
-  //     activeTorrents.insert(newIndex, item);
-  //     notifyListeners();
-  //   }
-  // }
-
-  // void _handleInactiveReorder(int oldIndex, int newIndex) {
-  //   if (_selectedSortingOption == "Default" && _selectedMainFilters.isEmpty) {
-  //     if (newIndex > oldIndex) {
-  //       newIndex -= 1;
-  //     }
-  //     final item = inactiveTorrents.removeAt(oldIndex);
-  //     inactiveTorrents.insert(newIndex, item);
-  //     notifyListeners();
-  //   }
-  // }
-
-  // void _handleQueuedReorder(int oldIndex, int newIndex) {
-  //   if (_selectedSortingOption == "Default") {
-  //     if (newIndex > oldIndex) {
-  //       newIndex -= 1;
-  //     }
-  //     final item = queuedTorrents.removeAt(oldIndex);
-  //     queuedTorrents.insert(newIndex, item);
-  //     notifyListeners();
-  //   }
-  // }
 
   static String handleTorrentName(String name) {
     if (Settings.getValue<bool>('key-use-torrent-name-parsing',

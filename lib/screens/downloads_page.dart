@@ -85,6 +85,13 @@ class _DownloadsPageState extends State<DownloadsPage>
                   else
                     Row(
                       children: [
+                        IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: () {
+                            state.toggleSearch();
+                          },
+                          tooltip: "Search",
+                        ),
                         // reimplment popup menu with MenuAnchor
                         // animation issues due to https://github.com/flutter/flutter/issues/143781
                         // TODO: so we will need to manually implement animations

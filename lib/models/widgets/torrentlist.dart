@@ -1,4 +1,4 @@
-
+import 'package:atba/models/widgets/search_bar.dart';
 import 'package:atba/models/widgets/torrent_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,61 +19,70 @@ class _TorrentsListState extends State<TorrentsList> {
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<DownloadsPageState>(context);
-
     return CustomScrollView(
       slivers: [
+        if (state.isSearching)
+          DownloadsSearchBar(controller: state.searchController),
         // Queued Torrents
         SliverToBoxAdapter(
           child: ListTile(
             title: Text('${state.queuedTorrents.length} Queued Torrents'),
             onTap: () => setState(() => _queuedExpanded = !_queuedExpanded),
-            trailing: Icon(_queuedExpanded ? Icons.expand_less : Icons.expand_more),
+            trailing:
+                Icon(_queuedExpanded ? Icons.expand_less : Icons.expand_more),
           ),
         ),
         if (_queuedExpanded)
           SliverList(
             delegate: SliverChildListDelegate(
-              state.queuedTorrents.map((torrent) => QueuedTorrentWidget(torrent: torrent)).toList(),
+              state.queuedTorrents
+                  .map((torrent) => QueuedTorrentWidget(torrent: torrent))
+                  .toList(),
             ),
           ),
 
         // Active Torrents
         SliverToBoxAdapter(
           child: ListTile(
-            title: Text(state.filteredSortedActiveTorrents.length == state.activeTorrents.length
+            title: Text(state.filteredSortedActiveTorrents.length ==
+                    state.activeTorrents.length
                 ? '${state.activeTorrents.length} Active Torrents'
                 : '${state.filteredSortedActiveTorrents.length}/${state.activeTorrents.length} Active Torrents'),
             onTap: () => setState(() => _activeExpanded = !_activeExpanded),
-            trailing: Icon(_activeExpanded ? Icons.expand_less : Icons.expand_more),
+            trailing:
+                Icon(_activeExpanded ? Icons.expand_less : Icons.expand_more),
           ),
         ),
         if (_activeExpanded)
           SliverList(
             delegate: SliverChildListDelegate(
-              state.filteredSortedActiveTorrents.map((torrent) => TorrentWidget(torrent: torrent)).toList(),
+              state.filteredSortedActiveTorrents
+                  .map((torrent) => TorrentWidget(torrent: torrent))
+                  .toList(),
             ),
           ),
 
         // Inactive Torrents
         SliverToBoxAdapter(
           child: ListTile(
-            title: Text(state.filteredSortedInactiveTorrents.length == state.inactiveTorrents.length
+            title: Text(state.filteredSortedInactiveTorrents.length ==
+                    state.inactiveTorrents.length
                 ? '${state.inactiveTorrents.length} Inactive Torrents'
                 : '${state.filteredSortedInactiveTorrents.length}/${state.inactiveTorrents.length} Inactive Torrents'),
             onTap: () => setState(() => _inactiveExpanded = !_inactiveExpanded),
-            trailing: Icon(_inactiveExpanded ? Icons.expand_less : Icons.expand_more),
+            trailing:
+                Icon(_inactiveExpanded ? Icons.expand_less : Icons.expand_more),
           ),
         ),
         if (_inactiveExpanded)
           SliverList(
             delegate: SliverChildListDelegate(
-              state.filteredSortedInactiveTorrents.map((torrent) => TorrentWidget(torrent: torrent)).toList(),
+              state.filteredSortedInactiveTorrents
+                  .map((torrent) => TorrentWidget(torrent: torrent))
+                  .toList(),
             ),
           ),
       ],
     );
   }
 }
-
-
-
