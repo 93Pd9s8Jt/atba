@@ -1,6 +1,5 @@
 import 'package:atba/screens/settings/google_oauth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/models/permission_model.dart';
@@ -18,8 +17,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final apiService = Provider.of<TorboxAPI>(context, listen: false);
-    final TextEditingController _apiKeyController = TextEditingController();
-    final TextEditingController _googleTokenController = TextEditingController();
+    final TextEditingController apiKeyController = TextEditingController();
+    final TextEditingController googleTokenController = TextEditingController();
     // yts,eztv,rarbg,1337x,thepiratebay,kickasstorrents,torrentgalaxy,magnetdl,horriblesubs,nyaasi,tokyotosho,anidex,rutor,rutracker,comando,bludv,torrent9,ilcorsaronero,mejortorrent,wolfmax4k,cinecalidad
     const Map<String, String> providers = {
       // value, name
@@ -126,7 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 // could probably share with setup/api_screen.dart
                 // TODO: make look less ugly & share code
                 TextField(
-                  controller: _apiKeyController,
+                  controller: apiKeyController,
                   decoration: const InputDecoration(
                     labelText: 'API Key',
                     border: OutlineInputBorder(),
@@ -138,7 +137,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    final apiKey = _apiKeyController.text.trim();
+                    final apiKey = apiKeyController.text.trim();
                     await apiService.saveApiKey(apiKey);
                     final response = await apiService.getUserData();
                     if (apiKey.isNotEmpty && response.success) {
@@ -210,7 +209,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: <Widget>[
                     GoogleDriveIntegrationSection(
                       apiService: apiService,
-                      googleTokenController: _googleTokenController,
+                      googleTokenController: googleTokenController,
                     ),
                     SimpleSettingsTile(
                       title: "Torrentio",
@@ -297,20 +296,38 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ])),
-          ListTile(
-              title: const Text("Storage location"),
-              leading: Icon(Icons.storage),
-              onTap: () async {
-                // TODO: niceify with methods in permission model (doesn't account for sd card yet)
-                PermissionModel permissionModel = PermissionModel();
-                final folderPath = await permissionModel.selectFolder();
-                if (folderPath == null) return;
-                await permissionModel.saveFolderPath(folderPath);
-                setState(() {}); // <-- ensure UI updates
-              },
-              subtitle: Text(Settings.getValue<String>('folder_path',
-                  defaultValue: 'No download folder set')!)),
-          const Divider(),
+          SimpleSettingsTile(
+            title: "Storage",
+            leading: Icon(Icons.storage),
+            child: SettingsScreen(
+              title: "Storage settings",
+              children: <Widget>[
+                ListTile(
+                    title: const Text("Storage location"),
+                    leading: Icon(Icons.storage),
+                    onTap: () async {
+                      // TODO: niceify with methods in permission model (doesn't account for sd card yet)
+                      PermissionModel permissionModel = PermissionModel();
+                      final folderPath = await permissionModel.selectFolder();
+                      if (folderPath == null) return;
+                      await permissionModel.saveFolderPath(folderPath);
+                      setState(() {}); // <-- ensure UI updates
+                    },
+                    subtitle: Text(Settings.getValue<String>('folder_path',
+                        defaultValue: 'No download folder set')!)),
+                ListTile(
+                    title: const Text("Clear cache"),
+                    leading: Icon(Icons.delete),
+                    onTap: () async {
+                      await apiService.deleteTorboxCache();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Cache cleared')),
+                      );
+                    }
+                ),
+              ],
+            ),
+          ),
           CheckboxSettingsTile(
             settingKey: 'key-use-torrent-name-parsing',
             title: 'Use torrent name parsing',
@@ -344,6 +361,3 @@ class _SettingsPageState extends State<SettingsPage> {
         ]));
   }
 }
-
-
-

@@ -13,72 +13,73 @@ class UsenetTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-      if (state.isSearching)
-        DownloadsSearchBar(controller: state.searchController),
-      SliverFillRemaining(
-        hasScrollBody: true,
-        child: RefreshIndicator(
-        onRefresh: () async {
-          await state.refreshUsenet(bypassCache: true);
-        },
-        child: FutureBuilder(
-          future: state.usenetFuture,
-          builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final data = snapshot.data as Map<String, dynamic>;
-            if (data.containsKey("success") && data["success"] != true) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Center(
-              child: Column(
-                children: [
-                Text('Failed to fetch data: ${data["detail"]}',
-                  style: const TextStyle(color: Colors.red)),
-                data["stackTrace"] != null
-                  ? ElevatedButton(
-                    child: const Text('Copy stack trace'),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(
-                        text: data["stackTrace"].toString()));
-                      ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Stack trace copied to clipboard'),
+        if (state.isSearching)
+          DownloadsSearchBar(controller: state.searchController),
+        SliverFillRemaining(
+          hasScrollBody: true,
+          child: RefreshIndicator(
+            key: state.usenetRefreshIndicatorKey,
+            onRefresh: () async {
+              await state.refreshUsenet(bypassCache: true);
+            },
+            child: FutureBuilder(
+              future: state.usenetFuture,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final data = snapshot.data as Map<String, dynamic>;
+                  if (data.containsKey("success") && data["success"] != true) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Text('Failed to fetch data: ${data["detail"]}',
+                                style: const TextStyle(color: Colors.red)),
+                            data["stackTrace"] != null
+                                ? ElevatedButton(
+                                    child: const Text('Copy stack trace'),
+                                    onPressed: () {
+                                      Clipboard.setData(ClipboardData(
+                                          text: data["stackTrace"].toString()));
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Stack trace copied to clipboard'),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : const SizedBox(),
+                          ],
+                        ),
                       ),
-                      );
-                    },
-                    )
-                  : const SizedBox(),
-                ],
-              ),
-              ),
-            );
-            }
+                    );
+                  }
 
-            return state.usenetDownloads.isNotEmpty
-              ? ListView.builder(
-                physics: const ScrollPhysics(),
-                itemCount: state.filteredSortedUsenetDownloads.length,
-                itemBuilder: (context, index) {
-                final download =
-                  state.filteredSortedUsenetDownloads[index];
-                return DownloadableItemWidget(
-                  item: download,
-                );
-                },
-              )
-              : const Center(
-                child: Text('No usenet downloads available'));
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-          },
+                  return state.usenetDownloads.isNotEmpty
+                      ? ListView.builder(
+                          physics: const ScrollPhysics(),
+                          itemCount: state.filteredSortedUsenetDownloads.length,
+                          itemBuilder: (context, index) {
+                            final download =
+                                state.filteredSortedUsenetDownloads[index];
+                            return DownloadableItemWidget(
+                              item: download,
+                            );
+                          },
+                        )
+                      : const Center(
+                          child: Text('No usenet downloads available'));
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+          ),
         ),
-        ),
-      ),
       ],
     );
   }

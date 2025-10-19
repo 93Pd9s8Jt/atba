@@ -1,17 +1,33 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
+import 'package:atba/models/torbox_api_response.dart';
+import 'package:atba/services/downloads_page_state.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart'
+import 'package:flutter/foundation.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart' 
     show Settings;
 import 'package:http/http.dart' as http;
-import 'secure_storage_service.dart';
-import '../models/torbox_api_response.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:atba/services/cache_http_client.dart';
+import 'package:atba/services/secure_storage_service.dart';
+
+TorboxAPIResponse _parseTorboxAPIResponse(dynamic json) {
+  assert(json is Map<String, dynamic> || json is String,
+      'Invalid JSON data type');
+  final jsonMap = json is String ? jsonDecode(json) : json;
+  return TorboxAPIResponse.fromJson(jsonMap);
+}
+
+String _decodeResponseBody(List<int> bodyBytes) {
+  return utf8.decode(bodyBytes);
+}
 
 class TorboxAPI {
   final SecureStorageService secureStorageService;
+  TorboxCacheHttpClient? client;
+  DownloadsPageState? downloadsPageState;
 
   static const api_base = 'https://api.torbox.app';
   static const search_api_base = 'https://search-api.torbox.app';
@@ -24,25 +40,32 @@ class TorboxAPI {
 
   TorboxAPI({
     required this.secureStorageService,
+    TorboxCacheHttpClient? client,
     this.baseUrl = '$api_base/$api_version',
     this.apiKey,
-  });
+  }) : client = TorboxCacheHttpClient();
 
   Future<void> init() async {
     final results = await Future.wait([
       secureStorageService.read('api_key'),
       getGoogleToken(),
+      client!.init(),
     ]);
-    apiKey = results[0];
-    googleToken = results[1];
+    apiKey = results[0] as String?;
+    googleToken = results[1] as String?;
   }
 
-  Future<TorboxAPIResponse> makeRequest(String endpoint,
-      {String method = "get",
-      SuccessReturnType returnType = SuccessReturnType.jsonResponse,
-      Map<String, dynamic> body = const {},
-      String? baseUrl,
-      }) async {
+  void setDownloadsPageState(DownloadsPageState state) {
+    downloadsPageState = state;
+  }
+
+  Future<TorboxAPIResponse> makeRequest(
+    String endpoint, {
+    String method = "get",
+    SuccessReturnType returnType = SuccessReturnType.jsonResponse,
+    Map<String, dynamic> body = const {},
+    String? baseUrl,
+  }) async {
     const multiPartRequestStreamEndpoints = [
       'api/torrents/createtorrent',
       'api/usenet/createusenetdownload',
@@ -50,7 +73,6 @@ class TorboxAPI {
     ];
     final useMultipartRequestStream =
         multiPartRequestStreamEndpoints.contains(endpoint);
-    print(useMultipartRequestStream);
     baseUrl ??= this.baseUrl;
     apiKey ??= await secureStorageService.read('api_key');
     if (apiKey == null) {
@@ -62,10 +84,13 @@ class TorboxAPI {
 
     method = method.toLowerCase();
 
-    final http.Response response;
+    late final int statusCode;
+    late final responseData;
+    late final String responseReasonPhrase;
 
     switch (method) {
       case 'get':
+
         Map<String, dynamic> queryParameters = body;
         queryParameters.removeWhere((key, value) => value == null);
         queryParameters = queryParameters
@@ -75,10 +100,17 @@ class TorboxAPI {
             url.path,
             queryParameters
                 .cast<String, dynamic>()); // adds body as query parameters
-        response = await http.get(requestUrl, headers: {
-          HttpHeaders.authorizationHeader: 'Bearer $apiKey',
-          HttpHeaders.contentTypeHeader: 'application/json',
-        });
+        final response = await client!.get(
+          requestUrl,
+          headers: {
+              HttpHeaders.authorizationHeader: 'Bearer $apiKey',
+              HttpHeaders.contentTypeHeader: 'application/json',
+            },
+          
+        );
+        statusCode = response.statusCode;
+        responseData = await compute(_decodeResponseBody, response.bodyBytes);
+        responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       case 'post':
         if (body.values.any((value) => value is PlatformFile) ||
@@ -98,9 +130,12 @@ class TorboxAPI {
             HttpHeaders.contentTypeHeader: 'application/json',
           });
           final streamedResponse = await request.send();
-          response = await http.Response.fromStream(streamedResponse);
+          final response = await http.Response.fromStream(streamedResponse);
+          statusCode = response.statusCode;
+          responseData = utf8.decode(response.bodyBytes);
+          responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         } else {
-          response = await http.post(
+          final response = await http.post(
             url,
             headers: {
               HttpHeaders.authorizationHeader: 'Bearer $apiKey',
@@ -108,10 +143,13 @@ class TorboxAPI {
             },
             body: jsonEncode(body),
           );
+                    statusCode = response.statusCode;
+          responseData = await compute(_decodeResponseBody, response.bodyBytes);
+          responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         }
         break;
       case 'put':
-        response = await http.put(
+        final response = await http.put(
           url,
           headers: {
             HttpHeaders.authorizationHeader: 'Bearer $apiKey',
@@ -119,27 +157,33 @@ class TorboxAPI {
           },
           body: jsonEncode(body),
         );
+                  statusCode = response.statusCode;
+          responseData = await compute(_decodeResponseBody, response.bodyBytes);
+          responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       case 'delete':
-        response = await http.delete(
+        final response = await http.delete(
           url,
           headers: {
             HttpHeaders.authorizationHeader: 'Bearer $apiKey',
             HttpHeaders.contentTypeHeader: 'application/json',
           },
         );
+                  statusCode = response.statusCode;
+          responseData = await compute(_decodeResponseBody, response.bodyBytes);
+          responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       default:
         throw Exception('Invalid request type');
     }
 
-    if (response.statusCode == 200) {
+    if (statusCode == 200) {
       if (returnType == SuccessReturnType.file) {
         // TODO: detect from content type
         final directory = await getApplicationDocumentsDirectory();
         final filePath = '${directory.path}/torrent_${body['id']}.torrent';
         final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+        await file.writeAsString(responseData);
         return TorboxAPIResponse.fromJson(
             {'success': true, 'error': null, 'detail': '', 'data': filePath});
       } else if (returnType == SuccessReturnType.xml) {
@@ -147,34 +191,37 @@ class TorboxAPI {
           'success': true,
           'error': null,
           'detail': '',
-          'data': response.body
+          'data': responseData
         });
       } else {
-        final responseData = jsonDecode(response.body);
-        return TorboxAPIResponse.fromJson(responseData);
+        return await compute(_parseTorboxAPIResponse, responseData);
       }
     } else {
       // first attempt to parse as torbox response:
       try {
-        final responseData = jsonDecode(response.body);
-        return TorboxAPIResponse.fromJson(responseData);
+        return await compute(_parseTorboxAPIResponse, responseData);
       } catch (e) {
         // if parsing fails, return as http error
         return TorboxAPIResponse.fromJson({
           "success": false,
-          "error": "HTTP ${response.statusCode.toString()}",
+          "error": "HTTP $statusCode",
           "detail":
-              "HTTP ${response.statusCode.toString()} - ${response.reasonPhrase}"
+              "HTTP $statusCode - $responseReasonPhrase"
         });
       }
     }
   }
+  Future<void> deleteTorboxCache() async {
+    await client?.store.clean();
+  }
+
 
   Future<void> saveApiKey(String apiKeyToSave) async {
     await secureStorageService.write('api_key', apiKeyToSave);
     apiKey = apiKeyToSave;
     // now we add referral
     Future.microtask(() async {
+      await deleteTorboxCache();
       await addReferralCode('61747744-fc2c-4580-907e-1e3816f54bfa');
     });
   }
@@ -182,6 +229,9 @@ class TorboxAPI {
   Future<void> deleteApiKey() async {
     await secureStorageService.delete('api_key');
     apiKey = null;
+    Future.microtask(() async {
+      await deleteTorboxCache();
+    });
   }
 
   Future<void> saveGoogleToken(String token, String UnixExpiryDate) async {
@@ -217,16 +267,18 @@ class TorboxAPI {
         'Either dotTorrentFile or magnetLink must be provided');
     assert(dotTorrentFile == null || magnetLink == null,
         'Only one of dotTorrentFile or magnetLink can be provided');
-    return makeRequest('api/torrents/createtorrent',
-        method: 'post',
-        body: {
-          'file': dotTorrentFile,
-          'magnet': magnetLink,
-          'seeding_preference': seedingPreference?.index,
-          'allow_zipping': allowZipping,
-          'torrent_name': torrentName,
-          'as_queued': asQueued,
-        });
+    final response = await makeRequest('api/torrents/createtorrent', method: 'post', body: {
+      'file': dotTorrentFile,
+      'magnet': magnetLink,
+      'seeding_preference': seedingPreference?.index,
+      'allow_zipping': allowZipping,
+      'torrent_name': torrentName,
+      'as_queued': asQueued,
+    });
+    if (response.success && response.data != null) {
+      downloadsPageState?.startPeriodicUpdate(response.data['torrent_id'], DownloadableItemType.torrent);
+    }
+    return response;
   }
 
   Future<TorboxAPIResponse> controlTorrent(ControlTorrentType operation,
@@ -287,7 +339,7 @@ class TorboxAPI {
       int torrentId, ExportTorrentDataType exportType) async {
     return makeRequest('api/torrents/exportdata',
         method: 'get',
-        returnType: exportType == ExportTorrentDataType.torrentFile
+        returnType: exportType == ExportTorrentDataType.torrentFile // other option is magnet
             ? SuccessReturnType.file
             : SuccessReturnType.jsonResponse,
         body: {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:collection/collection.dart';
 
@@ -33,9 +34,18 @@ class DownloadsPageState extends ChangeNotifier {
   final TextEditingController searchController = TextEditingController();
   List<DownloadableItem> selectedItems = [];
   final BuildContext context;
+  final GlobalKey<RefreshIndicatorState> torrentRefreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<RefreshIndicatorState> webRefreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<RefreshIndicatorState> usenetRefreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+  late final apiService;
 
-
+  // init
   DownloadsPageState(this.context) {
+    apiService = Provider.of<TorboxAPI>(context, listen: false);
+    apiService.setDownloadsPageState(this);
     _torrentsFuture = _fetchTorrents(context);
     _webDownloadsFuture = _fetchWebDownloads(context);
     _usenetFuture = _fetchUsenet(context);
@@ -69,12 +79,12 @@ class DownloadsPageState extends ChangeNotifier {
   List<WebDownload> get webDownloads => _getDownloads<WebDownload>();
   List<Usenet> get usenetDownloads => _getDownloads<Usenet>();
 
-  
   static bool _areQueuedTorrents(dynamic a, dynamic b) {
     return a is QueuedTorrent && b is QueuedTorrent;
   }
 
-  static Map<String, int? Function(DownloadableItem, DownloadableItem)> sortingOptions = {
+  static Map<String, int? Function(DownloadableItem, DownloadableItem)>
+      sortingOptions = {
     "Default": (a, b) => null,
     "A to Z": (a, b) => (handleTorrentName(a.name))
         .toLowerCase()
@@ -115,9 +125,13 @@ class DownloadsPageState extends ChangeNotifier {
 
     return sortedList.where((item) {
       return _selectedMainFilters.every((filterName) {
-        final filter = filters[filterName];
-        return filter != null ? filter(item) ?? true : true;
-      }) && (_searchQuery.isEmpty || handleTorrentName(item.name).toLowerCase().contains(_searchQuery.toLowerCase()));
+            final filter = filters[filterName];
+            return filter != null ? filter(item) ?? true : true;
+          }) &&
+          (_searchQuery.isEmpty ||
+              handleTorrentName(item.name)
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()));
     }).toList();
   }
 
@@ -177,6 +191,70 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
+  void startPeriodicUpdate(int id, DownloadableItemType type) {
+    Timer.periodic(const Duration(seconds: 60), (timer) async {
+      print(id.toString());
+      late final response;
+      switch (type) {
+        case DownloadableItemType.torrent:
+          response = await apiService.getTorrentsList(
+              torrentId: id, bypassCache: true);
+          if (!response.success || response.data == null) {
+            return;
+          }
+          final updatedTorrent = Torrent.fromJson(response.data);
+          final index = _downloads.indexWhere((item) => item is Torrent && item.id == id);
+          if (index != -1) {
+            _downloads[index] = updatedTorrent;
+            print("Updated torrent info for: ${updatedTorrent.name}");
+          } else {
+            _downloads.add(updatedTorrent);
+          }
+          if (updatedTorrent.progress >= 1 || !updatedTorrent.active) {
+            timer.cancel();
+          }
+          break;
+        case DownloadableItemType.webdl:
+          response = await apiService.getWebDownloadsList(
+              downloadId: id, bypassCache: true);
+          if (!response.success || response.data == null) {
+            return;
+          }
+          final updatedWebDownload = WebDownload.fromJson(response.data);
+          final index = _downloads.indexWhere((item) => item is WebDownload && item.id == id);
+          if (index != -1) {
+            _downloads[index] = updatedWebDownload;
+            
+          } else {
+            _downloads.add(updatedWebDownload);
+          }
+          if (updatedWebDownload.progress >= 1 || !updatedWebDownload.active) {
+            timer.cancel();
+          }
+          break;
+        case DownloadableItemType.usenet:
+          response = await apiService.getUsenetDownloadsList(
+              downloadId: id, bypassCache: true);
+          if (!response.success || response.data == null) {
+            return;
+          }
+          final updatedUsenet = Usenet.fromJson(response.data);
+          final index = _downloads.indexWhere((item) => item is Usenet && item.id == id);
+          if (index != -1) {
+            _downloads[index] = updatedUsenet;
+          } else {
+            _downloads.add(updatedUsenet);
+          }
+          if (updatedUsenet.progress >= 1 || !updatedUsenet.active) {
+            timer.cancel();
+          }
+          break;
+      }
+    });
+  }
+
+
+
   void toggleSearch() {
     isSearching = !isSearching;
     notifyListeners();
@@ -187,11 +265,14 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> _fetchTorrents(BuildContext context, {bool bypassCache = false}) async {
+  Future<Map<String, dynamic>> _fetchTorrents(BuildContext context,
+      {bool bypassCache = false}) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
-      final responses = await Future.wait(
-          [apiService.getTorrentsList(bypassCache: bypassCache), apiService.getQueuedItemsList(bypassCache: bypassCache)]);
+      final responses = await Future.wait([
+        apiService.getTorrentsList(bypassCache: bypassCache),
+        apiService.getQueuedItemsList(bypassCache: bypassCache)
+      ]);
 
       if (!responses[0].success || !responses[1].success) {
         return {
@@ -204,11 +285,15 @@ class DownloadsPageState extends ChangeNotifier {
       final List<Torrent> postQueuedTorrents = (responses[0].data as List)
           .map((json) => Torrent.fromJson(json))
           .toList();
+      postQueuedTorrents.where((torrent) => torrent.progress < 1 && torrent.active).forEach((torrent) {
+        startPeriodicUpdate(torrent.id, DownloadableItemType.torrent);
+      });
 
       final List<QueuedTorrent> queuedTorrents = (responses[1].data as List)
           .map((json) => QueuedTorrent.fromJson(json))
           .toList();
-      _downloads.removeWhere((item) => item is Torrent || item is QueuedTorrent);
+      _downloads
+          .removeWhere((item) => item is Torrent || item is QueuedTorrent);
       _downloads.addAll([
         ...postQueuedTorrents,
         ...queuedTorrents,
@@ -226,10 +311,12 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> _fetchWebDownloads(BuildContext context, {bool bypassCache = false}) async {
+  Future<Map<String, dynamic>> _fetchWebDownloads(BuildContext context,
+      {bool bypassCache = false}) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
-      final response = await apiService.getWebDownloadsList(bypassCache: bypassCache);
+      final response =
+          await apiService.getWebDownloadsList(bypassCache: bypassCache);
 
       if (!response.success) {
         return {
@@ -240,6 +327,11 @@ class DownloadsPageState extends ChangeNotifier {
       final List<WebDownload> webDownloads = (response.data as List)
           .map((json) => WebDownload.fromJson(json))
           .toList();
+      webDownloads
+          .where((webdl) => webdl.progress < 1 && webdl.active)
+          .forEach((webdl) {
+        startPeriodicUpdate(webdl.id, DownloadableItemType.webdl);
+      });
       _downloads.removeWhere((item) => item is WebDownload);
       _downloads.addAll(webDownloads);
 
@@ -255,10 +347,12 @@ class DownloadsPageState extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> _fetchUsenet(BuildContext context, {bool bypassCache = false}) async {
+  Future<Map<String, dynamic>> _fetchUsenet(BuildContext context,
+      {bool bypassCache = false}) async {
     try {
       final apiService = Provider.of<TorboxAPI>(context, listen: false);
-      final response = await apiService.getUsenetDownloadsList(bypassCache: bypassCache);
+      final response =
+          await apiService.getUsenetDownloadsList(bypassCache: bypassCache);
 
       if (!response.success) {
         return {
@@ -268,6 +362,11 @@ class DownloadsPageState extends ChangeNotifier {
       }
       final List<Usenet> usenetDownloads =
           (response.data as List).map((json) => Usenet.fromJson(json)).toList();
+      usenetDownloads
+          .where((usenet) => usenet.progress < 1 && usenet.active)
+          .forEach((usenet) {
+        startPeriodicUpdate(usenet.id, DownloadableItemType.usenet);
+      });
       _downloads.removeWhere((item) => item is Usenet);
       _downloads.addAll(usenetDownloads);
 
@@ -306,7 +405,6 @@ class DownloadsPageState extends ChangeNotifier {
     selectedItems.clear();
     notifyListeners();
   }
-
 
   // make sure only visible items are selected
   void selectAllItems() {
@@ -433,7 +531,8 @@ class DownloadsPageState extends ChangeNotifier {
         ...filteredSortedUsenetDownloads,
         ...filteredSortedWebDownloads,
       ];
-      selectedItems = allItems.where((item) => !selectedItems.contains(item)).toList();
+      selectedItems =
+          allItems.where((item) => !selectedItems.contains(item)).toList();
     }
     notifyListeners();
   }
@@ -485,7 +584,6 @@ class DownloadsPageState extends ChangeNotifier {
     await _handleSelectedItems((item) => item.download());
   }
 
-
   static String handleTorrentName(String name) {
     if (Settings.getValue<bool>('key-use-torrent-name-parsing',
         defaultValue: false)!) {
@@ -495,7 +593,6 @@ class DownloadsPageState extends ChangeNotifier {
       return name;
     }
   }
-
-
-
 }
+
+enum DownloadableItemType { torrent, webdl, usenet }

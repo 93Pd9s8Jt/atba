@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 RefreshIndicator buildTorrentsTab(
     DownloadsPageState state, BuildContext context) {
   return RefreshIndicator(
+    key: state.torrentRefreshIndicatorKey,
     onRefresh: () async {
       await state.refreshTorrents(bypassCache: true);
     },

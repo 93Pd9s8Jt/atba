@@ -132,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SnackBar(content: Text('Invalid link: ${file.path}')),
           );
           continue;
-        };
+        }
         // Handle text sharing (for links)
         if (uri.scheme == "magnet") {
           ScaffoldMessenger.of(context).showSnackBar(

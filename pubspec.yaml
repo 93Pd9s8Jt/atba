@@ -13,6 +13,8 @@ dependencies:
   collection: ^1.19.0
   crypto: ^3.0.6
   dartz: ^0.10.1
+  dio: ^5.9.0
+  dio_cache_interceptor: ^4.0.3
   dynamic_color: ^1.8.1
   either_dart: ^1.0.0
   file_picker: ^10.3.2
@@ -31,6 +33,12 @@ dependencies:
       ref: nested
   flutter_speed_dial: ^7.0.0
   http: ^1.4.0
+  http_cache_client: ^1.0.2
+  http_cache_core: ^1.1.1
+  http_cache_drift_store: ^7.0.0
+  http_cache_file_store: ^2.0.1
+  http_cache_hive_store: ^5.0.1
+  http_cache_sembast_store: ^1.0.0
   icon_craft: ^0.1.1
   implicitly_animated_reorderable_list_2: ^0.6.0
   listen_sharing_intent: ^1.9.2
@@ -40,6 +48,7 @@ dependencies:
   provider: ^6.1.5
   shared_preferences: ^2.5.3
   url_launcher: ^6.3.2
+  uuid: ^4.5.1
   video_player: ^2.10.0
   webview_flutter: ^4.13.0
 
