@@ -85,7 +85,7 @@ class TorboxAPI {
     method = method.toLowerCase();
 
     late final int statusCode;
-    late final responseData;
+    late final String responseData;
     late final String responseReasonPhrase;
 
     switch (method) {
@@ -276,6 +276,9 @@ class TorboxAPI {
       'as_queued': asQueued,
     });
     if (response.success && response.data != null) {
+      if (response.data['torrent_id'] == null) {
+        throw Exception('torrent_id is null in response data');
+      }
       downloadsPageState?.startPeriodicUpdate(response.data['torrent_id'], DownloadableItemType.torrent);
     }
     return response;

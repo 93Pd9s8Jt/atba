@@ -1,13 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
-import 'dart:isolate';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_cache_core/http_cache_core.dart';
 import 'package:http_cache_drift_store/http_cache_drift_store.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
-import 'package:http_cache_client/http_cache_client.dart';
 
 class TorboxCacheHttpClient {
   late final DriftCacheStore store;
@@ -32,6 +29,15 @@ class TorboxCacheHttpClient {
         uri.toString() + (normalizedHeaders?.toString() ?? ''));
   }
 
+  Future<void> _cacheRequest(String key, http.Response response,
+      {Duration? expiry}) async {
+    await store.set(await response.toCacheResponse(
+        key: key,
+        options: CacheOptions(
+            store: store, maxStale: expiry ?? defaultExpiry),
+        requestDate: DateTime.now()));
+  }
+
   /// Checks all cache entries for expiry and removes expired ones.
   Future<void> _purgeExpired() async {
     store.clean(staleOnly: true);
@@ -43,7 +49,9 @@ class TorboxCacheHttpClient {
 
   /// Custom get method, similar to http.get, with advanced cache logic
   Future<http.Response> get(Uri uri,
-      {Map<String, String>? headers, Duration? expiry}) async {
+      {Map<String, String>? headers,
+      Duration? expiry,
+      bool? cacheAndRefreshMylist}) async {
     await _purgeExpired();
 
     final path = uri.path;
@@ -77,7 +85,8 @@ class TorboxCacheHttpClient {
     ];
     for (final pattern in alwaysCacheEndpoints) {
       if (_matches(pattern, path)) {
-        return await _getWithCache(uri, headers, expiry: const Duration(days: 7));
+        return await _getWithCache(uri, headers,
+            expiry: const Duration(days: 7));
       }
     }
 
@@ -86,11 +95,13 @@ class TorboxCacheHttpClient {
         _matches(r'^/torrents/', path) ||
         _matches(r'^/usenet/', path) ||
         _matches(r'^/webdl/', path)) {
-      final isSearch = _matches(r'^/search/', path) || _matches(r'/search/', path);
+      final isSearch =
+          _matches(r'^/search/', path) || _matches(r'/search/', path);
       return await _getWithCache(
         uri,
         headers,
-        expiry: isSearch ? const Duration(minutes: 10) : const Duration(minutes: 5),
+        expiry:
+            isSearch ? const Duration(minutes: 10) : const Duration(minutes: 5),
       );
     }
 
@@ -105,23 +116,17 @@ class TorboxCacheHttpClient {
       if (bypassCache) {
         // Never cache if bypass_cache param is present and true
         final response = await http.get(uri, headers: headers);
+        _cacheRequest(_cacheKey(uri, headers), response);
         return response;
       } else {
         // Try to share cache between bypass_cache and non-bypass_cache
-        Map<String, String> queryParameters = Map.from(uri.queryParameters);
-        queryParameters['bypass_cache'] = "true";
-        final bypassCacheUri = uri.replace(queryParameters: queryParameters);
+        Map<String, String> newQueryParameters = Map.from(uri.queryParameters);
+        newQueryParameters['bypass_cache'] = "true";
+        final bypassCacheUri = uri.replace(queryParameters: newQueryParameters);
         final bypassCacheKey = _cacheKey(bypassCacheUri, headers);
 
-        final CacheResponse? cache = await store.get(bypassCacheKey);
-        if (cache != null && !cache.isStaled()) {
-          // Copy cache to non-bypass version
-          final noBypassCacheKey = _cacheKey(uri, headers);
-          CacheResponse newCache = cache.copyWith(
-              key: noBypassCacheKey, url: uri.toString());
-          await store.set(newCache);
-        }
-        return await _getWithCache(uri, headers, expiry: const Duration(days: 1));
+        return await _getWithCache(uri, headers,
+            expiry: const Duration(days: 1), providedKey: bypassCacheKey);
       }
     }
 
@@ -139,8 +144,7 @@ class TorboxCacheHttpClient {
       final cached = await store.get(key);
       if (cached != null && !cached.isStaled()) {
         final headers = cached.headers != null
-            ? Map<String, String>.from(
-                jsonDecode(utf8.decode(cached.headers!)))
+            ? Map<String, String>.from(jsonDecode(utf8.decode(cached.headers!)))
             : <String, String>{};
         return http.Response.bytes(
           cached.content!,
@@ -158,8 +162,8 @@ class TorboxCacheHttpClient {
 
   /// Helper to get with cache and expiry
   Future<http.Response> _getWithCache(Uri uri, Map<String, String>? headers,
-      {Duration? expiry}) async {
-    final key = _cacheKey(uri, headers);
+      {Duration? expiry, String? providedKey}) async {
+    final key = providedKey ?? _cacheKey(uri, headers);
     final cached = await store.get(key);
 
     if (cached != null) {
@@ -189,10 +193,8 @@ class TorboxCacheHttpClient {
 
     // Not cached or expired, fetch from network
     final response = await http.get(uri, headers: headers);
-    await store.set(await response.toCacheResponse(
-        key: key,
-        options: CacheOptions(store: store, maxStale: expiry),
-        requestDate: DateTime.now()));
+    _cacheRequest(key, response);
+
     return response;
   }
 

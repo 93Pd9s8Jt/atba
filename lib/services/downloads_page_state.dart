@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:collection/collection.dart';
 
 import 'package:atba/models/downloadable_item.dart';
@@ -192,8 +193,11 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   void startPeriodicUpdate(int id, DownloadableItemType type) {
-    Timer.periodic(const Duration(seconds: 60), (timer) async {
+    return; //dsiable periodic updates for now
+    void updateTimer() async {
       print(id.toString());
+      bool runTimerAgain = true;
+      late final Duration age;
       late final response;
       switch (type) {
         case DownloadableItemType.torrent:
@@ -203,6 +207,7 @@ class DownloadsPageState extends ChangeNotifier {
             return;
           }
           final updatedTorrent = Torrent.fromJson(response.data);
+          age = DateTime.now().difference(updatedTorrent.updatedAt);
           final index = _downloads.indexWhere((item) => item is Torrent && item.id == id);
           if (index != -1) {
             _downloads[index] = updatedTorrent;
@@ -211,7 +216,7 @@ class DownloadsPageState extends ChangeNotifier {
             _downloads.add(updatedTorrent);
           }
           if (updatedTorrent.progress >= 1 || !updatedTorrent.active) {
-            timer.cancel();
+            runTimerAgain = false;
           }
           break;
         case DownloadableItemType.webdl:
@@ -221,6 +226,7 @@ class DownloadsPageState extends ChangeNotifier {
             return;
           }
           final updatedWebDownload = WebDownload.fromJson(response.data);
+          age = DateTime.now().difference(updatedWebDownload.updatedAt);
           final index = _downloads.indexWhere((item) => item is WebDownload && item.id == id);
           if (index != -1) {
             _downloads[index] = updatedWebDownload;
@@ -229,7 +235,7 @@ class DownloadsPageState extends ChangeNotifier {
             _downloads.add(updatedWebDownload);
           }
           if (updatedWebDownload.progress >= 1 || !updatedWebDownload.active) {
-            timer.cancel();
+            runTimerAgain = false;
           }
           break;
         case DownloadableItemType.usenet:
@@ -239,6 +245,7 @@ class DownloadsPageState extends ChangeNotifier {
             return;
           }
           final updatedUsenet = Usenet.fromJson(response.data);
+          age = DateTime.now().difference(updatedUsenet.updatedAt);
           final index = _downloads.indexWhere((item) => item is Usenet && item.id == id);
           if (index != -1) {
             _downloads[index] = updatedUsenet;
@@ -246,11 +253,17 @@ class DownloadsPageState extends ChangeNotifier {
             _downloads.add(updatedUsenet);
           }
           if (updatedUsenet.progress >= 1 || !updatedUsenet.active) {
-            timer.cancel();
+            runTimerAgain = false;
           }
           break;
       }
-    });
+      if (runTimerAgain) {
+        
+        final int seconds = max(1, (log(max(5, age.inSeconds)) / log(1.2)).floor());
+        Timer(Duration(seconds: seconds), updateTimer);
+      }
+    }
+    Timer(const Duration(seconds: 10), updateTimer);
   }
 
 
