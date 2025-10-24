@@ -10,11 +10,11 @@ Another TorBox App.
 
 <img width="410" height="900" alt="image" src="https://github.com/user-attachments/assets/8c885631-9e5e-49c4-8ee1-0d6210bd8721" />
 
-
+## Contributing
+I'm always happy to review pull requests, and it would be particularly helpful if people could resolve issues on iOS and Android TV which I cannot debug. If you can't contribute code, suggestions and bug reports are also welcome.
 
 ## TODO/Upcoming features
 - Fully functonal internal video player (probably media_kit)
 - Fully cross platform 
 - Responsive design
-- Functional downloads page
   
