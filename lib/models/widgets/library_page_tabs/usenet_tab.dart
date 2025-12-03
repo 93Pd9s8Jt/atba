@@ -1,6 +1,6 @@
 import 'package:atba/models/widgets/downloadable_item_widget.dart';
 import 'package:atba/models/widgets/search_bar.dart';
-import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/services/library_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

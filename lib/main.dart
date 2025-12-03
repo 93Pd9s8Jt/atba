@@ -1,3 +1,4 @@
+import 'package:atba/services/update_service.dart';
 import 'package:atba/models/downloadable_item.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,9 @@ Future<void> main() async {
         Provider<SharedPrefsService>.value(value: sharedPrefsService),
         Provider<SecureStorageService>.value(value: secureStorageService),
         Provider<TorboxAPI>.value(value: apiService),
+        ProxyProvider<TorboxAPI, UpdateService>(
+          update: (_, torboxApi, __) => UpdateService(torboxApi),
+        ),
         ChangeNotifierProvider<StremioRequests>.value(value: stremioService),
         ChangeNotifierProvider<TorrentioAPI>.value(value: torrentioService),
         ChangeNotifierProvider<AppState>(

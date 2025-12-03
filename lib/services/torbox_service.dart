@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:atba/models/torbox_api_response.dart';
-import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/models/torrent.dart' show QueuedTorrent, Torrent;
+import 'package:atba/services/library_page_state.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -100,7 +101,13 @@ class TorboxAPI {
             url.path,
             queryParameters
                 .cast<String, dynamic>()); // adds body as query parameters
-        final response = await client!.get(
+        final dynamic fetchClient;
+        if (Settings.getValue("key-use-cache", defaultValue: true)!) {
+          fetchClient = client;
+        } else {
+          fetchClient = http.Client();
+        }
+        final response = await fetchClient!.get(
           requestUrl,
           headers: {
               HttpHeaders.authorizationHeader: 'Bearer $apiKey',
@@ -109,7 +116,7 @@ class TorboxAPI {
           
         );
         statusCode = response.statusCode;
-        responseData = await compute(_decodeResponseBody, response.bodyBytes);
+        responseData = await compute(_decodeResponseBody, response.bodyBytes as List<int>);
         responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       case 'post':
@@ -144,7 +151,7 @@ class TorboxAPI {
             body: jsonEncode(body),
           );
                     statusCode = response.statusCode;
-          responseData = await compute(_decodeResponseBody, response.bodyBytes);
+          responseData = await compute(_decodeResponseBody, response.bodyBytes as List<int>);
           responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         }
         break;
@@ -276,10 +283,15 @@ class TorboxAPI {
       'as_queued': asQueued,
     });
     if (response.success && response.data != null) {
-      if (response.data['torrent_id'] == null) {
-        throw Exception('torrent_id is null in response data');
+      if (response.data.containsKey('queued_id')) {
+        downloadsPageState?.temporaryQueuedTorrents.add(
+          QueuedTorrent.fromJson(response.data),
+        );
+        return response;
       }
-      downloadsPageState?.startPeriodicUpdate(response.data['torrent_id'], DownloadableItemType.torrent);
+      if (Settings.getValue("key-library-foreground-update", defaultValue: false)!) {
+        downloadsPageState?.startPeriodicUpdate<Torrent>(response.data['torrent_id']);
+      }
     }
     return response;
   }

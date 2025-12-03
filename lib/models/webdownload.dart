@@ -40,9 +40,12 @@ import 'package:atba/services/torbox_service.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'downloadable_item.dart';
+import 'package:json_annotation/json_annotation.dart';
+part 'webdownload.g.dart';
 
 enum WebDownloadState { downloading, finished, error, unknown }
 
+@JsonSerializable()
 class WebDownload extends DownloadableItem {
   final WebDownloadState state;
   final String error;
@@ -101,6 +104,10 @@ class WebDownload extends DownloadableItem {
       error: json['error'] ?? '',
     );
   }
+
+  factory WebDownload.fromJsonGenerated(Map<String, dynamic> json) => _$WebDownloadFromJson(json);
+  @override
+  Map<String, dynamic> toJsonGenerated() => _$WebDownloadToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {

@@ -2,7 +2,7 @@ import 'package:atba/models/widgets/search_bar.dart';
 import 'package:atba/models/widgets/torrent_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/services/library_page_state.dart';
 
 class TorrentsList extends StatefulWidget {
   const TorrentsList({super.key});

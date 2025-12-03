@@ -1,15 +1,15 @@
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:atba/models/torrent.dart';
-import 'package:atba/models/widgets/downloads_page_tabs/torrents_tab.dart';
-import 'package:atba/models/widgets/downloads_page_tabs/web_downloads_tab.dart';
-import 'package:atba/models/widgets/downloads_page_tabs/usenet_tab.dart';
-import 'package:atba/models/widgets/downloads_page_tabs/add_tabs.dart';
+import 'package:atba/models/widgets/library_page_tabs/torrents_tab.dart';
+import 'package:atba/models/widgets/library_page_tabs/web_downloads_tab.dart';
+import 'package:atba/models/widgets/library_page_tabs/usenet_tab.dart';
+import 'package:atba/models/widgets/library_page_tabs/add_tabs.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
-import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/services/library_page_state.dart';
 import 'package:icon_craft/icon_craft.dart';
 
 class DownloadsPage extends StatefulWidget {
@@ -85,13 +85,17 @@ class _DownloadsPageState extends State<DownloadsPage>
                   else
                     Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.refresh),
-                          onPressed: () {
-                            state.torrentRefreshIndicatorKey.currentState?.show();
-                            state.webRefreshIndicatorKey.currentState?.show();
-                            state.usenetRefreshIndicatorKey.currentState?.show();
-                          },
+                        if (Settings.getValue("key-show-refresh-icon",
+                            defaultValue: true)!)
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            onPressed: () {
+                              state.torrentRefreshIndicatorKey.currentState
+                                  ?.show();
+                              state.webRefreshIndicatorKey.currentState?.show();
+                              state.usenetRefreshIndicatorKey.currentState
+                                  ?.show();
+                            },
                           ),
                         IconButton(
                           icon: const Icon(Icons.search),
@@ -249,7 +253,7 @@ class _DownloadsPageState extends State<DownloadsPage>
                       ),
                     )
                   : null,
-                floatingActionButton: state.isSelecting
+              floatingActionButton: state.isSelecting
                   ? const SizedBox.shrink()
                   : AnimatedBuilder(
                       animation: _tabController.animation!,
@@ -386,7 +390,9 @@ class _DownloadsPageState extends State<DownloadsPage>
                         }
 
                         return SpeedDial(
-                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16))),
                           activeChild: const Icon(Icons.close),
                           direction: SpeedDialDirection.up,
                           children: getSpeedDialChildren(),

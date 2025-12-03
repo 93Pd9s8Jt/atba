@@ -3,6 +3,8 @@ import 'package:atba/services/torbox_service.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'downloadable_item.dart';
+import 'package:json_annotation/json_annotation.dart';
+part 'usenet.g.dart';
 
 enum UsenetPostProcessing {
   none,
@@ -12,6 +14,7 @@ enum UsenetPostProcessing {
   repairAndUnpackAndDelete
 }
 
+@JsonSerializable()
 class Usenet extends DownloadableItem {
   Usenet({
     required super.id,
@@ -62,6 +65,10 @@ class Usenet extends DownloadableItem {
       availability: json['availability'],
     );
   }
+
+  factory Usenet.fromJsonGenerated(Map<String, dynamic> json) => _$UsenetFromJson(json);
+  @override
+  Map<String, dynamic> toJsonGenerated() => _$UsenetToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {

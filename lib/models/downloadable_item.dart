@@ -1,5 +1,7 @@
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart';
+import 'package:json_annotation/json_annotation.dart';
+part 'downloadable_item.g.dart';
 
 abstract class DownloadableItem {
   static late TorboxAPI apiService;
@@ -65,9 +67,11 @@ abstract class DownloadableItem {
   Future<TorboxAPIResponse?> download() async => null;
   Future<TorboxAPIResponse?> downloadFile(DownloadableFile file) async => null;
 
+  Map<String, dynamic> toJsonGenerated();
+
 }
 
-
+@JsonSerializable()
 class DownloadableFile {
   final int id;
   final String? md5;
@@ -98,7 +102,12 @@ class DownloadableFile {
       shortName: json['short_name'],
     );
   }
+  factory DownloadableFile.fromJsonGenerated(Map<String, dynamic> json) => _$DownloadableFileFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DownloadableFileToJson(this);
 }
+
+
 
 enum DownloadableItemStatus {
   idle, loading, success, error

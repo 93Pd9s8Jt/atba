@@ -10,7 +10,7 @@ import 'package:app_links/app_links.dart';
 import 'package:provider/provider.dart';
 import 'package:listen_sharing_intent/listen_sharing_intent.dart';
 
-import 'downloads_page.dart';
+import 'library_page.dart';
 import 'watch_page.dart';
 import 'settings_page.dart';
 
@@ -230,8 +230,8 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.download),
-            label: 'Downloads',
+            icon: Icon(Icons.library_books_outlined),
+            label: 'Library',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.play_arrow),

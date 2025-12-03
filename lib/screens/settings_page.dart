@@ -297,6 +297,22 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ])),
           SimpleSettingsTile(
+              title: "Library",
+              leading: Icon(Icons.library_books),
+              child:
+                  SettingsScreen(title: "Library settings", children: <Widget>[
+                CheckboxSettingsTile(
+                  title: "Update items in the foreground",
+                  settingKey: "key-library-foreground-update",
+                  defaultValue: false,
+                ),
+                CheckboxSettingsTile(
+                  title: "Show refresh icon",
+                  settingKey: "key-show-refresh-icon",
+                  defaultValue: true,
+                )
+              ])),
+          SimpleSettingsTile(
             title: "Storage",
             leading: Icon(Icons.storage),
             child: SettingsScreen(
@@ -311,20 +327,26 @@ class _SettingsPageState extends State<SettingsPage> {
                       final folderPath = await permissionModel.selectFolder();
                       if (folderPath == null) return;
                       await permissionModel.saveFolderPath(folderPath);
-                      setState(() {}); // <-- ensure UI updates
+                      setState(() {});
                     },
                     subtitle: Text(Settings.getValue<String>('folder_path',
                         defaultValue: 'No download folder set')!)),
+                const Divider(),
+                CheckboxSettingsTile(
+                  title: "Use caching",
+                  settingKey: 'key-use-cache',
+                  defaultValue: true,
+                ),
                 ListTile(
                     title: const Text("Clear cache"),
                     leading: Icon(Icons.delete),
                     onTap: () async {
                       await apiService.deleteTorboxCache();
+                      await Settings.setValue("temporary-downloadable-items", "[]");
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Cache cleared')),
                       );
-                    }
-                ),
+                    }),
               ],
             ),
           ),

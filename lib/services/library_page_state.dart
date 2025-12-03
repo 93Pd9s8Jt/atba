@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:collection/collection.dart';
 
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torrent_name_parser.dart';
+import 'package:atba/services/update_service.dart';
 import 'package:flutter/material.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/webdownload.dart';
@@ -19,9 +19,12 @@ class DownloadsPageState extends ChangeNotifier {
   String _selectedSortingOption = Settings.getValue<String>(
       "key-selected-sorting-option",
       defaultValue: "Default")!;
+
   final List<String> _selectedMainFilters = List<String>.from(jsonDecode(
       Settings.getValue<String>("key-selected-main-filters",
           defaultValue: "[]")!)); // probably code be improved
+
+  final Map<int, StreamSubscription> _activeSubscriptions = {};
 
   final List<DownloadableItem> _downloads = [];
 
@@ -42,11 +45,60 @@ class DownloadsPageState extends ChangeNotifier {
   final GlobalKey<RefreshIndicatorState> usenetRefreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
   late final apiService;
+  late final UpdateService updateService;
+
+  List<DownloadableItem> temporaryDownloadableItems = Settings.getValue<String>(
+                  "temporary-downloadable-items",
+                  defaultValue: "[]")!
+              .isNotEmpty &&
+          Settings.getValue<bool>("key-library-foreground-update",
+              defaultValue: false)!
+      ? (jsonDecode(Settings.getValue<String>("temporary-downloadable-items",
+              defaultValue: "[]")!) as List)
+          .map((json) {
+          final Map<String, dynamic> itemJson = Map<String, dynamic>.from(json);
+          switch (itemJson['type']) {
+            case 'torrent':
+              return Torrent.fromJsonGenerated(itemJson);
+            case 'webdownload':
+              return WebDownload.fromJsonGenerated(itemJson);
+            case 'usenet':
+              return Usenet.fromJsonGenerated(itemJson);
+            default:
+              throw Exception('Unknown DownloadableItem type');
+          }
+        }).toList()
+      : [];
+
+  List<Torrent> get temporaryTorrents =>
+      temporaryDownloadableItems.whereType<Torrent>().toList();
+  List<WebDownload> get temporaryWebDownloads =>
+      temporaryDownloadableItems.whereType<WebDownload>().toList();
+  List<Usenet> get temporaryUsenetDownloads =>
+      temporaryDownloadableItems.whereType<Usenet>().toList();
+  List<QueuedTorrent> temporaryQueuedTorrents = [];
 
   // init
   DownloadsPageState(this.context) {
     apiService = Provider.of<TorboxAPI>(context, listen: false);
+    updateService = Provider.of<UpdateService>(context, listen: false);
     apiService.setDownloadsPageState(this);
+
+    for (var item in temporaryTorrents) {
+      if (item.progress < 1 && item.active) {
+        startPeriodicUpdate<Torrent>(item.id);
+      }
+    }
+    for (var item in temporaryWebDownloads) {
+      if (item.progress < 1 && item.active) {
+        startPeriodicUpdate<WebDownload>(item.id);
+      }
+    }
+    for (var item in temporaryUsenetDownloads) {
+      if (item.progress < 1 && item.active) {
+        startPeriodicUpdate<Usenet>(item.id);
+      }
+    }
     _torrentsFuture = _fetchTorrents(context);
     _webDownloadsFuture = _fetchWebDownloads(context);
     _usenetFuture = _fetchUsenet(context);
@@ -55,10 +107,13 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
-  // Optionally, add this if you ever dispose DownloadsPageState manually:
   @override
   void dispose() {
     searchController.dispose();
+    for (final subscription in _activeSubscriptions.values) {
+      subscription.cancel();
+    }
+    _activeSubscriptions.clear();
     super.dispose();
   }
 
@@ -69,8 +124,15 @@ class DownloadsPageState extends ChangeNotifier {
   Future<Map<String, dynamic>> get webDownloadsFuture => _webDownloadsFuture;
   Future<Map<String, dynamic>> get usenetFuture => _usenetFuture;
 
+  // exclude dups, temporary items override permanent ones because they ate newer
   List<T> _getDownloads<T extends DownloadableItem>() =>
-      _downloads.whereType<T>().toList();
+      temporaryDownloadableItems.whereType<T>().toList() +
+      _downloads
+          .whereType<T>()
+          .where((permaItem) => !temporaryDownloadableItems
+              .whereType<T>()
+              .any((tempItem) => permaItem.id == tempItem.id))
+          .toList();
 
   List<Torrent> get activeTorrents =>
       _getDownloads<Torrent>().where((torrent) => torrent.active).toList();
@@ -192,81 +254,86 @@ class DownloadsPageState extends ChangeNotifier {
     });
   }
 
-  void startPeriodicUpdate(int id, DownloadableItemType type) {
-    return; //dsiable periodic updates for now
-    void updateTimer() async {
-      print(id.toString());
-      bool runTimerAgain = true;
-      late final Duration age;
-      late final response;
-      switch (type) {
-        case DownloadableItemType.torrent:
-          response = await apiService.getTorrentsList(
-              torrentId: id, bypassCache: true);
-          if (!response.success || response.data == null) {
-            return;
-          }
-          final updatedTorrent = Torrent.fromJson(response.data);
-          age = DateTime.now().difference(updatedTorrent.updatedAt);
-          final index = _downloads.indexWhere((item) => item is Torrent && item.id == id);
-          if (index != -1) {
-            _downloads[index] = updatedTorrent;
-            print("Updated torrent info for: ${updatedTorrent.name}");
-          } else {
-            _downloads.add(updatedTorrent);
-          }
-          if (updatedTorrent.progress >= 1 || !updatedTorrent.active) {
-            runTimerAgain = false;
-          }
-          break;
-        case DownloadableItemType.webdl:
-          response = await apiService.getWebDownloadsList(
-              downloadId: id, bypassCache: true);
-          if (!response.success || response.data == null) {
-            return;
-          }
-          final updatedWebDownload = WebDownload.fromJson(response.data);
-          age = DateTime.now().difference(updatedWebDownload.updatedAt);
-          final index = _downloads.indexWhere((item) => item is WebDownload && item.id == id);
-          if (index != -1) {
-            _downloads[index] = updatedWebDownload;
-            
-          } else {
-            _downloads.add(updatedWebDownload);
-          }
-          if (updatedWebDownload.progress >= 1 || !updatedWebDownload.active) {
-            runTimerAgain = false;
-          }
-          break;
-        case DownloadableItemType.usenet:
-          response = await apiService.getUsenetDownloadsList(
-              downloadId: id, bypassCache: true);
-          if (!response.success || response.data == null) {
-            return;
-          }
-          final updatedUsenet = Usenet.fromJson(response.data);
-          age = DateTime.now().difference(updatedUsenet.updatedAt);
-          final index = _downloads.indexWhere((item) => item is Usenet && item.id == id);
-          if (index != -1) {
-            _downloads[index] = updatedUsenet;
-          } else {
-            _downloads.add(updatedUsenet);
-          }
-          if (updatedUsenet.progress >= 1 || !updatedUsenet.active) {
-            runTimerAgain = false;
-          }
-          break;
-      }
-      if (runTimerAgain) {
-        
-        final int seconds = max(1, (log(max(5, age.inSeconds)) / log(1.2)).floor());
-        Timer(Duration(seconds: seconds), updateTimer);
-      }
-    }
-    Timer(const Duration(seconds: 10), updateTimer);
+  void persistTemporaryDownloadableItems() {
+    // store in our db
+    List<Map<String, dynamic>> jsonItems = temporaryDownloadableItems
+        .map((item) => item.toJsonGenerated()
+          ..putIfAbsent("type", () {
+            switch (item) {
+              case Torrent _:
+                return 'torrent';
+              case WebDownload _:
+                return 'webdownload';
+              case Usenet _:
+                return 'usenet';
+              default:
+                throw Exception('Unknown DownloadableItem type');
+            }
+          }))
+        .toList();
+    Settings.setValue<String>(
+        "temporary-downloadable-items", jsonEncode(jsonItems));
   }
 
+  DownloadableItemStatus? setItemStatus<T extends DownloadableItem>(
+      int id, DownloadableItemStatus newStatus) {
+    final item = _getDownloads<T>().where((item) => item.id == id).first;
+    final oldItemStatus = item.itemStatus;
+    item.itemStatus = newStatus;
+    notifyListeners();
+    return oldItemStatus;
+  }
 
+  void startPeriodicUpdate<T extends DownloadableItem>(int id) {
+    if (!Settings.getValue("key-library-foreground-update",
+        defaultValue: false)!) {
+      return;
+    }
+    // If already subscribed, do nothing.
+    if (_activeSubscriptions.containsKey(id)) return;
+
+    final stream = updateService.monitorItem<T>(id);
+
+    _activeSubscriptions[id] = stream.listen(
+      (json) {
+        final index =
+            temporaryDownloadableItems.indexWhere((item) => item.id == id);
+        if (json["type"] == "updating") {
+          if (index != -1) {
+            temporaryDownloadableItems[index].itemStatus =
+                DownloadableItemStatus.loading;
+          }
+          notifyListeners();
+          return;
+        }
+        // Find the item in temporary list and update it.
+        T updatedItem = json["updatedItem"] as T;
+        if (index != -1) {
+          temporaryDownloadableItems[index] = updatedItem;
+        } else {
+          // Or add it if it's not there for some reason
+          temporaryDownloadableItems.add(updatedItem);
+        }
+
+        // Update the UI
+        notifyListeners();
+        persistTemporaryDownloadableItems(); // Persist the new state
+      },
+      onDone: () {
+        // When the stream closes (download finished), remove the subscription.
+        _activeSubscriptions.remove(id);
+      },
+      onError: (error) {
+        // Also remove on error.
+        _activeSubscriptions.remove(id);
+      },
+    );
+  }
+
+  void stopPeriodicUpdate(int id) {
+    _activeSubscriptions[id]?.cancel();
+    _activeSubscriptions.remove(id);
+  }
 
   void toggleSearch() {
     isSearching = !isSearching;
@@ -298,8 +365,13 @@ class DownloadsPageState extends ChangeNotifier {
       final List<Torrent> postQueuedTorrents = (responses[0].data as List)
           .map((json) => Torrent.fromJson(json))
           .toList();
-      postQueuedTorrents.where((torrent) => torrent.progress < 1 && torrent.active).forEach((torrent) {
-        startPeriodicUpdate(torrent.id, DownloadableItemType.torrent);
+      postQueuedTorrents
+          .where((torrent) => torrent.progress < 1 && torrent.active)
+          .forEach((torrent) {
+        if (Settings.getValue("key-library-foreground-update",
+            defaultValue: false)!) {
+          startPeriodicUpdate<Torrent>(torrent.id);
+        }
       });
 
       final List<QueuedTorrent> queuedTorrents = (responses[1].data as List)
@@ -343,7 +415,10 @@ class DownloadsPageState extends ChangeNotifier {
       webDownloads
           .where((webdl) => webdl.progress < 1 && webdl.active)
           .forEach((webdl) {
-        startPeriodicUpdate(webdl.id, DownloadableItemType.webdl);
+        if (Settings.getValue("key-library-foreground-update",
+            defaultValue: false)!) {
+          startPeriodicUpdate<WebDownload>(webdl.id);
+        }
       });
       _downloads.removeWhere((item) => item is WebDownload);
       _downloads.addAll(webDownloads);
@@ -378,7 +453,10 @@ class DownloadsPageState extends ChangeNotifier {
       usenetDownloads
           .where((usenet) => usenet.progress < 1 && usenet.active)
           .forEach((usenet) {
-        startPeriodicUpdate(usenet.id, DownloadableItemType.usenet);
+        if (Settings.getValue("key-library-foreground-update",
+            defaultValue: false)!) {
+          startPeriodicUpdate<Usenet>(usenet.id);
+        }
       });
       _downloads.removeWhere((item) => item is Usenet);
       _downloads.addAll(usenetDownloads);
@@ -402,8 +480,8 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   void toggleSelection(DownloadableItem item) {
-    if (selectedItems.contains(item)) {
-      selectedItems.remove(item);
+    if (selectedItems.any((selectedItem) => selectedItem.id == item.id)) {
+      selectedItems.removeWhere((selectedItem) => selectedItem.id == item.id);
       if (selectedItems.isEmpty) {
         isSelecting = false;
       }
@@ -511,22 +589,26 @@ class DownloadsPageState extends ChangeNotifier {
       switch (type) {
         case 'active':
           selectedItems = filteredSortedActiveTorrents
-              .where((item) => !selectedItems.contains(item))
+              .where((item) => !selectedItems
+                  .any((selectedItem) => selectedItem.id == item.id))
               .toList();
           break;
         case 'inactive':
           selectedItems = filteredSortedInactiveTorrents
-              .where((item) => !selectedItems.contains(item))
+              .where((item) => !selectedItems
+                  .any((selectedItem) => selectedItem.id == item.id))
               .toList();
           break;
         case 'queued':
           selectedItems = filteredSortedQueuedTorrents
-              .where((item) => !selectedItems.contains(item))
+              .where((item) => !selectedItems
+                  .any((selectedItem) => selectedItem.id == item.id))
               .toList();
           break;
         case 'usenet':
           selectedItems = filteredSortedUsenetDownloads
-              .where((item) => !selectedItems.contains(item))
+              .where((item) => !selectedItems
+                  .any((selectedItem) => selectedItem.id == item.id))
               .toList();
           break;
         case 'web':
@@ -555,6 +637,9 @@ class DownloadsPageState extends ChangeNotifier {
       {bool actionIsDelete = false}) async {
     // Iterate over a copy to avoid concurrent modification errors
     for (var item in List<DownloadableItem>.from(selectedItems)) {
+      if (actionIsDelete) {
+        stopPeriodicUpdate(item.id);
+      }
       item.itemStatus = DownloadableItemStatus.loading;
       notifyListeners();
       final response = await action(item);

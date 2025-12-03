@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/torrent_detail_screen.dart';
-import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/services/library_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
@@ -96,7 +96,10 @@ class TorrentWidget extends StatelessWidget {
     final state = Provider.of<DownloadsPageState>(context);
     PTN ptn = PTN();
     final isCensored = state.isTorrentNamesCensored;
-    final isSelected = state.selectedItems.contains(torrent);
+    final isSelected = state.selectedItems.any((item) =>
+        item is Torrent &&
+        item.id ==
+            torrent.id); // check if the selected items contain this torrent
     final torrentState = torrent.active
         ? torrent.downloadState
         : torrent.downloadState == "uploading"
@@ -229,7 +232,10 @@ class QueuedTorrentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = Provider.of<DownloadsPageState>(context);
     final isCensored = state.isTorrentNamesCensored;
-    final isSelected = state.selectedItems.contains(torrent);
+    final isSelected = state.selectedItems.any((item) =>
+        item is QueuedTorrent &&
+        item.id ==
+            torrent.id); // check if the selected items contain this torrent
     PTN ptn = PTN();
 
     return Container(
@@ -277,4 +283,3 @@ class QueuedTorrentWidget extends StatelessWidget {
     );
   }
 }
-

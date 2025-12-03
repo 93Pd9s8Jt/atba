@@ -3,6 +3,9 @@ import 'package:atba/models/torbox_api_response.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'downloadable_item.dart';
+import 'package:json_annotation/json_annotation.dart';
+part 'torrent.g.dart';
+
 
 /*
 Sample data:
@@ -58,6 +61,7 @@ String getReadableSize(int size) {
 
 enum TorrentStatus { idle, loading, success, error }
 
+@JsonSerializable()
 class Torrent extends DownloadableItem {
 
   final String hash;
@@ -159,6 +163,11 @@ class Torrent extends DownloadableItem {
       trackerMessage: json['tracker_message'] as String?,
     );
   }
+
+  factory Torrent.fromJsonGenerated(Map<String, dynamic> json) => _$TorrentFromJson(json);
+
+  @override
+  Map<String, dynamic> toJsonGenerated() => _$TorrentToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {
@@ -263,6 +272,7 @@ class Torrent extends DownloadableItem {
   }
 }
 
+@JsonSerializable()
 class QueuedTorrent extends DownloadableItem { // Technically not downloadable though
   final String magnet;
   final String? torrentFileLink;
@@ -313,6 +323,10 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
       type: json['type'] as String,
     );
   }
+
+  factory QueuedTorrent.fromJsonGenerated(Map<String, dynamic> json) => _$QueuedTorrentFromJson(json);
+  @override
+  Map<String, dynamic> toJsonGenerated() => _$QueuedTorrentToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {

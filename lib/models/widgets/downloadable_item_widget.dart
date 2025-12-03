@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/downloadable_item_detail_screen.dart';
-import 'package:atba/services/downloads_page_state.dart';
+import 'package:atba/services/library_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +18,7 @@ class DownloadableItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<DownloadsPageState>(context);
-    final isSelected = state.selectedItems.contains(item);
+    final isSelected = state.selectedItems.any((selectedItem) => selectedItem.id == item.id);
     final isCensored = state.isTorrentNamesCensored;
 
     return Container(
