@@ -95,11 +95,11 @@ class DownloadableFile {
     return DownloadableFile(
       id: json['id'],
       md5: json['md5'],
-      s3Path: json['s3_path'],
+      s3Path: json['s3Path'] ?? json['s3_path'], // apparently api can use both ??
       name: json['name'],
       size: json['size'],
       mimetype: json['mimetype'],
-      shortName: json['short_name'],
+      shortName: json['shortName'] ?? json['short_name'], // ditto
     );
   }
   factory DownloadableFile.fromJsonGenerated(Map<String, dynamic> json) => _$DownloadableFileFromJson(json);
