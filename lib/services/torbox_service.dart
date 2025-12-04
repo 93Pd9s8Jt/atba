@@ -306,7 +306,7 @@ class TorboxAPI {
     );
     if (response.success && response.data != null) {
       if (response.data.containsKey('queued_id')) {
-        final newQueuedTorrent = QueuedTorrent.fromJson(response.data);
+        final newQueuedTorrent = QueuedTorrent.fromJsonStub(response.data);
         downloadsPageState?.addQueuedTorrent(newQueuedTorrent);
         downloadsPageState?.addItemsToCache([newQueuedTorrent]);
       }

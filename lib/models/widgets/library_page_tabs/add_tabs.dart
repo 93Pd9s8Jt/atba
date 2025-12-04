@@ -805,7 +805,9 @@ class _AddSearchTabState extends State<AddSearchTab> {
       } else {
         bool hasListItems = false;
         if (const SetEquality()
-            .equals(valuesTypes, const {List<dynamic>, String})) {
+            .equals(valuesTypes, const {List<dynamic>, String}) ||
+            const SetEquality()
+            .equals(valuesTypes, const {List<dynamic>, int})) {
           hasListItems = true;
           _hasListItemFilters.add(type);
         }
@@ -825,6 +827,15 @@ class _AddSearchTabState extends State<AddSearchTab> {
                           .expand((x) => x)
                           .toSet()
                       : values)
+                  .sorted((a, b) {
+                            if (a is String && b is String) {
+                              return a.toLowerCase().compareTo(b.toLowerCase());
+                            } else if (a is int && b is int) {
+                              return a.compareTo(b);
+                            } else {
+                              return 0;
+                            }
+                          })
                   .map((value) {
                 return FilterChip(
                   label: Text(value.toString()),

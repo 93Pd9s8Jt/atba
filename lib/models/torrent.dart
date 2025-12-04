@@ -274,10 +274,10 @@ class Torrent extends DownloadableItem {
 
 @JsonSerializable()
 class QueuedTorrent extends DownloadableItem { // Technically not downloadable though
-  final String magnet;
+  final String? magnet;
   final String? torrentFileLink;
   final String hash;
-  final String type;
+  final String? type;
   TorrentStatus status = TorrentStatus.idle;
   @override
   DownloadableItemStatus? itemStatus;
@@ -289,10 +289,10 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
     required super.id,
     required super.name,
     required super.createdAt,
-    required this.magnet,
-    required this.torrentFileLink,
+    this.magnet,
+    this.torrentFileLink,
     required this.hash,
-    required this.type,
+    this.type,
   }) : super(
           updatedAt: createdAt,
           size: 0,
@@ -316,11 +316,20 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
     return QueuedTorrent(
       id: json['id'] as int,
       createdAt: DateTime.parse(json['created_at'] as String),
-      magnet: json['magnet'] as String,
+      magnet: json['magnet'] as String?,
       torrentFileLink: json['torrent_file'] as String?,
       hash: json['hash'] as String,
       name: json['name'] as String,
-      type: json['type'] as String,
+      type: json['type'] as String?,
+    );
+  }
+
+  factory QueuedTorrent.fromJsonStub(Map<String, dynamic> json) { // e.g. when created
+    return QueuedTorrent(
+      id: json['queued_id'] as int,
+      hash: json['hash'] as String,
+      name: json['name'] as String,
+      createdAt: DateTime.now(),
     );
   }
 
