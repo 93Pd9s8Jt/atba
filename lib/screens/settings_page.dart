@@ -108,10 +108,9 @@ class _SettingsPageState extends State<SettingsPage> {
     };
 
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Settings'),
-        ),
-        body: ListView(children: [
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        children: [
           SimpleSettingsTile(
             title: 'Account',
             leading: Icon(Icons.account_circle),
@@ -142,17 +141,20 @@ class _SettingsPageState extends State<SettingsPage> {
                     final response = await apiService.getUserData();
                     if (apiKey.isNotEmpty && response.success) {
                       await apiService.saveApiKey(apiKey);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('API Key saved')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('API Key saved')));
                       Navigator.pop(context);
                     } else {
                       apiService.deleteApiKey();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(apiKey.isNotEmpty
+                          content: Text(
+                            apiKey.isNotEmpty
                                 ? (response.detailOrUnknown)
-                                : 'API Key is required!')),
+                                : 'API Key is required!',
+                          ),
+                        ),
                       );
                     }
                   },
@@ -164,9 +166,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: Icon(Icons.delete),
                   onTap: () async {
                     await apiService.deleteApiKey();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('API Key deleted')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('API Key deleted')));
                   },
                 ),
               ],
@@ -202,105 +204,109 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           SimpleSettingsTile(
-              title: "Integrations",
-              leading: Icon(Icons.integration_instructions),
-              child: SettingsScreen(
-                  title: "Integrations settings",
-                  children: <Widget>[
-                    GoogleDriveIntegrationSection(
-                      apiService: apiService,
-                      googleTokenController: googleTokenController,
-                    ),
-                    SimpleSettingsTile(
-                      title: "Torrentio",
-                      leading: Icon(Icons.language),
-                      child: SettingsScreen(
-                        title: 'Torrentio settings',
-                        children: <Widget>[
-                          ExpandableSettingsTile(
-                            title: "Providers",
-                            children: [
-                              for (var provider in providers.keys)
-                                CheckboxSettingsTile(
-                                  settingKey: 'key-provider-$provider',
-                                  title: providers[provider] ?? provider,
-                                  defaultValue: true,
-                                ),
-                            ],
-                          ),
-                          DropDownSettingsTile<int>(
-                            title: "Sort by",
-                            settingKey: 'key-sort-by',
-                            values: <int, String>{
-                              1: 'By quality then seeders',
-                              2: 'By quality then size',
-                              3: 'By seeders',
-                              4: 'By size',
-                            },
-                            selected: 1,
-                            // onChange: (value) {
-                            //   debugPrint('key-dropdown-email-view: $value');
-                            // },
-                          ),
-                          ExpandableSettingsTile(
-                            title: "Priority foreign language",
-                            children: [
-                              for (var language
-                                  in languages.keys.toList()..sort())
-                                CheckboxSettingsTile(
-                                  settingKey: 'key-language-$language',
-                                  title: languages[language] ?? language,
-                                  defaultValue: false,
-                                ),
-                            ],
-                          ),
-                          ExpandableSettingsTile(
-                            title: "Exclude qualities",
-                            children: [
-                              for (var quality in qualities.keys)
-                                CheckboxSettingsTile(
-                                  settingKey: 'key-exclude-quality-$quality',
-                                  title: qualities[quality] ?? quality,
-                                  defaultValue: false,
-                                ),
-                            ],
-                          ),
-                          TextInputSettingsTile(
-                            settingKey: 'key-max-results-per-quality',
-                            title: 'Max results per quality',
-                            keyboardType: TextInputType.number,
-                            helperText: 'Leave empty for unlimited. ',
-                            validator: (value) {
-                              if (value == null || value.isEmpty) return null;
-                              if (int.tryParse(value) == null) {
-                                return 'Invalid number';
-                              }
-                              return null;
-                            },
-                          ),
-                          TextInputSettingsTile(
-                              settingKey: 'key-video-size-limit',
-                              title: 'Video size limit',
-                              keyboardType: TextInputType.number,
-                              helperText:
-                                  'Leave empty for no limit; use a comma to have a different size for movies and series e.g. 5GB ; 800MB ; 10GB,2GB',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return null;
-                                if (!RegExp(r'^([0-9.]*(?:MB|GB),?)+$')
-                                    .hasMatch(value)) {
-                                  return 'Invalid size';
-                                }
-                                return null;
-                              }),
+            title: "Integrations",
+            leading: Icon(Icons.integration_instructions),
+            child: SettingsScreen(
+              title: "Integrations settings",
+              children: <Widget>[
+                GoogleDriveIntegrationSection(
+                  apiService: apiService,
+                  googleTokenController: googleTokenController,
+                ),
+                SimpleSettingsTile(
+                  title: "Torrentio",
+                  leading: Icon(Icons.language),
+                  child: SettingsScreen(
+                    title: 'Torrentio settings',
+                    children: <Widget>[
+                      ExpandableSettingsTile(
+                        title: "Providers",
+                        children: [
+                          for (var provider in providers.keys)
+                            CheckboxSettingsTile(
+                              settingKey: 'key-provider-$provider',
+                              title: providers[provider] ?? provider,
+                              defaultValue: true,
+                            ),
                         ],
                       ),
-                    ),
-                  ])),
+                      DropDownSettingsTile<int>(
+                        title: "Sort by",
+                        settingKey: 'key-sort-by',
+                        values: <int, String>{
+                          1: 'By quality then seeders',
+                          2: 'By quality then size',
+                          3: 'By seeders',
+                          4: 'By size',
+                        },
+                        selected: 1,
+                        // onChange: (value) {
+                        //   debugPrint('key-dropdown-email-view: $value');
+                        // },
+                      ),
+                      ExpandableSettingsTile(
+                        title: "Priority foreign language",
+                        children: [
+                          for (var language in languages.keys.toList()..sort())
+                            CheckboxSettingsTile(
+                              settingKey: 'key-language-$language',
+                              title: languages[language] ?? language,
+                              defaultValue: false,
+                            ),
+                        ],
+                      ),
+                      ExpandableSettingsTile(
+                        title: "Exclude qualities",
+                        children: [
+                          for (var quality in qualities.keys)
+                            CheckboxSettingsTile(
+                              settingKey: 'key-exclude-quality-$quality',
+                              title: qualities[quality] ?? quality,
+                              defaultValue: false,
+                            ),
+                        ],
+                      ),
+                      TextInputSettingsTile(
+                        settingKey: 'key-max-results-per-quality',
+                        title: 'Max results per quality',
+                        keyboardType: TextInputType.number,
+                        helperText: 'Leave empty for unlimited. ',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          if (int.tryParse(value) == null) {
+                            return 'Invalid number';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextInputSettingsTile(
+                        settingKey: 'key-video-size-limit',
+                        title: 'Video size limit',
+                        keyboardType: TextInputType.number,
+                        helperText:
+                            'Leave empty for no limit; use a comma to have a different size for movies and series e.g. 5GB ; 800MB ; 10GB,2GB',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          if (!RegExp(
+                            r'^([0-9.]*(?:MB|GB),?)+$',
+                          ).hasMatch(value)) {
+                            return 'Invalid size';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           SimpleSettingsTile(
-              title: "Library",
-              leading: Icon(Icons.library_books),
-              child:
-                  SettingsScreen(title: "Library settings", children: <Widget>[
+            title: "Library",
+            leading: Icon(Icons.library_books),
+            child: SettingsScreen(
+              title: "Library settings",
+              children: <Widget>[
                 CheckboxSettingsTile(
                   title: "Update items in the foreground",
                   settingKey: "key-library-foreground-update",
@@ -310,8 +316,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: "Show refresh icon",
                   settingKey: "key-show-refresh-icon",
                   defaultValue: true,
-                )
-              ])),
+                ),
+                CheckboxSettingsTile(
+                  settingKey: 'key-use-torrent-name-parsing',
+                  title: 'Use torrent name parsing',
+                  defaultValue: true,
+                ),
+              ],
+            ),
+          ),
           SimpleSettingsTile(
             title: "Storage",
             leading: Icon(Icons.storage),
@@ -319,18 +332,23 @@ class _SettingsPageState extends State<SettingsPage> {
               title: "Storage settings",
               children: <Widget>[
                 ListTile(
-                    title: const Text("Storage location"),
-                    leading: Icon(Icons.storage),
-                    onTap: () async {
-                      // TODO: niceify with methods in permission model (doesn't account for sd card yet)
-                      PermissionModel permissionModel = PermissionModel();
-                      final folderPath = await permissionModel.selectFolder();
-                      if (folderPath == null) return;
-                      await permissionModel.saveFolderPath(folderPath);
-                      setState(() {});
-                    },
-                    subtitle: Text(Settings.getValue<String>('folder_path',
-                        defaultValue: 'No download folder set')!)),
+                  title: const Text("Storage location"),
+                  leading: Icon(Icons.storage),
+                  onTap: () async {
+                    // TODO: niceify with methods in permission model (doesn't account for sd card yet)
+                    PermissionModel permissionModel = PermissionModel();
+                    final folderPath = await permissionModel.selectFolder();
+                    if (folderPath == null) return;
+                    await permissionModel.saveFolderPath(folderPath);
+                    setState(() {});
+                  },
+                  subtitle: Text(
+                    Settings.getValue<String>(
+                      'folder_path',
+                      defaultValue: 'No download folder set',
+                    )!,
+                  ),
+                ),
                 const Divider(),
                 CheckboxSettingsTile(
                   title: "Use caching",
@@ -338,22 +356,21 @@ class _SettingsPageState extends State<SettingsPage> {
                   defaultValue: true,
                 ),
                 ListTile(
-                    title: const Text("Clear cache"),
-                    leading: Icon(Icons.delete),
-                    onTap: () async {
-                      await apiService.deleteTorboxCache();
-                      await Settings.setValue("temporary-downloadable-items", "[]");
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Cache cleared')),
-                      );
-                    }),
+                  title: const Text("Clear cache"),
+                  leading: Icon(Icons.delete),
+                  onTap: () async {
+                    await apiService.deleteTorboxCache();
+                    await Settings.setValue(
+                      "temporary-downloadable-items",
+                      "[]",
+                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Cache cleared')));
+                  },
+                ),
               ],
             ),
-          ),
-          CheckboxSettingsTile(
-            settingKey: 'key-use-torrent-name-parsing',
-            title: 'Use torrent name parsing',
-            defaultValue: true,
           ),
           CheckboxSettingsTile(
             settingKey: 'key-use-internal-video-player',
@@ -370,9 +387,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: const Icon(Icons.info),
                     onTap: () {
                       showAboutDialog(
-                          context: context,
-                          applicationName: 'ATBA',
-                          applicationVersion: snapshot.data!.version);
+                        context: context,
+                        applicationName: 'ATBA',
+                        applicationVersion: snapshot.data!.version,
+                      );
                     },
                   );
                 default:
@@ -380,6 +398,8 @@ class _SettingsPageState extends State<SettingsPage> {
               }
             },
           ),
-        ]));
+        ],
+      ),
+    );
   }
 }
