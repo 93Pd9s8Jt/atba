@@ -10,6 +10,18 @@ Another TorBox App.
 
 <img width="410" height="900" alt="image" src="https://github.com/user-attachments/assets/8c885631-9e5e-49c4-8ee1-0d6210bd8721" />
 
+
+## 🧭 Platform Snapshot
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| Android | ✅ Stable | Primary target; APK ships with each release |
+| Android TV | ⚠️ Unstable | Partial support, but navigation is broken |
+| Windows | ⚠️ Dev only | Run from source (`flutter run`). I test against this, so mostly functional except for downloading & deep linking |
+| macOS | ❌ Untested | - |
+| Linux | ❌ Untested | - |
+| Web | ❌ Fails | Currently doesn't build due to drift dependency |
+
 ## Contributing
 I'm always happy to review pull requests, and it would be particularly helpful if people could resolve issues on iOS and Android TV which I cannot debug. If you can't contribute code, suggestions and bug reports are also welcome.
 
