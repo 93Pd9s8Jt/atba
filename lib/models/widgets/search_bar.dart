@@ -1,4 +1,6 @@
+import 'package:atba/services/library_page_state.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DownloadsSearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -7,6 +9,7 @@ class DownloadsSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<DownloadsPageState>(context);
     return SliverAppBar(
       floating: true,
       title: TextField(
@@ -15,7 +18,10 @@ class DownloadsSearchBar extends StatelessWidget {
           hintText: 'Search...',
           suffixIcon: IconButton(
             icon: const Icon(Icons.clear),
-            onPressed: () => controller.clear(),
+            onPressed: () => {
+              if (controller.text.isNotEmpty) controller.clear()
+              else state.toggleSearch()
+            },
           ),
         ),
       ),
