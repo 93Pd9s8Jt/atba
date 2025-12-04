@@ -77,11 +77,17 @@ class DownloadsPageState extends ChangeNotifier {
       _torrentsFuture = cacheFuture;
       _webDownloadsFuture = cacheFuture;
       _usenetFuture = cacheFuture;
+      await cacheFuture;
     } else {
       _cacheService.clearCache();
       _torrentsFuture = _fetchTorrents();
       _webDownloadsFuture = _fetchWebDownloads();
       _usenetFuture = _fetchUsenet();
+      await Future.wait([
+        _torrentsFuture,
+        _webDownloadsFuture,
+        _usenetFuture,
+      ]);
     }
   }
 
