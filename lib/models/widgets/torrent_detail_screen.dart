@@ -22,7 +22,7 @@ class TorrentDetailScreen extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: Text(torrent.name, style: TextStyle(fontSize: 24)),
+              child: SelectableText(torrent.name, style: TextStyle(fontSize: 24)),
             ),
             SliverToBoxAdapter(
               child: Card(

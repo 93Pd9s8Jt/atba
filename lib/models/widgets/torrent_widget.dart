@@ -131,7 +131,7 @@ class TorrentWidget extends StatelessWidget {
             sigmaY: 6,
             tileMode: TileMode.decal,
           ),
-          child: Text(
+          child: SelectableText(
             Settings.getValue<bool>("key-use-torrent-name-parsing",
                     defaultValue: false)!
                 ? ptn.parse(torrent.name)['title']

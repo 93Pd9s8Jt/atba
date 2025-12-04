@@ -31,7 +31,7 @@ class DownloadableItemWidget extends StatelessWidget {
               sigmaY: 6,
               tileMode: TileMode.decal,
             ),
-            child: Text(item.name)),
+            child: SelectableText(item.name)),
         subtitle: () {
           // switch neeeds to be wrapped in an instantly invoked function expression
           switch (item.itemStatus) {

@@ -19,7 +19,7 @@ class DownloadableItemDetailScreen extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: Text(item.name, style: TextStyle(fontSize: 24)),
+              child: SelectableText(item.name, style: TextStyle(fontSize: 24)),
             ),
             SliverToBoxAdapter(
               child: Card(

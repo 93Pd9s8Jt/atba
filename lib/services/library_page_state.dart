@@ -306,6 +306,7 @@ class DownloadsPageState extends ChangeNotifier {
           (item) => item.id == id && item is T,
         );
         if (json["type"] == "updating") {
+          if (!Settings.getValue<bool>("key-library-foreground-update-update-animation", defaultValue: true)!) return;
           if (index != -1) {
             _downloads[index].itemStatus =
                 DownloadableItemStatus.loading;
