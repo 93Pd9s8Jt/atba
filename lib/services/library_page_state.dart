@@ -58,7 +58,9 @@ class DownloadsPageState extends ChangeNotifier {
   late final UpdateService updateService;
   late final DownloadableItemCacheService _cacheService;
 
-  static final Memoized1<String, String> handleTorrentName = Memoized1((String name) => _handleTorrentNameImpl(name));
+  static final Memoized1<String, String> handleTorrentName = Memoized1(
+    (String name) => _handleTorrentNameImpl(name),
+  );
 
   // init
   DownloadsPageState(this.context) {
@@ -356,22 +358,11 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> _fetchTorrents({
-    int? offset,
-    int? pageSize,
-  }) async {
+  Future<Map<String, dynamic>> _fetchTorrents() async {
     try {
       final responses = await Future.wait([
-        apiService.getTorrentsList(
-          bypassCache: true,
-          offset: offset,
-          limit: pageSize ?? 10,
-        ),
-        apiService.getQueuedItemsList(
-          bypassCache: true,
-          offset: offset,
-          limit: pageSize ?? 10,
-        ),
+        apiService.getTorrentsList(bypassCache: true),
+        apiService.getQueuedItemsList(bypassCache: true),
       ]);
 
       if (!responses[0].success || !responses[1].success) {
@@ -395,21 +386,6 @@ class DownloadsPageState extends ChangeNotifier {
       // );
       _downloads.addAll([...postQueuedTorrents, ...queuedTorrents]);
       _cacheService.saveItems(_downloads);
-      notifyListeners();
-
-      if (queuedTorrents.length == (pageSize ?? 10)) {
-        // There might be more queued torrents to fetch
-        final nextOffset = (offset ?? 0) + (pageSize ?? 10);
-        _fetchTorrents(offset: nextOffset, pageSize: pageSize);
-      }
-
-      if (postQueuedTorrents.length == (pageSize ?? 10)) {
-        // There might be more torrents to fetch
-        final nextOffset = (offset ?? 0) + (pageSize ?? 10);
-        Future.microtask(() async =>
-          await _fetchTorrents(offset: nextOffset, pageSize: pageSize)
-        );
-      }
 
       return {"success": true};
     } catch (e, stackTrace) {
