@@ -21,6 +21,19 @@ class DownloadableItemWidget extends StatelessWidget {
     final isSelected = state.selectedItems.any((selectedItem) => selectedItem.id == item.id);
     final isCensored = state.isTorrentNamesCensored;
 
+    void handleTap() {
+          if (state.isSelecting) {
+            state.toggleSelection(item);
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DownloadableItemDetailScreen(item: item),
+              ),
+            );
+          }
+        }
+
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
@@ -31,7 +44,7 @@ class DownloadableItemWidget extends StatelessWidget {
               sigmaY: 6,
               tileMode: TileMode.decal,
             ),
-            child: SelectableText(item.name)),
+            child: SelectableText(item.name, onTap: handleTap,)),
         subtitle: () {
           // switch neeeds to be wrapped in an instantly invoked function expression
           switch (item.itemStatus) {
@@ -49,18 +62,7 @@ class DownloadableItemWidget extends StatelessWidget {
         onLongPress: () {
           state.startSelection(item);
         },
-        onTap: () {
-          if (state.isSelecting) {
-            state.toggleSelection(item);
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DownloadableItemDetailScreen(item: item),
-              ),
-            );
-          }
-        },
+        onTap: handleTap,
       ),
     );
   }

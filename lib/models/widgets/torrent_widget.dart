@@ -65,7 +65,7 @@ class TorrentWidget extends StatelessWidget {
     "queuedUP": {"color": Colors.yellow, "icon": Icons.arrow_circle_down},
     "uploading (no peers)": {
       "color": Colors.yellow,
-      "icon": Icons.cloud_upload
+      "icon": Icons.cloud_upload,
     },
     "stalledUP": {"color": Colors.yellow, "icon": Icons.stop},
     "checkingUP": {"color": Colors.yellow, "icon": Icons.stop},
@@ -96,15 +96,26 @@ class TorrentWidget extends StatelessWidget {
     final state = Provider.of<DownloadsPageState>(context);
     PTN ptn = PTN();
     final isCensored = state.isTorrentNamesCensored;
-    final isSelected = state.selectedItems.any((item) =>
-        item is Torrent &&
-        item.id ==
-            torrent.id); // check if the selected items contain this torrent
+    final isSelected = state.selectedItems.any(
+      (item) => item is Torrent && item.id == torrent.id,
+    ); // check if the selected items contain this torrent
     final torrentState = torrent.active
         ? torrent.downloadState
         : torrent.downloadState == "uploading"
-            ? "cached"
-            : torrent.downloadState;
+        ? "cached"
+        : torrent.downloadState;
+    void handleTap() {
+      if (state.isSelecting) {
+        state.toggleSelection(torrent);
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TorrentDetailScreen(torrent: torrent),
+          ),
+        );
+      }
+    }
 
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
@@ -132,10 +143,13 @@ class TorrentWidget extends StatelessWidget {
             tileMode: TileMode.decal,
           ),
           child: SelectableText(
-            Settings.getValue<bool>("key-use-torrent-name-parsing",
-                    defaultValue: false)!
+            Settings.getValue<bool>(
+                  "key-use-torrent-name-parsing",
+                  defaultValue: false,
+                )!
                 ? ptn.parse(torrent.name)['title']
                 : torrent.name,
+              onTap: handleTap,
           ),
         ),
         subtitle: () {
@@ -185,9 +199,13 @@ class TorrentWidget extends StatelessWidget {
                                     border: Border.all(color: Colors.grey),
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
-                                  child: Text(_formatTimeDifference(
-                                      DateTime.now()
-                                          .difference(torrent.createdAt))),
+                                  child: Text(
+                                    _formatTimeDifference(
+                                      DateTime.now().difference(
+                                        torrent.createdAt,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             )
@@ -204,18 +222,7 @@ class TorrentWidget extends StatelessWidget {
           }
         }(),
         trailing: Text(getReadableSize(torrent.size)),
-        onTap: () {
-          if (state.isSelecting) {
-            state.toggleSelection(torrent);
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TorrentDetailScreen(torrent: torrent),
-              ),
-            );
-          }
-        },
+        onTap: handleTap,
         onLongPress: () {
           state.startSelection(torrent);
         },
@@ -232,18 +239,19 @@ class QueuedTorrentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = Provider.of<DownloadsPageState>(context);
     final isCensored = state.isTorrentNamesCensored;
-    final isSelected = state.selectedItems.any((item) =>
-        item is QueuedTorrent &&
-        item.id ==
-            torrent.id); // check if the selected items contain this torrent
+    final isSelected = state.selectedItems.any(
+      (item) => item is QueuedTorrent && item.id == torrent.id,
+    ); // check if the selected items contain this torrent
     PTN ptn = PTN();
 
     return Container(
       color: isSelected ? Theme.of(context).highlightColor : Colors.transparent,
       child: ListTile(
         title: Text(
-          Settings.getValue<bool>("key-use-torrent-name-parsing",
-                  defaultValue: false)!
+          Settings.getValue<bool>(
+                "key-use-torrent-name-parsing",
+                defaultValue: false,
+              )!
               ? ptn.parse(torrent.name)['title']
               : torrent.name,
         ).animate(target: isCensored ? 1 : 0).blur(),
