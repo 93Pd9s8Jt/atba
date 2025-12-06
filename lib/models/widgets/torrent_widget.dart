@@ -161,64 +161,54 @@ class TorrentWidget extends StatelessWidget {
             case DownloadableItemStatus.error:
               return Text('Error: ${torrent.errorMessage}');
             default:
-              return Column(
+                return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Text(torrentState),
+                  Wrap(
+                  spacing: 4.0,
+                  runSpacing: 4.0,
+                  children: [
+                    Container(
+                    padding: const EdgeInsets.all(4.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Text(torrentState),
+                    ),
+                    if (torrent.ratio != 0)
+                    Container(
+                      padding: const EdgeInsets.all(4.0),
+                      decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
                       ),
-                      torrent.ratio == 0
-                          ? Container()
-                          : Row(
-                              children: [
-                                SizedBox(width: 4.0),
-                                Container(
-                                  padding: const EdgeInsets.all(4.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  child: Text(torrent.ratio.toStringAsFixed(2)),
-                                ),
-                              ],
-                            ),
-                      torrent.active
-                          ? Row(
-                              children: [
-                                SizedBox(width: 4.0),
-                                Container(
-                                  padding: const EdgeInsets.all(4.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  child: Text(
-                                    _formatTimeDifference(
-                                      DateTime.now().difference(
-                                        torrent.createdAt,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Container(),
-                    ],
+                      child: Text(torrent.ratio.toStringAsFixed(2)),
+                    ),
+                    if (torrent.active)
+                    Container(
+                      padding: const EdgeInsets.all(4.0),
+                      decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Text(
+                      _formatTimeDifference(
+                        DateTime.now().difference(
+                        torrent.createdAt,
+                        ),
+                      ),
+                      ),
+                    ),
+                  ],
                   ),
                   if (torrentState.toLowerCase() == 'downloading')
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: LinearProgressIndicator(value: torrent.progress),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: LinearProgressIndicator(value: torrent.progress),
+                  ),
                 ],
-              );
+                );
           }
         }(),
         trailing: Text(getReadableSize(torrent.size)),
