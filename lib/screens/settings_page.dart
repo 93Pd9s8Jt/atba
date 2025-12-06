@@ -312,7 +312,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 CheckboxSettingsTile(
                   title: "Update items in the foreground",
                   settingKey: "key-library-foreground-update",
-                  defaultValue: false,
+                  defaultValue: true,
                    childrenIfEnabled: <Widget>[
                     CheckboxSettingsTile(
                       title: "Show update animation",

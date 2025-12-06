@@ -78,7 +78,7 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   Future<void> _initializeFutures() async {
-    if (await _isCacheNotEmpty()) {
+    if (Settings.getValue<bool>("key-use-cache", defaultValue: true)! && await _isCacheNotEmpty()) {
       final cacheFuture = _loadFromCache();
       _torrentsFuture = cacheFuture;
       _webDownloadsFuture = cacheFuture;
@@ -292,7 +292,7 @@ class DownloadsPageState extends ChangeNotifier {
   void startPeriodicUpdate<T extends DownloadableItem>(int id) {
     if (!Settings.getValue(
       "key-library-foreground-update",
-      defaultValue: false,
+      defaultValue: true,
     )!) {
       return;
     }
