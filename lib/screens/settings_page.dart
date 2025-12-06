@@ -1,4 +1,5 @@
 import 'package:atba/screens/settings/google_oauth.dart';
+import 'package:atba/services/downloadable_item_cache_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/services/torbox_service.dart';
@@ -17,6 +18,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final apiService = Provider.of<TorboxAPI>(context, listen: false);
+    final cacheService = DownloadableItemCacheService();
     final TextEditingController apiKeyController = TextEditingController();
     final TextEditingController googleTokenController = TextEditingController();
     // yts,eztv,rarbg,1337x,thepiratebay,kickasstorrents,torrentgalaxy,magnetdl,horriblesubs,nyaasi,tokyotosho,anidex,rutor,rutracker,comando,bludv,torrent9,ilcorsaronero,mejortorrent,wolfmax4k,cinecalidad
@@ -367,10 +369,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: Icon(Icons.delete),
                   onTap: () async {
                     await apiService.deleteTorboxCache();
-                    await Settings.setValue(
-                      "temporary-downloadable-items",
-                      "[]",
-                    );
+                    await cacheService.clearCache();
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Cache cleared')));

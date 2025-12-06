@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:memoized/memoized.dart';
+
 import 'package:atba/services/downloadable_item_cache_service.dart';
 import 'package:collection/collection.dart';
 
@@ -56,6 +58,8 @@ class DownloadsPageState extends ChangeNotifier {
   late final UpdateService updateService;
   late final DownloadableItemCacheService _cacheService;
 
+  static final Memoized1<String, String> handleTorrentName = Memoized1((String name) => _handleTorrentNameImpl(name));
+
   // init
   DownloadsPageState(this.context) {
     apiService = Provider.of<TorboxAPI>(context, listen: false);
@@ -83,11 +87,7 @@ class DownloadsPageState extends ChangeNotifier {
       _torrentsFuture = _fetchTorrents();
       _webDownloadsFuture = _fetchWebDownloads();
       _usenetFuture = _fetchUsenet();
-      await Future.wait([
-        _torrentsFuture,
-        _webDownloadsFuture,
-        _usenetFuture,
-      ]);
+      await Future.wait([_torrentsFuture, _webDownloadsFuture, _usenetFuture]);
     }
   }
 
@@ -301,15 +301,17 @@ class DownloadsPageState extends ChangeNotifier {
 
     _activeSubscriptions[id] = stream.listen(
       (json) {
-        
         final index = _downloads.indexWhere(
           (item) => item.id == id && item is T,
         );
         if (json["type"] == "updating") {
-          if (!Settings.getValue<bool>("key-library-foreground-update-update-animation", defaultValue: true)!) return;
+          if (!Settings.getValue<bool>(
+            "key-library-foreground-update-update-animation",
+            defaultValue: true,
+          )!)
+            return;
           if (index != -1) {
-            _downloads[index].itemStatus =
-                DownloadableItemStatus.loading;
+            _downloads[index].itemStatus = DownloadableItemStatus.loading;
           }
           notifyListeners();
           return;
@@ -354,11 +356,22 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> _fetchTorrents() async {
+  Future<Map<String, dynamic>> _fetchTorrents({
+    int? offset,
+    int? pageSize,
+  }) async {
     try {
       final responses = await Future.wait([
-        apiService.getTorrentsList(bypassCache: true),
-        apiService.getQueuedItemsList(bypassCache: true),
+        apiService.getTorrentsList(
+          bypassCache: true,
+          offset: offset,
+          limit: pageSize ?? 10,
+        ),
+        apiService.getQueuedItemsList(
+          bypassCache: true,
+          offset: offset,
+          limit: pageSize ?? 10,
+        ),
       ]);
 
       if (!responses[0].success || !responses[1].success) {
@@ -377,11 +390,26 @@ class DownloadsPageState extends ChangeNotifier {
       final List<QueuedTorrent> queuedTorrents = (responses[1].data as List)
           .map((json) => QueuedTorrent.fromJson(json))
           .toList();
-      _downloads.removeWhere(
-        (item) => item is Torrent || item is QueuedTorrent,
-      );
+      // _downloads.removeWhere(
+      //   (item) => item is Torrent || item is QueuedTorrent,
+      // );
       _downloads.addAll([...postQueuedTorrents, ...queuedTorrents]);
       _cacheService.saveItems(_downloads);
+      notifyListeners();
+
+      if (queuedTorrents.length == (pageSize ?? 10)) {
+        // There might be more queued torrents to fetch
+        final nextOffset = (offset ?? 0) + (pageSize ?? 10);
+        _fetchTorrents(offset: nextOffset, pageSize: pageSize);
+      }
+
+      if (postQueuedTorrents.length == (pageSize ?? 10)) {
+        // There might be more torrents to fetch
+        final nextOffset = (offset ?? 0) + (pageSize ?? 10);
+        Future.microtask(() async =>
+          await _fetchTorrents(offset: nextOffset, pageSize: pageSize)
+        );
+      }
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -397,9 +425,7 @@ class DownloadsPageState extends ChangeNotifier {
 
   Future<Map<String, dynamic>> _fetchWebDownloads() async {
     try {
-      final response = await apiService.getWebDownloadsList(
-        bypassCache: true,
-      );
+      final response = await apiService.getWebDownloadsList(bypassCache: true);
 
       if (!response.success) {
         return {"success": false, "detail": response.detail};
@@ -683,7 +709,7 @@ class DownloadsPageState extends ChangeNotifier {
     await _handleSelectedItems((item) => item.download());
   }
 
-  static String handleTorrentName(String name) {
+  static String _handleTorrentNameImpl(String name) {
     if (Settings.getValue<bool>(
       'key-use-torrent-name-parsing',
       defaultValue: false,
