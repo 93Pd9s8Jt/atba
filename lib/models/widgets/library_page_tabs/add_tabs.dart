@@ -687,9 +687,11 @@ class _AddSearchTabState extends State<AddSearchTab> {
     final response = await (widget.type == SearchTabType.torrent
         ? apiService.searchTorrents(
             _searchController.text,
+            checkCache: true
           )
         : apiService.searchUsenet(
             _searchController.text,
+            checkCache: true
           ));
     setState(() {
       _hasSearched = true;
@@ -960,6 +962,16 @@ class _AddSearchTabState extends State<AddSearchTab> {
                                     SearchTabType.torrent
                                 ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
                                 : result.readableSize),
+                            trailing: // cached indicator
+                                result.cached == true
+                                    ? Tooltip(
+                                        message: 'Cached result',
+                                        child: const Icon(
+                                          Icons.cached_sharp,
+                                          color: Colors.green,
+                                        ),
+                                      )
+                                    : null,
                             onTap: () async {
                               final response = await (result.searchResultType ==
                                       SearchTabType.torrent

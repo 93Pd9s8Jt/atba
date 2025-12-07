@@ -36,6 +36,7 @@ class SearchResult {
   final int lastKnownSeeders;
   final int lastKnownPeers;
   final int size;
+  final bool? cached;
   final String tracker;
   final List<String>? categories;
   final int files;
@@ -54,6 +55,7 @@ class SearchResult {
     required this.lastKnownSeeders,
     required this.lastKnownPeers,
     required this.size,
+    this.cached,
     required this.tracker,
     required this.categories,
     required this.files,
@@ -74,6 +76,7 @@ class SearchResult {
       lastKnownSeeders: json['last_known_seeders'],
       lastKnownPeers: json['last_known_peers'],
       size: int.parse(json['size'] .toString()),
+      cached: json['cached'],
       tracker: json['tracker'],
       categories: json['categories'].cast<String>(),
       files: int.parse(json["files"] .toString()),
@@ -81,6 +84,7 @@ class SearchResult {
       nzbLink: json['nzb'],
       age: json['age'],
       userSearch: json['user_search'],
+      
     );
   }
 
