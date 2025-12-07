@@ -78,7 +78,8 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   Future<void> _initializeFutures() async {
-    if (Settings.getValue<bool>("key-use-cache", defaultValue: true)! && await _isCacheNotEmpty()) {
+    bool cacheNotEmpty = await _isCacheNotEmpty();
+    if (Settings.getValue<bool>("key-use-cache", defaultValue: true)! && cacheNotEmpty) {
       final cacheFuture = _loadFromCache();
       _torrentsFuture = cacheFuture;
       _webDownloadsFuture = cacheFuture;
@@ -381,9 +382,9 @@ class DownloadsPageState extends ChangeNotifier {
       final List<QueuedTorrent> queuedTorrents = (responses[1].data as List)
           .map((json) => QueuedTorrent.fromJson(json))
           .toList();
-      // _downloads.removeWhere(
-      //   (item) => item is Torrent || item is QueuedTorrent,
-      // );
+      _downloads.removeWhere(
+        (item) => item is Torrent || item is QueuedTorrent,
+      );
       _downloads.addAll([...postQueuedTorrents, ...queuedTorrents]);
       _cacheService.saveItems(_downloads);
 

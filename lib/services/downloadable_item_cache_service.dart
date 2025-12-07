@@ -110,6 +110,8 @@ class DownloadableItemCacheService {
       return 'webdownload';
     } else if (item is Usenet) {
       return 'usenet';
+    } else if (item is QueuedTorrent) {
+      return 'queuedtorrent';
     }
     throw Exception('Unknown DownloadableItem type');
   }
@@ -123,6 +125,8 @@ class DownloadableItemCacheService {
         return WebDownload.fromJsonGenerated(itemJson);
       case 'usenet':
         return Usenet.fromJsonGenerated(itemJson);
+      case 'queuedtorrent':
+        return QueuedTorrent.fromJsonGenerated(itemJson);
       default:
         throw Exception('Unknown DownloadableItem type');
     }
