@@ -5,6 +5,7 @@ import 'package:atba/services/torbox_service.dart';
 import 'package:atba/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 
 class TorrentDetailScreen extends StatelessWidget {
@@ -142,7 +143,7 @@ class TorrentDetailScreen extends StatelessWidget {
                         Row(
                           children: [
                             ElevatedButton.icon(
-                              icon: Icon(Icons.drive_file_move),
+                              icon: Icon(FontAwesome.google_drive_brand),
                               label: Text("Download with Google Drive"),
                               onPressed: () async {
                                 final response = await apiService
@@ -256,7 +257,7 @@ class TorrentDetailScreen extends StatelessWidget {
                                         apiService.googleToken!.isNotEmpty) ...[
                                       SizedBox(width: 8),
                                       ElevatedButton.icon(
-                                        icon: Icon(Icons.drive_file_move),
+                                        icon: Icon(FontAwesome.google_drive_brand),
                                         label: Text("Google Drive"),
                                         onPressed: () async {
                                           final response = await apiService

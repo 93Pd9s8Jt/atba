@@ -311,8 +311,9 @@ class DownloadsPageState extends ChangeNotifier {
           if (!Settings.getValue<bool>(
             "key-library-foreground-update-update-animation",
             defaultValue: true,
-          )!)
+          )!) {
             return;
+          }
           if (index != -1) {
             _downloads[index].itemStatus = DownloadableItemStatus.loading;
           }

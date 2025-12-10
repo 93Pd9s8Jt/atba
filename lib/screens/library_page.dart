@@ -9,6 +9,7 @@ import 'package:atba/models/widgets/library_page_tabs/add_tabs.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:atba/services/library_page_state.dart';
 import 'package:icon_craft/icon_craft.dart';
@@ -377,7 +378,7 @@ class _DownloadsPageState extends State<DownloadsPage>
                                   },
                                 ),
                                 SpeedDialChild(
-                                  child: const Icon(Icons.link),
+                                  child: const Icon(BoxIcons.bx_magnet),
                                   label: 'Magnet',
                                   onTap: () {
                                     Navigator.push(

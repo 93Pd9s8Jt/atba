@@ -15,7 +15,7 @@ class JobsStatusPage extends StatefulWidget {
 
 class _JobsStatusPageState extends State<JobsStatusPage> {
   List<JobQueueItem>? _jobs;
-  Set<JobQueueItem> _selectedJobs = {};
+  final Set<JobQueueItem> _selectedJobs = {};
   bool _isSelecting = false;
   late final JobsUpdateService updateService;
 

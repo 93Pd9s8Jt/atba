@@ -69,7 +69,7 @@ class TorboxAPI {
     Map<String, dynamic>? body,
     String? baseUrl,
   }) async {
-    const multiPartRequestStreamEndpoints = [
+    const multiPartRequestStreamEndpoints = [ // hardcoded due to strange bug that wouldn't let me pass this as a parameter
       'api/torrents/createtorrent',
       'api/usenet/createusenetdownload',
       'api/webdl/createwebdownload',
