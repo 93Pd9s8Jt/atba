@@ -17,3 +17,15 @@ String readableTime(int seconds) {
     return '${secs}s';
   }
 }
+
+  String formatTimeDifference(Duration duration) {
+    if (duration.inDays > 0) {
+      return '${duration.inDays}d';
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours}h';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes}m';
+    } else {
+      return '${duration.inSeconds}s';
+    }
+  }

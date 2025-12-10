@@ -1,4 +1,5 @@
 import 'package:atba/models/widgets/downloads_prompt.dart';
+import 'package:atba/screens/jobs_status_page.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/library_page_tabs/torrents_tab.dart';
@@ -85,6 +86,21 @@ class _DownloadsPageState extends State<DownloadsPage>
                   else
                     Row(
                       children: [
+                        if (Settings.getValue("key-show-jobs-status-shortcut",
+                            defaultValue: true)!)
+                          IconButton(
+                            icon: const Icon(Icons.work),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const JobsStatusPage(),
+                                ),
+                              );
+                            },
+                            tooltip: "Jobs Status",
+                          ),
                         if (Settings.getValue("key-show-refresh-icon",
                             defaultValue: true)!)
                           IconButton(

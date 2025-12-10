@@ -90,6 +90,13 @@ class DownloadableItemCacheService {
     await query.go();
   }
 
+  Future<void> deleteItemByType<T extends DownloadableItem>() async {
+    final query = _db.delete(_db.downloadableItemCache)
+      ..where((tbl) =>
+          tbl.itemType.equals(_getTypeString<T>()));
+    await query.go();
+  }
+
   Future<void> clearCache() async {
     await _db.delete(_db.downloadableItemCache).go();
   }
@@ -111,6 +118,19 @@ class DownloadableItemCacheService {
     } else if (item is Usenet) {
       return 'usenet';
     } else if (item is QueuedTorrent) {
+      return 'queuedtorrent';
+    }
+    throw Exception('Unknown DownloadableItem type');
+  }
+
+  String _getTypeString<T extends DownloadableItem>() {
+    if (T == Torrent) {
+      return 'torrent';
+    } else if (T == WebDownload) {
+      return 'webdownload';
+    } else if (T == Usenet) {
+      return 'usenet';
+    } else if (T == QueuedTorrent) {
       return 'queuedtorrent';
     }
     throw Exception('Unknown DownloadableItem type');

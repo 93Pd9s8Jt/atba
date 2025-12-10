@@ -1,3 +1,4 @@
+import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
 import 'package:atba/services/downloadable_item_cache_service.dart';
 import 'package:flutter/material.dart';
@@ -211,6 +212,11 @@ class _SettingsPageState extends State<SettingsPage> {
             child: SettingsScreen(
               title: "Integrations settings",
               children: <Widget>[
+                SimpleSettingsTile(
+                  title: "Jobs status",
+                  leading: Icon(Icons.work),
+                  child: JobsStatusPage(),
+                ),
                 GoogleDriveIntegrationSection(
                   apiService: apiService,
                   googleTokenController: googleTokenController,
@@ -313,17 +319,23 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: "Update items in the foreground",
                   settingKey: "key-library-foreground-update",
                   defaultValue: true,
-                   childrenIfEnabled: <Widget>[
+                  childrenIfEnabled: <Widget>[
                     CheckboxSettingsTile(
                       title: "Show update animation",
-                      settingKey: "key-library-foreground-update-update-animation",
+                      settingKey:
+                          "key-library-foreground-update-update-animation",
                       defaultValue: true,
                     ),
-                   ]
+                  ],
                 ),
                 CheckboxSettingsTile(
                   title: "Show refresh icon",
                   settingKey: "key-show-refresh-icon",
+                  defaultValue: true,
+                ),
+                CheckboxSettingsTile(
+                  title: "Show shortcut to jobs statuses",
+                  settingKey: "key-show-jobs-status-shortcut",
                   defaultValue: true,
                 ),
                 CheckboxSettingsTile(

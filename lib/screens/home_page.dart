@@ -239,7 +239,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'More',
           ),
         ],
         currentIndex: _selectedIndex,

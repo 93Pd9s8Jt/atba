@@ -58,6 +58,7 @@ dependencies:
   video_player: ^2.10.0
   webview_flutter: ^4.13.0
   memoized: ^2.2.6
+  icons_plus: ^5.0.0
 
 flutter_launcher_icons:
   android: true

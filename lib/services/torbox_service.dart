@@ -66,7 +66,7 @@ class TorboxAPI {
     String endpoint, {
     String method = "get",
     SuccessReturnType returnType = SuccessReturnType.jsonResponse,
-    Map<String, dynamic> body = const {},
+    Map<String, dynamic>? body,
     String? baseUrl,
   }) async {
     const multiPartRequestStreamEndpoints = [
@@ -95,7 +95,7 @@ class TorboxAPI {
 
     switch (method) {
       case 'get':
-        Map<String, dynamic> queryParameters = body;
+        Map<String, dynamic> queryParameters = body ?? {};
         queryParameters.removeWhere((key, value) => value == null);
         queryParameters = queryParameters.map(
           (key, value) => MapEntry(key, value.toString()),
@@ -126,17 +126,17 @@ class TorboxAPI {
         responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       case 'post':
-        if (body.values.any((value) => value is PlatformFile) ||
+        if (body?.values.any((value) => value is PlatformFile) ?? false ||
             useMultipartRequestStream) {
           var request = http.MultipartRequest('POST', url);
-          for (String? key in body.keys) {
-            if (key == null || body[key] == null || body[key] == "") continue;
-            if (body[key] is PlatformFile) {
+          for (String? key in body?.keys ?? []) {
+            if (key == null || body?[key] == null || body?[key] == "") continue;
+            if (body?[key] is PlatformFile) {
               request.files.add(
-                await http.MultipartFile.fromPath(key, body[key].path),
+                await http.MultipartFile.fromPath(key, body?[key].path),
               );
             } else {
-              request.fields[key] = body[key];
+              request.fields[key] = body?[key];
             }
           }
           request.headers.addAll({
@@ -198,7 +198,7 @@ class TorboxAPI {
       if (returnType == SuccessReturnType.file) {
         // TODO: detect from content type
         final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/torrent_${body['id']}.torrent';
+        final filePath = '${directory.path}/torrent_${body!['id']}.torrent'; // only torrents, web, usenet use this
         final file = File(filePath);
         await file.writeAsString(responseData);
         return TorboxAPIResponse.fromJson({
@@ -846,11 +846,15 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getJobStatusById(int jobId) async {
-    return makeRequest("api/integration/jobs/$jobId", method: 'get');
+    return makeRequest("api/integration/job/$jobId", method: 'get');
   }
 
   Future<TorboxAPIResponse> getJobStatusByHash(String hash) async {
     return makeRequest("api/integration/jobs/$hash", method: 'get');
+  }
+
+  Future<TorboxAPIResponse> cancelJobById(int jobId) async {
+    return makeRequest("api/integration/job/$jobId", method: 'delete');
   }
 
   // #Queued

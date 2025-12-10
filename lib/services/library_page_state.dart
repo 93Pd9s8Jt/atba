@@ -31,7 +31,7 @@ class DownloadsPageState extends ChangeNotifier {
         defaultValue: "[]",
       )!,
     ),
-  ); // probably code be improved
+  ); // TODO: probably code be improved
 
   final Map<int, StreamSubscription> _activeSubscriptions = {};
 
@@ -79,14 +79,14 @@ class DownloadsPageState extends ChangeNotifier {
 
   Future<void> _initializeFutures() async {
     bool cacheNotEmpty = await _isCacheNotEmpty();
-    if (Settings.getValue<bool>("key-use-cache", defaultValue: true)! && cacheNotEmpty) {
+    if (Settings.getValue<bool>("key-use-cache", defaultValue: true)! &&
+        cacheNotEmpty) {
       final cacheFuture = _loadFromCache();
       _torrentsFuture = cacheFuture;
       _webDownloadsFuture = cacheFuture;
       _usenetFuture = cacheFuture;
       await cacheFuture;
     } else {
-      _cacheService.clearCache();
       _torrentsFuture = _fetchTorrents();
       _webDownloadsFuture = _fetchWebDownloads();
       _usenetFuture = _fetchUsenet();
@@ -386,7 +386,11 @@ class DownloadsPageState extends ChangeNotifier {
         (item) => item is Torrent || item is QueuedTorrent,
       );
       _downloads.addAll([...postQueuedTorrents, ...queuedTorrents]);
-      _cacheService.saveItems(_downloads);
+      Future.microtask(() async {
+        await _cacheService.deleteItemByType<Torrent>();
+        await _cacheService.deleteItemByType<QueuedTorrent>();
+        await _cacheService.saveItems(_downloads);
+      });
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -413,7 +417,10 @@ class DownloadsPageState extends ChangeNotifier {
 
       _downloads.removeWhere((item) => item is WebDownload);
       _downloads.addAll(webDownloads);
-      _cacheService.saveItems(webDownloads);
+      Future.microtask(() async {
+        await _cacheService.deleteItemByType<WebDownload>();
+        await _cacheService.saveItems(webDownloads);
+      });
 
       return {"success": true};
     } catch (e, stackTrace) {
@@ -439,7 +446,10 @@ class DownloadsPageState extends ChangeNotifier {
 
       _downloads.removeWhere((item) => item is Usenet);
       _downloads.addAll(usenetDownloads);
-      _cacheService.saveItems(usenetDownloads);
+      Future.microtask(() async {
+        await _cacheService.deleteItemByType<Usenet>();
+        await _cacheService.saveItems(usenetDownloads);
+      });
 
       return {"success": true};
     } catch (e, stackTrace) {

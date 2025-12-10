@@ -1,5 +1,6 @@
 import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
+import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/utils.dart';
 import 'package:flutter/material.dart';
@@ -14,30 +15,36 @@ class TorrentDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final apiService = Provider.of<TorboxAPI>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Details"),
-      ),
+      appBar: AppBar(title: Text("Details")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: SelectableText(torrent.name, style: TextStyle(fontSize: 24)),
+              child: SelectableText(
+                torrent.name,
+                style: TextStyle(fontSize: 24),
+              ),
             ),
             SliverToBoxAdapter(
               child: Card(
                 elevation: 3,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 margin: EdgeInsets.symmetric(vertical: 8),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Torrent Info",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Torrent Info",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 8),
                       Row(
                         children: [
@@ -53,7 +60,8 @@ class TorrentDetailScreen extends StatelessWidget {
                                 } else if (snapshot.hasError ||
                                     snapshot.data?.data == null) {
                                   return Text(
-                                      "Error loading magnet: ${snapshot.data?.detailOrUnknown}");
+                                    "Error loading magnet: ${snapshot.data?.detailOrUnknown}",
+                                  );
                                 } else {
                                   return GestureDetector(
                                     onTap: () async {
@@ -61,13 +69,16 @@ class TorrentDetailScreen extends StatelessWidget {
                                           snapshot.data?.data as String?;
                                       if (magnet == null) return;
                                       Clipboard.setData(
-                                          ClipboardData(text: magnet));
+                                        ClipboardData(text: magnet),
+                                      );
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                                'Magnet link copied to clipboard'),
+                                              'Magnet link copied to clipboard',
+                                            ),
                                           ),
                                         );
                                       }
@@ -88,8 +99,10 @@ class TorrentDetailScreen extends StatelessWidget {
                         children: [
                           Icon(Icons.storage, size: 20),
                           SizedBox(width: 8),
-                          Text('Size: ${getReadableSize(torrent.size)}',
-                              style: TextStyle(fontSize: 16)),
+                          Text(
+                            'Size: ${getReadableSize(torrent.size)}',
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ],
                       ),
                       SizedBox(height: 8),
@@ -129,59 +142,79 @@ class TorrentDetailScreen extends StatelessWidget {
                         Row(
                           children: [
                             ElevatedButton.icon(
-                                icon: Icon(Icons.drive_file_move),
-                                label: Text("Download with Google Drive"),
-                                onPressed: () async {
-                                  final response =
-                                      await apiService.queueIntegration(
-                                          QueueableIntegration.google,
-                                          torrent.id,
-                                          zip: true,
-                                          type: IntegrationFileType.torrent);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(response.success
-                                            ? 'Torrent queued for Google Drive'
-                                            : 'Failed to queue torrent: ${response.detailOrUnknown}'),
-                                      ),
+                              icon: Icon(Icons.drive_file_move),
+                              label: Text("Download with Google Drive"),
+                              onPressed: () async {
+                                final response = await apiService
+                                    .queueIntegration(
+                                      QueueableIntegration.google,
+                                      torrent.id,
+                                      zip: true,
+                                      type: IntegrationFileType.torrent,
                                     );
-                                  }
-                                })
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        response.success
+                                            ? 'Torrent queued for Google Drive'
+                                            : 'Failed to queue torrent: ${response.detailOrUnknown}',
+                                      ),
+                                      action: response.success
+                                          ? SnackBarAction(
+                                              label: "View",
+                                              onPressed: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      JobsStatusPage(),
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                           ],
-                        )
-                      ]
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
             ),
             SliverToBoxAdapter(
-              child: Text("Files",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                "Files",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
             torrent.files.isEmpty
                 ? SliverToBoxAdapter(child: Text("No files found."))
                 : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final file = torrent.files[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            title: Text(file.name),
-                            // Move the button below the text instead of trailing
-                            isThreeLine: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
-                            // Remove trailing, add button below
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(getReadableSize(file.size)),
-                                SizedBox(height: 8),
-                                FittedBox(
-                                  child: Row(children: [
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final file = torrent.files[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          title: Text(file.name),
+                          // Move the button below the text instead of trailing
+                          isThreeLine: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
+                          ),
+                          // Remove trailing, add button below
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(getReadableSize(file.size)),
+                              SizedBox(height: 8),
+                              FittedBox(
+                                child: Row(
+                                  children: [
                                     ElevatedButton.icon(
                                       icon: Icon(Icons.download),
                                       label: Text("Download"),
@@ -192,24 +225,29 @@ class TorrentDetailScreen extends StatelessWidget {
                                             await showPermissionDialog(context);
                                         if (!storageGranted) {
                                           if (context.mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                    'Storage permission is required to download files.'),
+                                                  'Storage permission is required to download files.',
+                                                ),
                                               ),
                                             );
                                           }
                                           return;
                                         }
-                                        final result =
-                                            await torrent.downloadFile(file);
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        final result = await torrent
+                                            .downloadFile(file);
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                            content: Text(result.data != null
-                                                ? 'File download started'
-                                                : 'Failed to start download'),
+                                            content: Text(
+                                              result.data != null
+                                                  ? 'File download started'
+                                                  : 'Failed to start download',
+                                            ),
                                           ),
                                         );
                                       },
@@ -221,36 +259,53 @@ class TorrentDetailScreen extends StatelessWidget {
                                         icon: Icon(Icons.drive_file_move),
                                         label: Text("Google Drive"),
                                         onPressed: () async {
-                                          final response =
-                                              await apiService.queueIntegration(
-                                                  QueueableIntegration.google,
-                                                  torrent.id,
-                                                  fileId: file.id,
-                                                  zip: false,
-                                                  type: IntegrationFileType
-                                                      .torrent);
+                                          final response = await apiService
+                                              .queueIntegration(
+                                                QueueableIntegration.google,
+                                                torrent.id,
+                                                fileId: file.id,
+                                                zip: false,
+                                                type:
+                                                    IntegrationFileType.torrent,
+                                              );
                                           if (context.mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               SnackBar(
-                                                content: Text(response.success
-                                                    ? 'File queued for Google Drive'
-                                                    : 'Failed to queue file: ${response.detailOrUnknown}'),
+                                                content: Text(
+                                                  response.success
+                                                      ? 'File queued for Google Drive'
+                                                      : 'Failed to queue file: ${response.detailOrUnknown}',
+                                                ),
+                                                action: response.success
+                                                    ? SnackBarAction(
+                                                        label: "View",
+                                                        onPressed: () =>
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        JobsStatusPage(),
+                                                              ),
+                                                            ),
+                                                      )
+                                                    : null,
                                               ),
                                             );
                                           }
                                         },
-                                      )
-                                    ]
-                                  ]),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      childCount: torrent.files.length,
-                    ),
+                        ),
+                      );
+                    }, childCount: torrent.files.length),
                   ),
           ],
         ),

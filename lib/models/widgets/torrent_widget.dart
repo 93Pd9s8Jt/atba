@@ -5,6 +5,7 @@ import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/torrent_detail_screen.dart';
 import 'package:atba/services/library_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
+import 'package:atba/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -79,17 +80,7 @@ class TorrentWidget extends StatelessWidget {
     "moving": {"color": Colors.yellow, "icon": Icons.stop},
   };
 
-  String _formatTimeDifference(Duration duration) {
-    if (duration.inDays > 0) {
-      return '${duration.inDays}d';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours}h';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes}m';
-    } else {
-      return '${duration.inSeconds}s';
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +184,7 @@ class TorrentWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: Text(
-                      _formatTimeDifference(
+                      formatTimeDifference(
                         DateTime.now().difference(
                         torrent.createdAt,
                         ),

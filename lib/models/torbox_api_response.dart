@@ -143,3 +143,124 @@ extension SearchTabTypeExtension on SearchTabType {
     }
   }
 }
+/*
+0 =
+"id" -> 95996
+1 =
+"created_at" -> "2025-12-07T19:15:06.198752+00:00"
+2 =
+"updated_at" -> "2025-12-07T19:15:07.711253+00:00"
+3 =
+"auth_id" -> "be089f0f-63cd-4215-9649-37acf63585b0"
+4 =
+"hash" -> "7afd51e5458dfd9b8e75ba5f1d640a301803dd1a"
+5 =
+"type" -> "torrent"
+6 =
+"integration" -> "google"
+7 =
+"file_id" -> 0
+8 =
+"zip" -> false
+9 =
+"progress" -> 0
+10 =
+"detail" -> "Failed to request permission from Google Drive. Errored with status code: 401 Please try again."
+11 =
+"download_url" -> null
+12 =
+"status" -> "failed"
+13 =
+"task_id" -> "2b0a19ae-fad1-4117-b506-67b86f784e83"
+*/
+class JobQueueStatusResponse {
+  final int id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final String authId;
+  final String hash;
+  final String type;
+  final String integration;
+  final int? fileId;
+  final bool zip;
+  final num progress;
+  final String detail;
+  final String? downloadUrl;
+  final JobQueueStatus status;
+  final String taskId;
+  final String? fileName;
+
+  JobQueueStatusResponse({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.authId,
+    required this.hash,
+    required this.type,
+    required this.integration,
+    required this.fileId,
+    required this.zip,
+    required this.progress,
+    required this.detail,
+    required this.downloadUrl,
+    required this.status,
+    required this.taskId,
+    required this.fileName,
+  });
+
+  factory JobQueueStatusResponse.fromJson(Map<String, dynamic> json) {
+    return JobQueueStatusResponse(
+      id: json['id'],
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+      authId: json['auth_id'],
+      hash: json['hash'],
+      type: json['type'],
+      integration: json['integration'],
+      fileId: json['file_id'],
+      zip: json['zip'],
+      progress: json['progress'],
+      detail: json['detail'],
+      downloadUrl: json['download_url'],
+      status: JobQueueStatusExtension.fromString(json['status']),
+      taskId: json['task_id'],
+      fileName: json["file_name"],
+    );
+  }
+}
+
+enum JobQueueStatus { completed, failed, pending, uploading, preparing }
+
+extension JobQueueStatusExtension on JobQueueStatus {
+  String get name {
+    switch (this) {
+      case JobQueueStatus.completed:
+        return 'completed';
+      case JobQueueStatus.failed:
+        return 'failed';
+      case JobQueueStatus.pending:
+        return 'pending';
+      case JobQueueStatus.uploading:
+        return 'uploading';
+      case JobQueueStatus.preparing:
+        return 'preparing';
+    }
+  }
+
+  static JobQueueStatus fromString(String value) {
+    switch (value.toLowerCase()) {
+      case 'completed':
+        return JobQueueStatus.completed;
+      case 'failed':
+        return JobQueueStatus.failed;
+      case 'pending':
+        return JobQueueStatus.pending;
+      case 'uploading':
+        return JobQueueStatus.uploading;
+      case 'preparing':
+        return JobQueueStatus.preparing;
+      default:
+        throw Exception('Unknown JobQueueStatus value: $value');
+    }
+  }
+}
