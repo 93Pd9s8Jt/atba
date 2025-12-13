@@ -1,19 +1,34 @@
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
+import 'package:atba/services/torbox_service.dart';
+import 'package:atba/screens/jobs_status_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:atba/models/torrent.dart';
+import 'package:atba/models/usenet.dart';
+import 'package:atba/models/webdownload.dart';
 import 'package:atba/utils.dart';
+import 'package:icons_plus/icons_plus.dart';
+import 'package:provider/provider.dart';
 
 class DownloadableItemDetailScreen extends StatelessWidget {
   final DownloadableItem item;
   const DownloadableItemDetailScreen({super.key, required this.item});
 
+  IntegrationFileType? _getIntegrationFileType() {
+    if (item is Torrent) return IntegrationFileType.torrent;
+    if (item is Usenet) return IntegrationFileType.usenet;
+    if (item is WebDownload) return IntegrationFileType.webdownload;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final apiService = Provider.of<TorboxAPI>(context, listen: false);
+    final integrationType = _getIntegrationFileType();
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Details"),
-      ),
+      appBar: AppBar(title: Text("Details")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: CustomScrollView(
@@ -25,23 +40,81 @@ class DownloadableItemDetailScreen extends StatelessWidget {
               child: Card(
                 elevation: 3,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 margin: EdgeInsets.symmetric(vertical: 8),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Item Info",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Item Info",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 8),
+                      if (item is Torrent) ...[
+                        Row(
+                          children: [
+                            Icon(Icons.link, size: 20),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: FutureBuilder(
+                                future: (item as Torrent).exportAsMagnet(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text("Loading magnet...");
+                                  } else if (snapshot.hasError ||
+                                      snapshot.data?.data == null) {
+                                    return Text(
+                                      "Error loading magnet: ${snapshot.data?.detailOrUnknown}",
+                                    );
+                                  } else {
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        final String? magnet =
+                                            snapshot.data?.data as String?;
+                                        if (magnet == null) return;
+                                        Clipboard.setData(
+                                          ClipboardData(text: magnet),
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Magnet link copied to clipboard',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: Text(
+                                        snapshot.data?.data as String? ?? "",
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                      ],
                       Row(
                         children: [
                           Icon(Icons.storage, size: 20),
                           SizedBox(width: 8),
-                          Text('Size: ${getReadableSize(item.size)}',
-                              style: TextStyle(fontSize: 16)),
+                          Text(
+                            'Size: ${getReadableSize(item.size)}',
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ],
                       ),
                       SizedBox(height: 8),
@@ -56,12 +129,75 @@ class DownloadableItemDetailScreen extends StatelessWidget {
                         ],
                       ),
                       if (item.progress < 1) ...[
+                        if (item is Torrent) ...[
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.group, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Seeds: ${(item as Torrent).seeds} | Peers: ${(item as Torrent).peers}',
+                              ),
+                            ],
+                          ),
+                        ],
                         SizedBox(height: 8),
                         LinearProgressIndicator(value: item.progress),
                         SizedBox(height: 8),
                         Text(
                           'ETA: ${readableTime(item.eta)}',
                           style: TextStyle(fontSize: 16),
+                        ),
+                      ],
+                      // Download with integrations (google drive, etc)
+                      if (apiService.googleToken != null &&
+                          apiService.googleToken!.isNotEmpty &&
+                          integrationType != null) ...[
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              icon: Icon(FontAwesome.google_drive_brand),
+                              label: Text("Download with Google Drive"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onSecondary,
+                              ),
+                              onPressed: () async {
+                                final response = await apiService
+                                    .queueIntegration(
+                                      QueueableIntegration.google,
+                                      item.id,
+                                      zip: true,
+                                      type: integrationType,
+                                    );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        response.success
+                                            ? 'Item queued for Google Drive'
+                                            : 'Failed to queue item: ${response.detailOrUnknown}',
+                                      ),
+                                      action: response.success
+                                          ? SnackBarAction(
+                                              label: "View",
+                                              onPressed: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      JobsStatusPage(),
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ],
@@ -71,64 +207,135 @@ class DownloadableItemDetailScreen extends StatelessWidget {
             ),
             // Files section for DownloadableItem
             SliverToBoxAdapter(
-              child: Text("Files",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                "Files",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
             item.files.isEmpty
                 ? SliverToBoxAdapter(child: Text("No files found."))
                 : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final file = item.files[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            title: Text(file.name),
-                            isThreeLine: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(getReadableSize(file.size)),
-                                SizedBox(height: 8),
-                                ElevatedButton.icon(
-                                  icon: Icon(Icons.download),
-                                  label: Text("Download"),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.onSecondary),
-                                  onPressed: () async {
-                                    final bool storageGranted =
-                                        await showPermissionDialog(context);
-                                    if (!storageGranted) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final file = item.files[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          title: Text(file.name),
+                          isThreeLine: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(getReadableSize(file.size)),
+                              SizedBox(height: 8),
+                              FittedBox(
+                                child: Row(
+                                  children: [
+                                    ElevatedButton.icon(
+                                      icon: Icon(Icons.download),
+                                      label: Text("Download"),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).colorScheme.onSecondary,
+                                      ),
+                                      onPressed: () async {
+                                        final bool storageGranted =
+                                            await showPermissionDialog(context);
+                                        if (!storageGranted) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Storage permission is required to download files.',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return;
+                                        }
+                                        final result = await item.downloadFile(
+                                          file,
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                                'Storage permission is required to download files.'),
+                                              result?.data != null
+                                                  ? 'File download started'
+                                                  : 'Failed to start download',
+                                            ),
                                           ),
                                         );
-                                      }
-                                      return;
-                                    }
-                                    final result =
-                                        await item.downloadFile(file);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(result?.data != null
-                                            ? 'File download started'
-                                            : 'Failed to start download'),
+                                      },
+                                    ),
+                                    if (apiService.googleToken != null &&
+                                        apiService.googleToken!.isNotEmpty &&
+                                        integrationType != null) ...[
+                                      SizedBox(width: 8),
+                                      ElevatedButton.icon(
+                                        icon: Icon(
+                                          FontAwesome.google_drive_brand,
+                                        ),
+                                        label: Text("Google Drive"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Theme.of(
+                                            context,
+                                          ).colorScheme.onSecondary,
+                                        ),
+                                        onPressed: () async {
+                                          final response = await apiService
+                                              .queueIntegration(
+                                                QueueableIntegration.google,
+                                                item.id,
+                                                fileId: file.id,
+                                                zip: false,
+                                                type: integrationType,
+                                              );
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  response.success
+                                                      ? 'File queued for Google Drive'
+                                                      : 'Failed to queue file: ${response.detailOrUnknown}',
+                                                ),
+                                                action: response.success
+                                                    ? SnackBarAction(
+                                                        label: "View",
+                                                        onPressed: () =>
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        JobsStatusPage(),
+                                                              ),
+                                                            ),
+                                                      )
+                                                    : null,
+                                              ),
+                                            );
+                                          }
+                                        },
                                       ),
-                                    );
-                                  },
+                                    ],
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      childCount: item.files.length,
-                    ),
+                        ),
+                      );
+                    }, childCount: item.files.length),
                   ),
           ],
         ),

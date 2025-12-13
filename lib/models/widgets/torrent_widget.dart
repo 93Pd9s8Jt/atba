@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/torrent.dart';
-import 'package:atba/models/widgets/torrent_detail_screen.dart';
+import 'package:atba/models/widgets/downloadable_item_detail_screen.dart';
 import 'package:atba/services/library_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
 import 'package:atba/utils.dart';
@@ -103,7 +103,7 @@ class TorrentWidget extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TorrentDetailScreen(torrent: torrent),
+            builder: (context) => DownloadableItemDetailScreen(item: torrent),
           ),
         );
       }
