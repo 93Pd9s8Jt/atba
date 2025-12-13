@@ -8,6 +8,7 @@ import 'package:atba/services/torrent_name_parser.dart';
 import 'package:atba/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
@@ -135,7 +136,7 @@ class TorrentWidget extends StatelessWidget {
           ),
           child: SelectableText(
             Settings.getValue<bool>(
-                  "key-use-torrent-name-parsing",
+                  Constants.useTorrentNameParsing,
                   defaultValue: false,
                 )!
                 ? ptn.parse(torrent.name)['title']
@@ -230,7 +231,7 @@ class QueuedTorrentWidget extends StatelessWidget {
       child: ListTile(
         title: Text(
           Settings.getValue<bool>(
-                "key-use-torrent-name-parsing",
+                Constants.useTorrentNameParsing,
                 defaultValue: false,
               )!
               ? ptn.parse(torrent.name)['title']

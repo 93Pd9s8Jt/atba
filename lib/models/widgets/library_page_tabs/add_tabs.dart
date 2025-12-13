@@ -3,6 +3,7 @@ import 'package:atba/services/torbox_service.dart' as torbox;
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
 
@@ -601,7 +602,7 @@ class _AddSearchTabState extends State<AddSearchTab> {
   void initState() {
     super.initState();
     _selectedSortingOption = Settings.getValue<String>(
-      'search_${widget.type.name}_sorting',
+      '${Constants.searchSortingPrefix}${widget.type.name}${Constants.searchSortingSuffix}',
       defaultValue: 'Default',
     )!;
   }
@@ -670,7 +671,7 @@ class _AddSearchTabState extends State<AddSearchTab> {
     if (save) {
       Future.microtask(() => {
             Settings.setValue<String>(
-              'search_${widget.type.name}_sorting',
+              '${Constants.searchSortingPrefix}${widget.type.name}${Constants.searchSortingSuffix}',
               option,
             )
           });

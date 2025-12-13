@@ -14,20 +14,21 @@ import 'package:atba/models/torrent.dart';
 import 'package:atba/models/webdownload.dart';
 import 'package:atba/models/usenet.dart';
 import 'package:atba/services/torbox_service.dart';
+import 'package:atba/config/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 class DownloadsPageState extends ChangeNotifier {
   bool _isTorrentNamesCensored = false;
   String _selectedSortingOption = Settings.getValue<String>(
-    "key-selected-sorting-option",
+    Constants.selectedSortingOption,
     defaultValue: "Default",
   )!;
 
   final List<String> _selectedMainFilters = List<String>.from(
     jsonDecode(
       Settings.getValue<String>(
-        "key-selected-main-filters",
+        Constants.selectedMainFilters,
         defaultValue: "[]",
       )!,
     ),
@@ -79,7 +80,7 @@ class DownloadsPageState extends ChangeNotifier {
 
   Future<void> _initializeFutures() async {
     bool cacheNotEmpty = await _isCacheNotEmpty();
-    if (Settings.getValue<bool>("key-use-cache", defaultValue: true)! &&
+    if (Settings.getValue<bool>(Constants.useCache, defaultValue: true)! &&
         cacheNotEmpty) {
       final cacheFuture = _loadFromCache();
       _torrentsFuture = cacheFuture;
@@ -249,7 +250,7 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
     Future.microtask(() async {
       await Settings.setValue<String>(
-        "key-selected-sorting-option",
+        Constants.selectedSortingOption,
         _selectedSortingOption,
       );
     });
@@ -264,7 +265,7 @@ class DownloadsPageState extends ChangeNotifier {
     notifyListeners();
     Future.microtask(() async {
       await Settings.setValue<String>(
-        "key-selected-main-filters",
+        Constants.selectedMainFilters,
         jsonEncode(_selectedMainFilters),
       );
     });
@@ -292,7 +293,7 @@ class DownloadsPageState extends ChangeNotifier {
 
   void startPeriodicUpdate<T extends DownloadableItem>(int id) {
     if (!Settings.getValue(
-      "key-library-foreground-update",
+      Constants.libraryForegroundUpdate,
       defaultValue: true,
     )!) {
       return;
@@ -309,7 +310,7 @@ class DownloadsPageState extends ChangeNotifier {
         );
         if (json["type"] == "updating") {
           if (!Settings.getValue<bool>(
-            "key-library-foreground-update-update-animation",
+            Constants.libraryForegroundUpdateAnimation,
             defaultValue: true,
           )!) {
             return;
@@ -699,7 +700,7 @@ class DownloadsPageState extends ChangeNotifier {
 
   static String _handleTorrentNameImpl(String name) {
     if (Settings.getValue<bool>(
-      'key-use-torrent-name-parsing',
+      Constants.useTorrentNameParsing,
       defaultValue: false,
     )!) {
       PTN ptn = PTN();

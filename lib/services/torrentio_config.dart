@@ -1,4 +1,5 @@
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:atba/config/constants.dart';
 
 class TorrentioConfig {
   static const Map<String, String> providers = {
@@ -87,12 +88,12 @@ class TorrentioConfig {
     'unknown': 'Unknown',
   };
 
-  static final String CSPROVIDERS = providers.keys.where((key) => Settings.getValue<bool>("key-provider-$key") ?? false).join(',');
-  static final String CSLANGUAGES = languages.keys.where((key) => Settings.getValue<bool>("key-language-$key") ?? false).join(',');
-  static final String CSQUALITIES = qualities.keys.where((key) => Settings.getValue<bool>("key-exclude-quality-$key") ?? false).join(',');
-  static final String SORTBY = {1: '', 2: 'qualitysize', 3: 'seeders', 4: 'size'}[Settings.getValue<int>("key-sort-by") ?? 1]!;
-  static final String SIZELIMIT = Settings.getValue<String>("key-video-size-limit") ?? '';
-  static final String NUMBERPERQUALITYLIMIT = Settings.getValue<String>("key-max-results-per-quality") ?? ''; // TODO: validate
+  static final String CSPROVIDERS = providers.keys.where((key) => Settings.getValue<bool>("${Constants.keyProviderPrefix}$key") ?? false).join(',');
+  static final String CSLANGUAGES = languages.keys.where((key) => Settings.getValue<bool>("${Constants.keyLanguagePrefix}$key") ?? false).join(',');
+  static final String CSQUALITIES = qualities.keys.where((key) => Settings.getValue<bool>("${Constants.keyExcludeQualityPrefix}$key") ?? false).join(',');
+  static final String SORTBY = {1: '', 2: 'qualitysize', 3: 'seeders', 4: 'size'}[Settings.getValue<int>(Constants.torrentioSortBy) ?? 1]!;
+  static final String SIZELIMIT = Settings.getValue<String>(Constants.torrentioVideoSizeLimit) ?? '';
+  static final String NUMBERPERQUALITYLIMIT = Settings.getValue<String>(Constants.torrentioMaxResultsPerQuality) ?? ''; // TODO: validate
 }
 
 enum SearchType { movie, tv }

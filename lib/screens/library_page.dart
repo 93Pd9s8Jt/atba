@@ -2,6 +2,7 @@ import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:atba/models/torrent.dart';
+import 'package:atba/config/constants.dart';
 import 'package:atba/models/widgets/library_page_tabs/torrents_tab.dart';
 import 'package:atba/models/widgets/library_page_tabs/web_downloads_tab.dart';
 import 'package:atba/models/widgets/library_page_tabs/usenet_tab.dart';
@@ -87,7 +88,7 @@ class _DownloadsPageState extends State<DownloadsPage>
                   else
                     Row(
                       children: [
-                        if (Settings.getValue("key-show-jobs-status-shortcut",
+                        if (Settings.getValue(Constants.showJobsStatusShortcut,
                             defaultValue: true)!)
                           IconButton(
                             icon: const Icon(Icons.work),
@@ -102,7 +103,7 @@ class _DownloadsPageState extends State<DownloadsPage>
                             },
                             tooltip: "Jobs Status",
                           ),
-                        if (Settings.getValue("key-show-refresh-icon",
+                        if (Settings.getValue(Constants.showRefreshIcon,
                             defaultValue: true)!)
                           IconButton(
                             icon: const Icon(Icons.refresh),
@@ -245,7 +246,7 @@ class _DownloadsPageState extends State<DownloadsPage>
                             IconButton(
                               icon: Icon(Icons.download),
                               onPressed: () async {
-                                if (Settings.getValue<String>("folder_path") ==
+                                if (Settings.getValue<String>(Constants.folderPath) ==
                                     null) {
                                   bool granted =
                                       await showPermissionDialog(context);

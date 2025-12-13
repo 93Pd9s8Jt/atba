@@ -39,6 +39,7 @@ import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:atba/config/constants.dart';
 import 'downloadable_item.dart';
 import 'package:json_annotation/json_annotation.dart';
 part 'webdownload.g.dart';
@@ -117,7 +118,7 @@ class WebDownload extends DownloadableItem {
 
   @override
   Future<TorboxAPIResponse> download() async {
-    final folderPath = Settings.getValue<String>("folder_path");
+    final folderPath = Settings.getValue<String>(Constants.folderPath);
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
@@ -135,7 +136,7 @@ class WebDownload extends DownloadableItem {
 
   @override
   Future<TorboxAPIResponse> downloadFile(DownloadableFile file) async {
-    final folderPath = Settings.getValue<String>("folder_path");
+    final folderPath = Settings.getValue<String>(Constants.folderPath);
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }

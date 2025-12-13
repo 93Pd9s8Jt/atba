@@ -1,10 +1,11 @@
 import 'package:atba/models/permission_model.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<bool> showPermissionDialog(BuildContext context) async {
-  if (Settings.getValue<String>("folder_path") != null) return true;
+  if (Settings.getValue<String>(Constants.folderPath) != null) return true;
   return await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {

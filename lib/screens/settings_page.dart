@@ -1,6 +1,7 @@
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
 import 'package:atba/services/downloadable_item_cache_service.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/services/torbox_service.dart';
@@ -185,7 +186,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: <Widget>[
                 DropDownSettingsTile<String>(
                   title: 'Theme',
-                  settingKey: 'key-theme',
+                  settingKey: Constants.theme,
                   values: <String, String>{
                     'system': 'System default',
                     'light': 'Light',
@@ -194,12 +195,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   selected: 'system',
                 ),
                 CheckboxSettingsTile(
-                  settingKey: 'key-use-material-3',
+                  settingKey: Constants.useMaterial3,
                   title: 'Use Material3 theming',
                   defaultValue: true,
                 ),
                 CheckboxSettingsTile(
-                  settingKey: 'key-use-torbox-font-family',
+                  settingKey: Constants.useTorboxFontFamily,
                   title: 'Use torbox\'s dotted font',
                   defaultValue: false,
                 ),
@@ -232,7 +233,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           for (var provider in providers.keys)
                             CheckboxSettingsTile(
-                              settingKey: 'key-provider-$provider',
+                              settingKey: '${Constants.keyProviderPrefix}$provider',
                               title: providers[provider] ?? provider,
                               defaultValue: true,
                             ),
@@ -240,7 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       DropDownSettingsTile<int>(
                         title: "Sort by",
-                        settingKey: 'key-sort-by',
+                        settingKey: Constants.torrentioSortBy,
                         values: <int, String>{
                           1: 'By quality then seeders',
                           2: 'By quality then size',
@@ -257,7 +258,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           for (var language in languages.keys.toList()..sort())
                             CheckboxSettingsTile(
-                              settingKey: 'key-language-$language',
+                              settingKey: '${Constants.keyLanguagePrefix}$language',
                               title: languages[language] ?? language,
                               defaultValue: false,
                             ),
@@ -268,14 +269,14 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           for (var quality in qualities.keys)
                             CheckboxSettingsTile(
-                              settingKey: 'key-exclude-quality-$quality',
+                              settingKey: '${Constants.keyExcludeQualityPrefix}$quality',
                               title: qualities[quality] ?? quality,
                               defaultValue: false,
                             ),
                         ],
                       ),
                       TextInputSettingsTile(
-                        settingKey: 'key-max-results-per-quality',
+                        settingKey: Constants.torrentioMaxResultsPerQuality,
                         title: 'Max results per quality',
                         keyboardType: TextInputType.number,
                         helperText: 'Leave empty for unlimited. ',
@@ -288,7 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                       TextInputSettingsTile(
-                        settingKey: 'key-video-size-limit',
+                        settingKey: Constants.torrentioVideoSizeLimit,
                         title: 'Video size limit',
                         keyboardType: TextInputType.number,
                         helperText:
@@ -317,29 +318,29 @@ class _SettingsPageState extends State<SettingsPage> {
               children: <Widget>[
                 CheckboxSettingsTile(
                   title: "Update items in the foreground",
-                  settingKey: "key-library-foreground-update",
+                  settingKey: Constants.libraryForegroundUpdate,
                   defaultValue: true,
                   childrenIfEnabled: <Widget>[
                     CheckboxSettingsTile(
                       title: "Show update animation",
                       settingKey:
-                          "key-library-foreground-update-update-animation",
+                          Constants.libraryForegroundUpdateAnimation,
                       defaultValue: true,
                     ),
                   ],
                 ),
                 CheckboxSettingsTile(
                   title: "Show refresh icon",
-                  settingKey: "key-show-refresh-icon",
+                  settingKey: Constants.showRefreshIcon,
                   defaultValue: true,
                 ),
                 CheckboxSettingsTile(
                   title: "Show shortcut to jobs statuses",
-                  settingKey: "key-show-jobs-status-shortcut",
+                  settingKey: Constants.showJobsStatusShortcut,
                   defaultValue: true,
                 ),
                 CheckboxSettingsTile(
-                  settingKey: 'key-use-torrent-name-parsing',
+                  settingKey: Constants.useTorrentNameParsing,
                   title: 'Use torrent name parsing',
                   defaultValue: true,
                 ),
@@ -365,7 +366,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                   subtitle: Text(
                     Settings.getValue<String>(
-                      'folder_path',
+                      Constants.folderPath,
                       defaultValue: 'No download folder set',
                     )!,
                   ),
@@ -373,7 +374,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 const Divider(),
                 CheckboxSettingsTile(
                   title: "Use caching",
-                  settingKey: 'key-use-cache',
+                  settingKey: Constants.useCache,
                   defaultValue: true,
                 ),
                 ListTile(
@@ -391,7 +392,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           CheckboxSettingsTile(
-            settingKey: 'key-use-internal-video-player',
+            settingKey: Constants.useInternalVideoPlayer,
             title: 'Use internal video player (buggy)',
             defaultValue: false,
           ),

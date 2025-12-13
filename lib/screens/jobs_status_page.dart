@@ -2,6 +2,7 @@ import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/jobs_update_service.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/utils.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +22,7 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
   bool _isSelecting = false;
   late final JobsUpdateService updateService;
 
-  static String _selectedSortingOption = Settings.getValue<String>("job-queue-selected-sort", defaultValue: "Default")!;
+  static String _selectedSortingOption = Settings.getValue<String>(Constants.jobQueueSelectedSort, defaultValue: "Default")!;
 
   static final Map<String, int Function(JobQueueItem, JobQueueItem)>
   _sortingFunctions = {
@@ -196,7 +197,7 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
         (int index) => MenuItemButton(
           onPressed: () async {
             setState(() => _selectedSortingOption = _sortingFunctions.keys.elementAt(index));
-            await Settings.setValue("job-queue-selected-sort", _selectedSortingOption);
+            await Settings.setValue(Constants.jobQueueSelectedSort, _selectedSortingOption);
             // Navigator.pop(context);
           },
           child: Row(

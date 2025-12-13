@@ -7,6 +7,7 @@ import 'package:atba/services/library_page_state.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart'
     show Settings;
 import 'package:http/http.dart' as http;
@@ -106,7 +107,7 @@ class TorboxAPI {
           queryParameters.cast<String, dynamic>(),
         ); // adds body as query parameters
         final dynamic fetchClient;
-        if (Settings.getValue("key-use-cache", defaultValue: true)!) {
+        if (Settings.getValue(Constants.useCache, defaultValue: true)!) {
           fetchClient = client;
         } else {
           fetchClient = http.Client();
@@ -255,18 +256,18 @@ class TorboxAPI {
   }
 
   Future<void> saveGoogleToken(String token, String UnixExpiryDate) async {
-    await secureStorageService.write('google_drive_token', token);
-    await Settings.setValue('google_drive_token_expiry', UnixExpiryDate);
+    await secureStorageService.write(Constants.googleDriveToken, token);
+    await Settings.setValue(Constants.googleDriveTokenExpiry, UnixExpiryDate);
     googleToken = token;
   }
 
   Future<String?> getGoogleToken() async {
-    return await secureStorageService.read('google_drive_token');
+    return await secureStorageService.read(Constants.googleDriveTokenExpiry);
   }
 
   Future<void> deleteGoogleToken() async {
-    await secureStorageService.delete('google_drive_token');
-    await Settings.setValue('google_drive_token_expiry', null);
+    await secureStorageService.delete(Constants.googleDriveTokenExpiry);
+    await Settings.setValue(Constants.googleDriveTokenExpiry, null);
     googleToken = null;
   }
 
@@ -311,7 +312,7 @@ class TorboxAPI {
         downloadsPageState?.addItemsToCache([newQueuedTorrent]);
       }
       if (Settings.getValue(
-        "key-library-foreground-update",
+        Constants.libraryForegroundUpdate,
         defaultValue: false,
       )!) {
         downloadsPageState?.startPeriodicUpdate<Torrent>(

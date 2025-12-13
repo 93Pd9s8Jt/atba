@@ -1,6 +1,7 @@
 import 'package:atba/services/torrentio_service.dart';
 import 'package:atba/services/torrentio_config.dart';
 import 'package:atba/screens/video_player_screen.dart';
+import 'package:atba/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 // import 'package:extended_sliver/extended_sliver.dart';
@@ -452,7 +453,7 @@ class _DetailsPageState extends State<DetailsPage>
       _showError('Failed to load stream data');
       return;
     }
-    Settings.getValue<bool>('key-use-internal-video-player') ?? false
+    Settings.getValue<bool>(Constants.useInternalVideoPlayer) ?? false
         ? Navigator.push(
             context,
             MaterialPageRoute(
