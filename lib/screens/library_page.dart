@@ -292,13 +292,13 @@ class _DownloadsPageState extends State<DownloadsPage>
                         Icon getFabIcon() {
                           switch (iconTabIndex) {
                             case 0:
-                              return const Icon(Icons.diversity_2);
+                              return const Icon(AntDesign.node_index_outline);
                             case 1:
                               return const Icon(Icons.cloud_download);
                             case 2:
                               return const Icon(Icons.hub);
                             default:
-                              return const Icon(Icons.diversity_2);
+                              return const Icon(AntDesign.node_index_outline);
                           }
                         }
 
