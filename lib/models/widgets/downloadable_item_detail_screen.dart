@@ -95,6 +95,7 @@ class DownloadableItemDetailScreen extends StatelessWidget {
                                 ElevatedButton.icon(
                                   icon: Icon(Icons.download),
                                   label: Text("Download"),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.onSecondary),
                                   onPressed: () async {
                                     final bool storageGranted =
                                         await showPermissionDialog(context);

@@ -190,6 +190,9 @@ class MovieCard extends StatelessWidget {
                   width: double.infinity,
                   height: 200,
                   fit: BoxFit.fitHeight,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(child: Icon(Icons.error));
+                  },
                 ),
               )
             else

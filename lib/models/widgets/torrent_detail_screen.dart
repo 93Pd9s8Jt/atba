@@ -145,6 +145,7 @@ class TorrentDetailScreen extends StatelessWidget {
                             ElevatedButton.icon(
                               icon: Icon(FontAwesome.google_drive_brand),
                               label: Text("Download with Google Drive"),
+                              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.onSecondary),
                               onPressed: () async {
                                 final response = await apiService
                                     .queueIntegration(
@@ -219,6 +220,7 @@ class TorrentDetailScreen extends StatelessWidget {
                                     ElevatedButton.icon(
                                       icon: Icon(Icons.download),
                                       label: Text("Download"),
+                                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.onSecondary),
                                       onPressed: () async {
                                         // Implement your file download logic here
                                         // For example:
@@ -257,8 +259,11 @@ class TorrentDetailScreen extends StatelessWidget {
                                         apiService.googleToken!.isNotEmpty) ...[
                                       SizedBox(width: 8),
                                       ElevatedButton.icon(
-                                        icon: Icon(FontAwesome.google_drive_brand),
+                                        icon: Icon(
+                                          FontAwesome.google_drive_brand,
+                                        ),
                                         label: Text("Google Drive"),
+                                        style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.onSecondary),
                                         onPressed: () async {
                                           final response = await apiService
                                               .queueIntegration(
