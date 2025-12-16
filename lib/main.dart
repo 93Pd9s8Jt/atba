@@ -1,11 +1,9 @@
 import 'package:atba/services/update_service.dart';
 import 'package:atba/models/downloadable_item.dart';
-import 'package:flutter/foundation.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
 import 'services/shared_prefs_service.dart';
 import 'services/secure_storage_service.dart';
@@ -23,9 +21,6 @@ import 'app_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initSettings();
-  if (Platform.isAndroid || Platform.isIOS) {
-    await FlutterDownloader.initialize(debug: kDebugMode);
-  }
 
   final sharedPrefsService = SharedPrefsService();
   await sharedPrefsService.init();
@@ -33,11 +28,8 @@ Future<void> main() async {
   final secureStorageService = SecureStorageService();
 
   final isFirstRun = sharedPrefsService.getString('isFirstRun') == null;
-  
 
-  final apiService = TorboxAPI(
-    secureStorageService: secureStorageService,
-  );
+  final apiService = TorboxAPI(secureStorageService: secureStorageService);
   await apiService.init();
 
   final hasApiKey = apiService.apiKey != null;
@@ -45,6 +37,16 @@ Future<void> main() async {
   DownloadableItem.initApiService(apiService);
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
+
+  FileDownloader().configureNotification(
+    tapOpensFile: true,
+    progressBar: true,
+    running: TaskNotification('Downloading', '{progress} | {filename}'),
+    complete: TaskNotification('Download finished', '{filename}'),
+    error: TaskNotification("Error", "{filename}"),
+    paused: TaskNotification("Paused", "{filename}"),
+    canceled: TaskNotification("Canceled", "{filename}"),
+  );
 
   runApp(
     MultiProvider(
@@ -71,9 +73,7 @@ Future<void> main() async {
 }
 
 Future<void> initSettings() async {
-  await Settings.init(
-    cacheProvider: SharePreferenceCache(),
-  );
+  await Settings.init(cacheProvider: SharePreferenceCache());
 }
 
 class AtbaApp extends StatelessWidget {
@@ -123,8 +123,10 @@ class AtbaApp extends StatelessWidget {
                 useMaterial3: true,
                 colorScheme: lightColorScheme,
               ),
-              darkTheme:
-                  ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
+              darkTheme: ThemeData(
+                useMaterial3: true,
+                colorScheme: darkColorScheme,
+              ),
               themeMode: ThemeMode.system,
               home: isFirstRun
                   ? (hasApiKey ? const HomeScreen() : ApiKeyScreen())
@@ -142,11 +144,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
 

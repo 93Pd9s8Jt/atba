@@ -24,7 +24,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2
-  flutter_downloader: ^1.12.0
   flutter_inappwebview: ^6.1.5
   flutter_launcher_icons: ^0.14.4
   flutter_screenutil: ^5.9.3
@@ -59,6 +58,7 @@ dependencies:
   webview_flutter: ^4.13.0
   memoized: ^2.2.6
   icons_plus: ^5.0.0
+  background_downloader: ^9.4.1
 
 flutter_launcher_icons:
   android: true

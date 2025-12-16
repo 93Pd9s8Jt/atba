@@ -37,7 +37,7 @@
 
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/config/constants.dart';
 import 'downloadable_item.dart';
@@ -106,14 +106,17 @@ class WebDownload extends DownloadableItem {
     );
   }
 
-  factory WebDownload.fromJsonGenerated(Map<String, dynamic> json) => _$WebDownloadFromJson(json);
+  factory WebDownload.fromJsonGenerated(Map<String, dynamic> json) =>
+      _$WebDownloadFromJson(json);
   @override
   Map<String, dynamic> toJsonGenerated() => _$WebDownloadToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {
-    return await DownloadableItem.apiService
-        .controlWebDownload(ControlWebdlType.delete, webId: id);
+    return await DownloadableItem.apiService.controlWebDownload(
+      ControlWebdlType.delete,
+      webId: id,
+    );
   }
 
   @override
@@ -122,14 +125,17 @@ class WebDownload extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response =
-        await DownloadableItem.apiService.getWebDownloadUrl(id, zipLink: true);
-    await FlutterDownloader.enqueue(
-      url: response.data as String,
-      savedDir: folderPath,
-      fileName: "$name.zip",
-      showNotification: true,
-      openFileFromNotification: true,
+    final response = await DownloadableItem.apiService.getWebDownloadUrl(
+      id,
+      zipLink: true,
+    );
+    await FileDownloader().enqueue(
+      DownloadTask(
+        url: response.data as String,
+        directory: folderPath,
+        filename: "$name.zip",
+        allowPause: true
+      ),
     );
     return response;
   }
@@ -140,17 +146,20 @@ class WebDownload extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await DownloadableItem.apiService
-        .getWebDownloadUrl(id, fileId: file.id);
+    final response = await DownloadableItem.apiService.getWebDownloadUrl(
+      id,
+      fileId: file.id,
+    );
     if (!response.success) {
       return response;
     }
-    await FlutterDownloader.enqueue(
-      url: response.data as String,
-      savedDir: folderPath,
-      fileName: file.name,
-      showNotification: true,
-      openFileFromNotification: true,
+    await FileDownloader().enqueue(
+      DownloadTask(
+        url: response.data as String,
+        directory: folderPath,
+        filename: file.name.split('/').last,
+        allowPause: true
+      ),
     );
     return response;
   }

@@ -81,6 +81,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.0"
+  background_downloader:
+    dependency: "direct main"
+    description:
+      name: background_downloader
+      sha256: efe41340f6518449f6c5f116d9bcecc97bbff7708efe47d7a645478117ce15fd
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.4.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -374,14 +382,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.2"
-  flutter_downloader:
-    dependency: "direct main"
-    description:
-      name: flutter_downloader
-      sha256: "93a9ddbd561f8a3f5483b4189453fba145a0a1014a88143c96a966296b78a118"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.12.0"
   flutter_inappwebview:
     dependency: "direct main"
     description:

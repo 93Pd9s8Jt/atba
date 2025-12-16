@@ -1,6 +1,6 @@
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/models/torbox_api_response.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/config/constants.dart';
 import 'downloadable_item.dart';
@@ -242,13 +242,13 @@ class Torrent extends DownloadableItem {
     if (!response.success) {
       return response; // Return early if the response is not successful
     }
-    await FlutterDownloader.enqueue(
+    await FileDownloader().enqueue(DownloadTask(
       url: response.data as String,
-      savedDir: folderPath,
-      fileName: "$name.zip",
-      showNotification: true,
-      openFileFromNotification: true,
-    );
+      baseDirectory: BaseDirectory.root,
+      directory: folderPath,
+      filename: "$name.zip",
+      allowPause: true
+    ));
     return response;
   }
 
@@ -262,13 +262,14 @@ class Torrent extends DownloadableItem {
     if (!response.success) {
       return response;
     }
-    await FlutterDownloader.enqueue(
+
+    await FileDownloader().enqueue(DownloadTask(
       url: response.data as String,
-      savedDir: folderPath,
-      fileName: file.name.split('/').last,
-      showNotification: true,
-      openFileFromNotification: true,
-    );
+      directory: folderPath,
+      baseDirectory: BaseDirectory.root,
+      filename: file.name.split('/').last,
+      allowPause: true
+    ));
     return response;
   }
 }

@@ -1,6 +1,6 @@
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/config/constants.dart';
 import 'downloadable_item.dart';
@@ -12,7 +12,7 @@ enum UsenetPostProcessing {
   defaultProcessing,
   repair,
   repairAndUnpack,
-  repairAndUnpackAndDelete
+  repairAndUnpackAndDelete,
 }
 
 @JsonSerializable()
@@ -67,14 +67,17 @@ class Usenet extends DownloadableItem {
     );
   }
 
-  factory Usenet.fromJsonGenerated(Map<String, dynamic> json) => _$UsenetFromJson(json);
+  factory Usenet.fromJsonGenerated(Map<String, dynamic> json) =>
+      _$UsenetFromJson(json);
   @override
   Map<String, dynamic> toJsonGenerated() => _$UsenetToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {
-    return await DownloadableItem.apiService
-        .controlUsenetDownload(ControlUsenetType.delete, usenetId: id);
+    return await DownloadableItem.apiService.controlUsenetDownload(
+      ControlUsenetType.delete,
+      usenetId: id,
+    );
   }
 
   @override
@@ -83,14 +86,17 @@ class Usenet extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await DownloadableItem.apiService
-        .getUsenetDownloadUrl(id, zipLink: true);
-    await FlutterDownloader.enqueue(
-      url: response.data as String,
-      savedDir: folderPath,
-      fileName: "$name.zip",
-      showNotification: true,
-      openFileFromNotification: true,
+    final response = await DownloadableItem.apiService.getUsenetDownloadUrl(
+      id,
+      zipLink: true,
+    );
+    await FileDownloader().enqueue(
+      DownloadTask(
+        url: response.data as String,
+        directory: folderPath,
+        filename: "$name.zip",
+        allowPause: true
+      ),
     );
     return response;
   }
@@ -101,17 +107,20 @@ class Usenet extends DownloadableItem {
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await DownloadableItem.apiService
-        .getUsenetDownloadUrl(id, fileId: file.id);
+    final response = await DownloadableItem.apiService.getUsenetDownloadUrl(
+      id,
+      fileId: file.id,
+    );
     if (!response.success) {
       return response;
     }
-    await FlutterDownloader.enqueue(
-      url: response.data as String,
-      savedDir: folderPath,
-      fileName: file.name,
-      showNotification: true,
-      openFileFromNotification: true,
+    await FileDownloader().enqueue(
+      DownloadTask(
+        url: response.data as String,
+        directory: folderPath,
+        filename: file.name.split('/').last,
+        allowPause: true
+      ),
     );
     return response;
   }
