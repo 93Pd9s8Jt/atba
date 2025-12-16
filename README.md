@@ -17,7 +17,8 @@ Another TorBox App.
 |----------|--------|-------|
 | Android | ✅ Stable | Primary target; APK ships with each release |
 | Android TV | ⚠️ Unstable | Partial support, but navigation is broken |
-| Windows | ⚠️ Dev only | Run from source (`flutter run`). I test against this, so mostly functional except for downloading & deep linking |
+| Windows | ⚠️ Dev only | Run from source (`flutter run`). I test against this, so mostly functional except for deep linking |
+| iOS | ❌ Untested | - |
 | macOS | ❌ Untested | - |
 | Linux | ❌ Untested | - |
 | Web | ❌ Fails | Currently doesn't build due to drift dependency |
