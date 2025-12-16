@@ -24,9 +24,7 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Web Downloads'),
-      ),
+      appBar: AppBar(title: const Text('Add Web Downloads')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -84,20 +82,19 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
 
                       int successCount = 0;
                       for (var url in urls) {
-                        var response = await widget.apiService.makeRequest(
-                            'api/webdl/createwebdownload',
-                            method: 'post',
-                            body: {
-                              "link": url.trim(),
-                              "password": password,
-                            });
+                        var response = await widget.apiService
+                            .createWebDownload(
+                              url.trim(),
+                              password: password,
+                            );
                         if (response.success == true) {
                           successCount++;
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                  'Failed to add $url: ${response.detail}'),
+                                'Failed to add $url: ${response.detail}',
+                              ),
                             ),
                           );
                         }
@@ -111,7 +108,8 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '$successCount download(s) added successfully.'),
+                              '$successCount download(s) added successfully.',
+                            ),
                           ),
                         );
                         Navigator.pop(context);
@@ -119,7 +117,8 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '$successCount out of ${urls.length} download(s) added successfully.'),
+                              '$successCount out of ${urls.length} download(s) added successfully.',
+                            ),
                           ),
                         );
                       }
@@ -148,9 +147,7 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
     final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Magnet Links'),
-      ),
+      appBar: AppBar(title: const Text('Add Magnet Links')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -179,8 +176,9 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                       if (magnetLinkController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Please enter at least one magnet link.'),
+                            content: Text(
+                              'Please enter at least one magnet link.',
+                            ),
                           ),
                         );
                         return;
@@ -205,7 +203,8 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                  'Failed to add torrent: ${response.detailOrUnknown}'),
+                                'Failed to add torrent: ${response.detailOrUnknown}',
+                              ),
                             ),
                           );
                         }
@@ -220,7 +219,8 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '$successCount torrent${successCount != 1 ? "s" : ""} added successfully.'),
+                              '$successCount torrent${successCount != 1 ? "s" : ""} added successfully.',
+                            ),
                           ),
                         );
                         Navigator.pop(context);
@@ -228,7 +228,8 @@ class _AddMagnetTabState extends State<AddMagnetTab> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '$successCount out of ${magnetLinks.length} torrent(s) added successfully.'),
+                              '$successCount out of ${magnetLinks.length} torrent(s) added successfully.',
+                            ),
                           ),
                         );
                       }
@@ -257,9 +258,7 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
     final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Torrent File'),
-      ),
+      appBar: AppBar(title: const Text('Add Torrent File')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -310,7 +309,8 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            'Failed to add torrent: ${response.detailOrUnknown}'),
+                          'Failed to add torrent: ${response.detailOrUnknown}',
+                        ),
                       ),
                     );
                   }
@@ -360,9 +360,7 @@ class _AddNzbLinkTabState extends State<AddNzbLinkTab> {
     final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Usenet from URL'),
-      ),
+      appBar: AppBar(title: const Text('Add Usenet from URL')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -397,9 +395,7 @@ class _AddNzbLinkTabState extends State<AddNzbLinkTab> {
                     onPressed: () async {
                       if (linkController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please enter a URL.'),
-                          ),
+                          const SnackBar(content: Text('Please enter a URL.')),
                         );
                         return;
                       }
@@ -412,16 +408,9 @@ class _AddNzbLinkTabState extends State<AddNzbLinkTab> {
                           ? passwordController.text
                           : null;
 
-                      var response = await apiService.makeRequest(
-                        'api/usenet/createusenetdownload',
-                        method: 'post',
-                        body: {
-                          "file": null,
-                          "link": link,
-                          "name": null,
-                          "password": password,
-                          "post_processing": null,
-                        },
+                      var response = await apiService.createUsenetDownload(
+                        link: link,
+                        password: password,
                       );
 
                       setState(() {
@@ -439,7 +428,8 @@ class _AddNzbLinkTabState extends State<AddNzbLinkTab> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                'Failed to add Usenet download: ${response.detailOrUnknown}'),
+                              'Failed to add Usenet download: ${response.detailOrUnknown}',
+                            ),
                           ),
                         );
                       }
@@ -469,9 +459,7 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
     final apiService = Provider.of<torbox.TorboxAPI>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Usenet from File'),
-      ),
+      appBar: AppBar(title: const Text('Add Usenet from File')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -497,11 +485,11 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
               onPressed: _isLoading
                   ? null
                   : () async {
-                      FilePickerResult? result =
-                          await FilePicker.platform.pickFiles(
-                        type: FileType.custom,
-                        allowedExtensions: ['nzb'],
-                      );
+                      FilePickerResult? result = await FilePicker.platform
+                          .pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['nzb'],
+                          );
 
                       if (result != null) {
                         PlatformFile file = result.files.first;
@@ -513,18 +501,12 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
                           _isLoading = true;
                         });
 
-                        var response = await apiService.makeRequest(
-                          'api/usenet/createusenetdownload',
-                          method: 'post',
-                          body: {
-                            "file": file, // file is handled on api side
-                            "link": null,
-                            "name": file.name,
-                            "password": passwordController.text.isNotEmpty
-                                ? passwordController.text
-                                : null,
-                            "post_processing": null,
-                          },
+                        var response = await apiService.createUsenetDownload(
+                          nzbFile: file,
+                          name: file.name,
+                          password: passwordController.text.isNotEmpty
+                              ? passwordController.text
+                              : null,
                         );
 
                         setState(() {
@@ -534,8 +516,9 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
                         if (response.success) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content:
-                                  Text('Usenet download added successfully'),
+                              content: Text(
+                                'Usenet download added successfully',
+                              ),
                             ),
                           );
                           Navigator.pop(context);
@@ -543,7 +526,8 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                  'Failed to add Usenet download: ${response.detailOrUnknown}'),
+                                'Failed to add Usenet download: ${response.detailOrUnknown}',
+                              ),
                             ),
                           );
                         }
@@ -609,20 +593,22 @@ class _AddSearchTabState extends State<AddSearchTab> {
 
   static Map<String, int Function(SearchResult, SearchResult)> sortingOptions =
       {
-    "Default": (a, b) => 0,
-    "A to Z": (a, b) =>
-        (a.rawTitle).toLowerCase().compareTo(b.rawTitle.toLowerCase()),
-    "Z to A": (a, b) =>
-        -(a.rawTitle).toLowerCase().compareTo(b.rawTitle.toLowerCase()),
-    "Largest": (a, b) => -a.size.compareTo(b.size),
-    "Smallest": (a, b) => a.size.compareTo(b.size),
-    "Most Seeders": (a, b) => -a.lastKnownSeeders.compareTo(b.lastKnownSeeders),
-    "Least Seeders": (a, b) => a.lastKnownSeeders.compareTo(b.lastKnownSeeders),
-    "Most Peers": (a, b) => -a.lastKnownPeers.compareTo(b.lastKnownPeers),
-    "Least Peers": (a, b) => a.lastKnownPeers.compareTo(b.lastKnownPeers),
-    "Oldest": (a, b) => a.age.compareTo(b.age),
-    "Newest": (a, b) => -a.age.compareTo(b.age),
-  };
+        "Default": (a, b) => 0,
+        "A to Z": (a, b) =>
+            (a.rawTitle).toLowerCase().compareTo(b.rawTitle.toLowerCase()),
+        "Z to A": (a, b) =>
+            -(a.rawTitle).toLowerCase().compareTo(b.rawTitle.toLowerCase()),
+        "Largest": (a, b) => -a.size.compareTo(b.size),
+        "Smallest": (a, b) => a.size.compareTo(b.size),
+        "Most Seeders": (a, b) =>
+            -a.lastKnownSeeders.compareTo(b.lastKnownSeeders),
+        "Least Seeders": (a, b) =>
+            a.lastKnownSeeders.compareTo(b.lastKnownSeeders),
+        "Most Peers": (a, b) => -a.lastKnownPeers.compareTo(b.lastKnownPeers),
+        "Least Peers": (a, b) => a.lastKnownPeers.compareTo(b.lastKnownPeers),
+        "Oldest": (a, b) => a.age.compareTo(b.age),
+        "Newest": (a, b) => -a.age.compareTo(b.age),
+      };
   void _applyFilters() {
     _filteredResults = _results.where((result) {
       for (var entry in _selectedFilters.entries) {
@@ -669,12 +655,14 @@ class _AddSearchTabState extends State<AddSearchTab> {
     });
 
     if (save) {
-      Future.microtask(() => {
-            Settings.setValue<String>(
-              '${Constants.searchSortingPrefix}${widget.type.name}${Constants.searchSortingSuffix}',
-              option,
-            )
-          });
+      Future.microtask(
+        () => {
+          Settings.setValue<String>(
+            '${Constants.searchSortingPrefix}${widget.type.name}${Constants.searchSortingSuffix}',
+            option,
+          ),
+        },
+      );
     }
   }
 
@@ -686,14 +674,8 @@ class _AddSearchTabState extends State<AddSearchTab> {
       _isLoading = true;
     });
     final response = await (widget.type == SearchTabType.torrent
-        ? apiService.searchTorrents(
-            _searchController.text,
-            checkCache: true
-          )
-        : apiService.searchUsenet(
-            _searchController.text,
-            checkCache: true
-          ));
+        ? apiService.searchTorrents(_searchController.text, checkCache: true)
+        : apiService.searchUsenet(_searchController.text, checkCache: true));
     setState(() {
       _hasSearched = true;
     });
@@ -707,12 +689,10 @@ class _AddSearchTabState extends State<AddSearchTab> {
                     item["magnet"],
                     item["nzb"],
                     item["hash"],
-                    item["torrent"]
+                    item["torrent"],
                   ].any((link) => link != null),
                 )
-                .map((item) => SearchResult.fromJson(
-                      item,
-                    ))
+                .map((item) => SearchResult.fromJson(item))
                 .toList();
         _applyFilters();
         _isLoading = false;
@@ -729,8 +709,10 @@ class _AddSearchTabState extends State<AddSearchTab> {
     }
   }
 
-  void _showFilterBottomSheet(BuildContext context,
-      void Function(Map<String, List<dynamic>>, Set<String>) onFiltersChanged) {
+  void _showFilterBottomSheet(
+    BuildContext context,
+    void Function(Map<String, List<dynamic>>, Set<String>) onFiltersChanged,
+  ) {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -753,11 +735,14 @@ class _AddSearchTabState extends State<AddSearchTab> {
   }
 
   List<Widget> _buildFilters(
-      BuildContext context,
-      StateSetter setState,
-      void Function(
-              Map<String, List<dynamic>> filters, Set<String> listItemFilters)
-          onFiltersChanged) {
+    BuildContext context,
+    StateSetter setState,
+    void Function(
+      Map<String, List<dynamic>> filters,
+      Set<String> listItemFilters,
+    )
+    onFiltersChanged,
+  ) {
     // we build the filters dynamically based on the parsed names
     if (_results.isEmpty) {
       return [
@@ -788,11 +773,14 @@ class _AddSearchTabState extends State<AddSearchTab> {
       final Set<Type> valuesTypes = values.map((e) => e.runtimeType).toSet();
       if (const SetEquality().equals(valuesTypes, const {bool})) {
         return CheckboxListTile(
-          title: Text(type.fromCamelCase(),
-              style: TextStyle(
-                  color: (_selectedFilters[type]?.isNotEmpty ?? false)
-                      ? Theme.of(context).colorScheme.primary
-                      : null)),
+          title: Text(
+            type.fromCamelCase(),
+            style: TextStyle(
+              color: (_selectedFilters[type]?.isNotEmpty ?? false)
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+          ),
           value: _selectedFilters[type]?.isNotEmpty ?? false,
           onChanged: (bool? selected) {
             setState(() {
@@ -807,60 +795,73 @@ class _AddSearchTabState extends State<AddSearchTab> {
         );
       } else {
         bool hasListItems = false;
-        if (const SetEquality()
-            .equals(valuesTypes, const {List<dynamic>, String}) ||
-            const SetEquality()
-            .equals(valuesTypes, const {List<dynamic>, int})) {
+        if (const SetEquality().equals(valuesTypes, const {
+              List<dynamic>,
+              String,
+            }) ||
+            const SetEquality().equals(valuesTypes, const {
+              List<dynamic>,
+              int,
+            })) {
           hasListItems = true;
           _hasListItemFilters.add(type);
         }
         return ExpansionTile(
-          title: Text(type.fromCamelCase(),
-              style: TextStyle(
-                  color: (_selectedFilters[type]?.isNotEmpty ?? false)
-                      ? Theme.of(context).colorScheme.primary
-                      : null)),
+          title: Text(
+            type.fromCamelCase(),
+            style: TextStyle(
+              color: (_selectedFilters[type]?.isNotEmpty ?? false)
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+          ),
           children: [
             Wrap(
               spacing: 8.0,
               runSpacing: 8.0,
-              children: (hasListItems
-                      ? values
-                          .map((x) => x is Iterable ? x : [x])
-                          .expand((x) => x)
-                          .toSet()
-                      : values)
-                  .sorted((a, b) {
-                            if (a is String && b is String) {
-                              return a.toLowerCase().compareTo(b.toLowerCase());
-                            } else if (a is int && b is int) {
-                              return a.compareTo(b);
-                            } else {
-                              return 0;
-                            }
-                          })
-                  .map((value) {
-                return FilterChip(
-                  label: Text(value.toString()),
-                  selected: _selectedFilters[type]?.contains(value) ?? false,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        if (_selectedFilters[type] == null) {
-                          _selectedFilters[type] = [];
+              children:
+                  (hasListItems
+                          ? values
+                                .map((x) => x is Iterable ? x : [x])
+                                .expand((x) => x)
+                                .toSet()
+                          : values)
+                      .sorted((a, b) {
+                        if (a is String && b is String) {
+                          return a.toLowerCase().compareTo(b.toLowerCase());
+                        } else if (a is int && b is int) {
+                          return a.compareTo(b);
+                        } else {
+                          return 0;
                         }
-                        _selectedFilters[type]!.add(value);
-                      } else {
-                        _selectedFilters[type]?.remove(value);
-                        if (_selectedFilters[type]?.isEmpty ?? true) {
-                          _selectedFilters.remove(type);
-                        }
-                      }
-                    });
-                    onFiltersChanged(_selectedFilters, _hasListItemFilters);
-                  },
-                );
-              }).toList(),
+                      })
+                      .map((value) {
+                        return FilterChip(
+                          label: Text(value.toString()),
+                          selected:
+                              _selectedFilters[type]?.contains(value) ?? false,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                if (_selectedFilters[type] == null) {
+                                  _selectedFilters[type] = [];
+                                }
+                                _selectedFilters[type]!.add(value);
+                              } else {
+                                _selectedFilters[type]?.remove(value);
+                                if (_selectedFilters[type]?.isEmpty ?? true) {
+                                  _selectedFilters.remove(type);
+                                }
+                              }
+                            });
+                            onFiltersChanged(
+                              _selectedFilters,
+                              _hasListItemFilters,
+                            );
+                          },
+                        );
+                      })
+                      .toList(),
             ),
           ],
         );
@@ -874,25 +875,31 @@ class _AddSearchTabState extends State<AddSearchTab> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_results.isNotEmpty
-            ? ' ${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results'
-            : ''),
+        title: Text(
+          _results.isNotEmpty
+              ? ' ${_filteredResults.length != _results.length ? "${_filteredResults.length}/" : ""}${_results.length} results'
+              : '',
+        ),
         actions: [
           MenuAnchor(
-            builder: (BuildContext context, MenuController controlller,
-                Widget? child) {
-              return IconButton(
-                icon: const Icon(Icons.sort),
-                onPressed: () {
-                  if (controlller.isOpen) {
-                    controlller.close();
-                  } else {
-                    controlller.open();
-                  }
+            builder:
+                (
+                  BuildContext context,
+                  MenuController controlller,
+                  Widget? child,
+                ) {
+                  return IconButton(
+                    icon: const Icon(Icons.sort),
+                    onPressed: () {
+                      if (controlller.isOpen) {
+                        controlller.close();
+                      } else {
+                        controlller.open();
+                      }
+                    },
+                    tooltip: "Sort search results",
+                  );
                 },
-                tooltip: "Sort search results",
-              );
-            },
             menuChildren: List<MenuItemButton>.generate(
               sortingOptions.length,
               (int index) => MenuItemButton(
@@ -908,8 +915,10 @@ class _AddSearchTabState extends State<AddSearchTab> {
                       Row(
                         children: [
                           SizedBox(width: 4),
-                          Icon(Icons.check,
-                              color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.check,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ],
                       ),
                   ],
@@ -941,8 +950,9 @@ class _AddSearchTabState extends State<AddSearchTab> {
               decoration: InputDecoration(
                 labelText: 'Search for ${widget.type.pluralName.toLowerCase()}',
                 suffixIcon: IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () => onSearch(apiService)),
+                  icon: const Icon(Icons.search),
+                  onPressed: () => onSearch(apiService),
+                ),
               ),
             ),
             if (_isLoading)
@@ -959,45 +969,51 @@ class _AddSearchTabState extends State<AddSearchTab> {
                           final result = _sortedFilteredResults[index];
                           return ListTile(
                             title: Text(result.rawTitle),
-                            subtitle: Text(result.searchResultType ==
-                                    SearchTabType.torrent
-                                ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
-                                : result.readableSize),
+                            subtitle: Text(
+                              result.searchResultType == SearchTabType.torrent
+                                  ? 'Size: ${result.readableSize} | Seeders: ${result.lastKnownSeeders}'
+                                  : result.readableSize,
+                            ),
                             trailing: // cached indicator
-                                result.cached == true
-                                    ? Tooltip(
-                                        message: 'Cached result',
-                                        child: const Icon(
-                                          Icons.cached_sharp,
-                                          color: Colors.green,
-                                        ),
-                                      )
-                                    : null,
+                            result.cached == true
+                                ? Tooltip(
+                                    message: 'Cached result',
+                                    child: const Icon(
+                                      Icons.cached_sharp,
+                                      color: Colors.green,
+                                    ),
+                                  )
+                                : null,
                             onTap: () async {
-                              final response = await (result.searchResultType ==
-                                      SearchTabType.torrent
-                                  ? apiService.createTorrent(
-                                      magnetLink: result.magnetLink ??
-                                          "magnet:?xt=urn:btih:${result.hash}&dn=${result.rawTitle}",
-                                      torrentName: result.title,
-                                    )
-                                  : apiService.createUsenetDownload(
-                                      link: result.nzbLink,
-                                      name: result.title,
-                                    ));
-                              if (mounted) { // TODO: fix properly - currently nothing will be shown if the user navigates away too soon
+                              final response =
+                                  await (result.searchResultType ==
+                                          SearchTabType.torrent
+                                      ? apiService.createTorrent(
+                                          magnetLink:
+                                              result.magnetLink ??
+                                              "magnet:?xt=urn:btih:${result.hash}&dn=${result.rawTitle}",
+                                          torrentName: result.title,
+                                        )
+                                      : apiService.createUsenetDownload(
+                                          link: result.nzbLink,
+                                          name: result.title,
+                                        ));
+                              if (mounted) {
+                                // TODO: fix properly - currently nothing will be shown if the user navigates away too soon
                                 if (response.success) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                          '${result.searchResultType.name} added successfully'),
+                                        '${result.searchResultType.name} added successfully',
+                                      ),
                                     ),
                                   );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                          'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}'),
+                                        'Failed to add ${result.searchResultType.name.toLowerCase()}: ${response.detailOrUnknown}',
+                                      ),
                                     ),
                                   );
                                 }

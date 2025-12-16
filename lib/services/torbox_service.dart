@@ -63,7 +63,7 @@ class TorboxAPI {
     downloadsPageState = state;
   }
 
-  Future<TorboxAPIResponse> makeRequest(
+  Future<TorboxAPIResponse> _makeRequest(
     String endpoint, {
     String method = "get",
     SuccessReturnType returnType = SuccessReturnType.jsonResponse,
@@ -127,8 +127,8 @@ class TorboxAPI {
         responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       case 'post':
-        if (body?.values.any((value) => value is PlatformFile) ?? false ||
-            useMultipartRequestStream) {
+        if (useMultipartRequestStream || (body?.values.any((value) => value is PlatformFile) ?? false) 
+            ) {
           var request = http.MultipartRequest('POST', url);
           for (String? key in body?.keys ?? []) {
             if (key == null || body?[key] == null || body?[key] == "") continue;
@@ -293,7 +293,7 @@ class TorboxAPI {
       dotTorrentFile == null || magnetLink == null,
       'Only one of dotTorrentFile or magnetLink can be provided',
     );
-    final response = await makeRequest(
+    final response = await _makeRequest(
       'api/torrents/createtorrent',
       method: 'post',
       body: {
@@ -332,7 +332,7 @@ class TorboxAPI {
       torrentId != null || all != null,
       'Either torrentId or all must be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/torrents/controltorrent',
       method: 'post',
       body: {'torrent_id': torrentId, 'operation': operation.name, 'all': all},
@@ -350,7 +350,7 @@ class TorboxAPI {
       fileId != null || zipLink != null,
       'Either fileId or zipLink must be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/torrents/requestdl',
       method: 'get',
       returnType: returnTorrentFile == null
@@ -373,7 +373,7 @@ class TorboxAPI {
     int? offset,
     int? limit,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'api/torrents/mylist',
       method: 'get',
       body: {
@@ -394,7 +394,7 @@ class TorboxAPI {
       torrentHashes.isNotEmpty,
       'At least one torrent hash must be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/torrents/checkcached',
       method: 'get',
       body: {
@@ -409,7 +409,7 @@ class TorboxAPI {
     int torrentId,
     ExportTorrentDataType exportType,
   ) async {
-    return makeRequest(
+    return _makeRequest(
       'api/torrents/exportdata',
       method: 'get',
       returnType:
@@ -426,7 +426,7 @@ class TorboxAPI {
     String torrentHash, {
     int? timeout,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'api/torrents/torrentinfo',
       method: 'get',
       body: {'hash': torrentHash, 'timeout': timeout},
@@ -451,7 +451,7 @@ class TorboxAPI {
       nzbFile == null || link == null,
       'Only one of nzbFile or link can be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/usenet/createusenetdownload',
       method: 'post',
       body: {
@@ -474,7 +474,7 @@ class TorboxAPI {
       usenetId != null || all != null,
       'Either usenetId or all must be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/usenet/controlusenetdownload',
       method: 'post',
       body: {'usenet_id': usenetId, 'operation': operation.name, 'all': all},
@@ -500,7 +500,7 @@ class TorboxAPI {
       zipLink == null || returnTorrentFile == null,
       'Only one of zipLink or returnTorrentFile can be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/usenet/requestdl',
       method: 'get',
       returnType: returnTorrentFile == null
@@ -523,7 +523,7 @@ class TorboxAPI {
     int? offset,
     int? limit,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'api/usenet/mylist',
       method: 'get',
       body: {
@@ -540,7 +540,7 @@ class TorboxAPI {
     CheckCacheReturnFormat? returnFormat,
   }) async {
     assert(usenetHashes.isNotEmpty, 'At least one nzb id must be provided');
-    return makeRequest(
+    return _makeRequest(
       'api/usenet/checkcached',
       method: 'get',
       body: {'hash': usenetHashes.join(','), 'format': returnFormat?.name},
@@ -555,7 +555,7 @@ class TorboxAPI {
     String? password,
     bool? asQueued,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'api/webdl/createwebdownload',
       method: 'post',
       body: {
@@ -576,7 +576,7 @@ class TorboxAPI {
       webId != null || all != null,
       'Either webId or all must be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/webdl/controlwebdownload',
       method: 'post',
       body: {'webdl_id': webId, 'operation': operation.name, 'all': all},
@@ -598,7 +598,7 @@ class TorboxAPI {
       zipLink == null || returnTorrentFile == null,
       'Only one of zipLink or returnTorrentFile can be provided',
     );
-    return makeRequest(
+    return _makeRequest(
       'api/webdl/requestdl',
       method: 'get',
       returnType: returnTorrentFile == null
@@ -621,7 +621,7 @@ class TorboxAPI {
     int? offset,
     int? limit,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'api/webdl/mylist',
       method: 'get',
       body: {
@@ -638,7 +638,7 @@ class TorboxAPI {
     CheckCacheReturnFormat? returnFormat,
   }) async {
     assert(webLinks.isNotEmpty, 'At least one web link must be provided');
-    return makeRequest(
+    return _makeRequest(
       'api/webdl/checkcached',
       method: 'get',
       body: {
@@ -651,7 +651,7 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getWebHostersList() async {
-    return makeRequest('api/webdl/hosters', method: 'get');
+    return _makeRequest('api/webdl/hosters', method: 'get');
   }
 
   // #General
@@ -661,12 +661,12 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getStats() async {
-    return makeRequest('api/stats', method: 'get');
+    return _makeRequest('api/stats', method: 'get');
   }
 
   // #Notifications
   Future<TorboxAPIResponse> getRSSNotificationFeed() async {
-    return makeRequest(
+    return _makeRequest(
       'api/notifications/rss',
       method: 'get',
       returnType: SuccessReturnType.xml,
@@ -675,28 +675,28 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getJSONNotificationFeed() async {
-    return makeRequest('api/notifications/mynotifications', method: 'get');
+    return _makeRequest('api/notifications/mynotifications', method: 'get');
   }
 
   Future<TorboxAPIResponse> clearAllNotifications() async {
-    return makeRequest('api/notifications/clear', method: 'post');
+    return _makeRequest('api/notifications/clear', method: 'post');
   }
 
   Future<TorboxAPIResponse> clearNotification(int notificationId) async {
-    return makeRequest(
+    return _makeRequest(
       'api/notifications/clear/$notificationId',
       method: 'post',
     );
   }
 
   Future<TorboxAPIResponse> sendTestNotification() async {
-    return makeRequest('api/notifications/test', method: 'post');
+    return _makeRequest('api/notifications/test', method: 'post');
   }
 
   // #User
 
   Future<TorboxAPIResponse> getUserData({bool? getSettings}) async {
-    return makeRequest(
+    return _makeRequest(
       'api/user/me',
       method: 'get',
       body: {'settings': getSettings},
@@ -704,14 +704,14 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> addReferralCode(String referralCode) async {
-    return makeRequest(
+    return _makeRequest(
       'api/user/addreferral?referral=$referralCode',
       method: 'post',
     );
   }
 
   Future<TorboxAPIResponse> requestConfirmationCode() async {
-    return makeRequest('api/user/getconfirmation', method: 'get');
+    return _makeRequest('api/user/getconfirmation', method: 'get');
   }
 
   // #RSS feeds
@@ -731,7 +731,7 @@ class TorboxAPI {
       minutesScanInterval == null || minutesScanInterval >= 10,
       'minutesScanInterval must be at least 10',
     );
-    return makeRequest(
+    return _makeRequest(
       "api/rss/addrss",
       method: 'post',
       body: {
@@ -752,7 +752,7 @@ class TorboxAPI {
     int rssId,
     RssOperation operation,
   ) async {
-    return makeRequest(
+    return _makeRequest(
       "api/rss/controlrss",
       method: 'post',
       body: {'rss_feed_id': rssId, 'operation': operation.name},
@@ -774,7 +774,7 @@ class TorboxAPI {
       minutesScanInterval == null || minutesScanInterval >= 10,
       'minutesScanInterval must be at least 10',
     );
-    return makeRequest(
+    return _makeRequest(
       "api/rss/modifyrss",
       method: 'put',
       body: {
@@ -792,11 +792,11 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getRSSFeeedsList({int? rssId}) async {
-    return makeRequest("api/rss/getfeeds", method: 'get', body: {'id': rssId});
+    return _makeRequest("api/rss/getfeeds", method: 'get', body: {'id': rssId});
   }
 
   Future<TorboxAPIResponse> getRSSFeedItems(int rssId) async {
-    return makeRequest(
+    return _makeRequest(
       "api/rss/getfeeditems",
       method: 'get',
       body: {'rss_feed_id': rssId},
@@ -828,7 +828,7 @@ class TorboxAPI {
       token != null && token.isNotEmpty,
       'Token for ${integration.name} is not available',
     );
-    return makeRequest(
+    return _makeRequest(
       "api/integration/${integration.name}",
       method: 'post',
       body: {
@@ -843,19 +843,19 @@ class TorboxAPI {
   }
 
   Future<TorboxAPIResponse> getAllJobs() async {
-    return makeRequest("api/integration/jobs", method: 'get');
+    return _makeRequest("api/integration/jobs", method: 'get');
   }
 
   Future<TorboxAPIResponse> getJobStatusById(int jobId) async {
-    return makeRequest("api/integration/job/$jobId", method: 'get');
+    return _makeRequest("api/integration/job/$jobId", method: 'get');
   }
 
   Future<TorboxAPIResponse> getJobStatusByHash(String hash) async {
-    return makeRequest("api/integration/jobs/$hash", method: 'get');
+    return _makeRequest("api/integration/jobs/$hash", method: 'get');
   }
 
   Future<TorboxAPIResponse> cancelJobById(int jobId) async {
-    return makeRequest("api/integration/job/$jobId", method: 'delete');
+    return _makeRequest("api/integration/job/$jobId", method: 'delete');
   }
 
   // #Queued
@@ -867,7 +867,7 @@ class TorboxAPI {
     int? limit,
     FileType? type,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       "api/queued/getqueued",
       method: 'get',
       body: {
@@ -883,7 +883,7 @@ class TorboxAPI {
   // #Search API
 
   Future<TorboxAPIResponse> getMetadata(IdType idType, String id) async {
-    return makeRequest(
+    return _makeRequest(
       'meta/${idType.name}:$id',
       method: 'get',
       baseUrl: search_api_base,
@@ -894,7 +894,7 @@ class TorboxAPI {
     String query, {
     SearchType? type,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'search/$query',
       method: 'get',
       baseUrl: search_api_base,
@@ -912,7 +912,7 @@ class TorboxAPI {
     bool? checkOwned,
     bool? searchUserEngines,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'torrents/${idType.name}:$id',
       method: 'get',
       baseUrl: search_api_base,
@@ -934,7 +934,7 @@ class TorboxAPI {
     bool? checkOwned,
     bool? searchUserEngines,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'torrents/search/$query',
       method: 'get',
       baseUrl: search_api_base,
@@ -957,7 +957,7 @@ class TorboxAPI {
     bool? checkOwned,
     bool? searchUserEngines,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'usenet/${idType.name}:$id',
       method: 'get',
       baseUrl: search_api_base,
@@ -981,7 +981,7 @@ class TorboxAPI {
     bool? checkOwned,
     bool? searchUserEngines,
   }) async {
-    return makeRequest(
+    return _makeRequest(
       'usenet/search/$query',
       method: 'get',
       baseUrl: search_api_base,
@@ -1013,7 +1013,7 @@ class TorboxAPI {
       operation != QueuedItemOperation.start || all == null,
       'all can only be true for delete operation',
     );
-    return makeRequest(
+    return _makeRequest(
       "api/queued/controlqueued",
       method: 'post',
       body: {'queued_id': queuedId, 'operation': operation.name, 'all': all},
