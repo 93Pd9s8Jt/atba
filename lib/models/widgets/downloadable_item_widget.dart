@@ -17,7 +17,7 @@ class DownloadableItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = Provider.of<DownloadsPageState>(context);
+    final state = Provider.of<LibraryPageState>(context);
     final isSelected = state.selectedItems.any((selectedItem) => selectedItem.id == item.id);
     final isCensored = state.isTorrentNamesCensored;
 

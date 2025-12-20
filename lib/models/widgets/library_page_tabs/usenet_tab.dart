@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class UsenetTab extends StatelessWidget {
-  final DownloadsPageState state;
+  final LibraryPageState state;
 
   const UsenetTab({super.key, required this.state});
 

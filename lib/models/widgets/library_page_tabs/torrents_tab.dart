@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 RefreshIndicator buildTorrentsTab(
-    DownloadsPageState state, BuildContext context) {
+    LibraryPageState state, BuildContext context) {
   return RefreshIndicator(
     key: state.torrentRefreshIndicatorKey,
     onRefresh: () async {

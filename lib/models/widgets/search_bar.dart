@@ -9,7 +9,7 @@ class DownloadsSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = Provider.of<DownloadsPageState>(context);
+    final state = Provider.of<LibraryPageState>(context);
     return SliverAppBar(
       floating: true,
       title: TextField(

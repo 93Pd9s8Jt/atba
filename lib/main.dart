@@ -14,7 +14,6 @@ import 'services/torrentio_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'screens/setup/api_screen.dart';
 import 'screens/home_page.dart';
-// import 'cache_provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'app_state.dart';
 

@@ -31,7 +31,7 @@ String _decodeResponseBody(List<int> bodyBytes) {
 class TorboxAPI {
   final SecureStorageService secureStorageService;
   TorboxCacheHttpClient? client;
-  DownloadsPageState? downloadsPageState;
+  LibraryPageState? downloadsPageState;
 
   static const api_base = 'https://api.torbox.app';
   static const search_api_base = 'https://search-api.torbox.app';
@@ -59,7 +59,7 @@ class TorboxAPI {
     googleToken = results[1] as String?;
   }
 
-  void setDownloadsPageState(DownloadsPageState state) {
+  void setDownloadsPageState(LibraryPageState state) {
     downloadsPageState = state;
   }
 

@@ -85,7 +85,7 @@ class TorrentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = Provider.of<DownloadsPageState>(context);
+    final state = Provider.of<LibraryPageState>(context);
     PTN ptn = PTN();
     final isCensored = state.isTorrentNamesCensored;
     final isSelected = state.selectedItems.any(
@@ -219,7 +219,7 @@ class QueuedTorrentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = Provider.of<DownloadsPageState>(context);
+    final state = Provider.of<LibraryPageState>(context);
     final isCensored = state.isTorrentNamesCensored;
     final isSelected = state.selectedItems.any(
       (item) => item is QueuedTorrent && item.id == torrent.id,

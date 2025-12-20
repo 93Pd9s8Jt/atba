@@ -18,7 +18,7 @@ class _TorrentsListState extends State<TorrentsList> {
 
   @override
   Widget build(BuildContext context) {
-    final state = Provider.of<DownloadsPageState>(context);
+    final state = Provider.of<LibraryPageState>(context);
     return CustomScrollView(
       slivers: [
         if (state.isSearching)

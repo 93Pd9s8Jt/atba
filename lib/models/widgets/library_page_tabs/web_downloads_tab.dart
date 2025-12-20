@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class WebDownloadsTab extends StatelessWidget {
-  final DownloadsPageState state;
+  final LibraryPageState state;
 
   const WebDownloadsTab({super.key, required this.state});
 

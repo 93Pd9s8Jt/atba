@@ -18,8 +18,9 @@ import 'package:atba/config/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
-class DownloadsPageState extends ChangeNotifier {
+class LibraryPageState extends ChangeNotifier {
   bool _isTorrentNamesCensored = false;
+  static bool _libraryPageFirstViewHasOccurred = false;
   String _selectedSortingOption = Settings.getValue<String>(
     Constants.selectedSortingOption,
     defaultValue: "Default",
@@ -64,7 +65,7 @@ class DownloadsPageState extends ChangeNotifier {
   );
 
   // init
-  DownloadsPageState(this.context) {
+  LibraryPageState(this.context) {
     apiService = Provider.of<TorboxAPI>(context, listen: false);
     updateService = Provider.of<UpdateService>(context, listen: false);
     _cacheService = DownloadableItemCacheService();
@@ -134,6 +135,7 @@ class DownloadsPageState extends ChangeNotifier {
   }
 
   bool get isTorrentNamesCensored => _isTorrentNamesCensored;
+  bool get libraryPageFirstViewHasOccurred => _libraryPageFirstViewHasOccurred;
   String get selectedSortingOption => _selectedSortingOption;
   List<String> get selectedMainFilters => _selectedMainFilters;
   Future<Map<String, dynamic>> get torrentsFuture =>
@@ -243,6 +245,16 @@ class DownloadsPageState extends ChangeNotifier {
   void toggleTorrentNamesCensoring() {
     _isTorrentNamesCensored = !_isTorrentNamesCensored;
     notifyListeners();
+  }
+
+  void onLibraryPageFirstView() async {
+    if (!_libraryPageFirstViewHasOccurred) {
+      _libraryPageFirstViewHasOccurred = true;
+
+      torrentRefreshIndicatorKey.currentState?.show();
+      webRefreshIndicatorKey.currentState?.show();
+      usenetRefreshIndicatorKey.currentState?.show();
+    }
   }
 
   void updateSortingOption(String option) {
