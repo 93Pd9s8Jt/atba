@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:atba/models/downloadable_item.dart';
-import 'package:atba/models/torrent.dart';
 import 'package:atba/models/widgets/downloadable_item_detail_screen.dart';
 import 'package:atba/services/library_page_state.dart';
+import 'package:atba/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -1,4 +1,5 @@
-import 'package:atba/models/torrent.dart';
+
+import 'package:atba/utils.dart';
 
 class TorboxAPIResponse {
   final bool success;

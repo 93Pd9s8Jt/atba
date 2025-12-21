@@ -8,8 +8,7 @@ String readableTime(int seconds) {
     return "∞"; // 100 days
   } else if (days > 0) {
     return '${days}d ${hours % 24}h';
-  }
-  else if (hours > 0) {
+  } else if (hours > 0) {
     return '${hours}h ${minutes}m';
   } else if (minutes > 0) {
     return '${minutes}m ${secs}s';
@@ -18,14 +17,26 @@ String readableTime(int seconds) {
   }
 }
 
-  String formatTimeDifference(Duration duration) {
-    if (duration.inDays > 0) {
-      return '${duration.inDays}d';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours}h';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes}m';
-    } else {
-      return '${duration.inSeconds}s';
-    }
+String formatTimeDifference(Duration duration) {
+  if (duration.inDays > 0) {
+    return '${duration.inDays}d';
+  } else if (duration.inHours > 0) {
+    return '${duration.inHours}h';
+  } else if (duration.inMinutes > 0) {
+    return '${duration.inMinutes}m';
+  } else {
+    return '${duration.inSeconds}s';
   }
+}
+
+String getReadableSize(int size) {
+  if (size < 1000) {
+    return '$size B';
+  } else if (size < 1000 * 1000) {
+    return '${(size / 1000).toStringAsPrecision(3)} KB';
+  } else if (size < 1000 * 1000 * 1000) {
+    return '${(size / (1000 * 1000)).toStringAsPrecision(3)} MB';
+  } else {
+    return '${(size / (1000 * 1000 * 1000)).toStringAsPrecision(3)} GB';
+  }
+}

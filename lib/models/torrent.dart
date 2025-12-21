@@ -48,18 +48,6 @@ Sample data:
         }
 */
 
-String getReadableSize(int size) {
-  if (size < 1024) {
-    return '$size B';
-  } else if (size < 1024 * 1024) {
-    return '${(size / 1024).toStringAsPrecision(3)} KB';
-  } else if (size < 1024 * 1024 * 1024) {
-    return '${(size / (1024 * 1024)).toStringAsPrecision(3)} MB';
-  } else {
-    return '${(size / (1024 * 1024 * 1024)).toStringAsPrecision(3)} GB';
-  }
-}
-
 enum TorrentStatus { idle, loading, success, error }
 
 @JsonSerializable()

@@ -122,9 +122,12 @@ class DownloadableItemDetailScreen extends StatelessWidget {
                         children: [
                           Icon(Icons.download, size: 20),
                           SizedBox(width: 8),
-                          Text(
-                            'Status: ${item.downloadState}${item.progress < 1 ? " (${(item.progress * 100).toStringAsFixed(1)}%)" : ""}',
-                            style: TextStyle(fontSize: 16),
+                          Expanded(
+                            child: Text(
+                              'Status: ${item.downloadState}${item.progress < 1 ? " (${(item.progress * 100).toStringAsFixed(1)}%)" : ""}',
+                              style: TextStyle(fontSize: 16),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
