@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class JobsStatusPage extends StatefulWidget {
   const JobsStatusPage({super.key});
@@ -103,7 +104,7 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
                             }),
                           },
                       } else {
-
+                        if (job.data.downloadUrl != null) launchUrlString(job.data.downloadUrl!),
                       }
                     },
                     onLongPress: () {
@@ -137,7 +138,7 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
     updateService = JobsUpdateService(apiService);
     final response = await apiService.getAllJobs();
     setState(() {
-      _jobs = (response.data as List)
+      _jobs = ((response.data ?? []) as List)
           .map(
             (jobJson) =>
                 JobQueueItem(data: JobQueueStatusResponse.fromJson(jobJson)),

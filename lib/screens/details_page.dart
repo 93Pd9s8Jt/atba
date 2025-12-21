@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:android_intent_plus/android_intent.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailsPage extends StatefulWidget {
   final String title;
@@ -402,8 +403,7 @@ class _DetailsPageState extends State<DetailsPage>
   
 
   void _launchURL(String url) async {
-    // TODO: Implement URL launcher for opening YouTube trailers
-    // This method should be completed with a package like url_launcher
+    await launchUrl(Uri.parse(url));
   }
 
   Future<void> playStream(String id, SearchType type) async {
