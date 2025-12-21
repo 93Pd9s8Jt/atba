@@ -2,6 +2,7 @@ import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/screens/jobs_status_page.dart';
+import 'package:atba/services/video_playback_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:atba/models/torrent.dart';
@@ -235,103 +236,11 @@ class DownloadableItemDetailScreen extends StatelessWidget {
                               Text(getReadableSize(file.size)),
                               SizedBox(height: 8),
                               FittedBox(
-                                child: Row(
-                                  children: [
-                                    ElevatedButton.icon(
-                                      icon: Icon(Icons.download),
-                                      label: Text("Download"),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).colorScheme.onSecondary,
-                                      ),
-                                      onPressed: () async {
-                                        final bool storageGranted =
-                                            await showPermissionDialog(context);
-                                        if (!storageGranted) {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Storage permission is required to download files.',
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                          return;
-                                        }
-                                        final result = await item.downloadFile(
-                                          file,
-                                        );
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              result?.data != null
-                                                  ? 'File download started'
-                                                  : 'Failed to start download',
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    if (apiService.googleToken != null &&
-                                        apiService.googleToken!.isNotEmpty &&
-                                        integrationType != null) ...[
-                                      SizedBox(width: 8),
-                                      ElevatedButton.icon(
-                                        icon: Icon(
-                                          FontAwesome.google_drive_brand,
-                                        ),
-                                        label: Text("Google Drive"),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Theme.of(
-                                            context,
-                                          ).colorScheme.onSecondary,
-                                        ),
-                                        onPressed: () async {
-                                          final response = await apiService
-                                              .queueIntegration(
-                                                QueueableIntegration.google,
-                                                item.id,
-                                                fileId: file.id,
-                                                zip: false,
-                                                type: integrationType,
-                                              );
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  response.success
-                                                      ? 'File queued for Google Drive'
-                                                      : 'Failed to queue file: ${response.detailOrUnknown}',
-                                                ),
-                                                action: response.success
-                                                    ? SnackBarAction(
-                                                        label: "View",
-                                                        onPressed: () =>
-                                                            Navigator.push(
-                                                              context,
-                                                              MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        JobsStatusPage(),
-                                                              ),
-                                                            ),
-                                                      )
-                                                    : null,
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ],
+                                child: _buildFileButtons(
+                                  context,
+                                  file,
+                                  apiService,
+                                  integrationType,
                                 ),
                               ),
                             ],
@@ -343,6 +252,128 @@ class DownloadableItemDetailScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildButton(
+    BuildContext context,
+    Text label,
+    Icon icon,
+    VoidCallback onPressed,
+  ) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: icon,
+      style: IconButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.onSecondary,
+      ),
+    ); /*ElevatedButton.icon(
+      icon: icon,
+      label: label,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.onSecondary,
+      ),
+      onPressed: onPressed,
+    );*/
+  }
+
+  Row _buildFileButtons(
+    BuildContext context,
+    DownloadableFile file,
+    TorboxAPI apiService,
+    IntegrationFileType? integrationType,
+  ) {
+    return Row(
+      children: [
+                  SizedBox(width: 8),
+          _buildButton(context, Text("Watch"), Icon(Icons.play_arrow), () async {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Fetching stream URL...'),
+              ),
+            );
+            final response = await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
+            if (response.success && response.data != null) {
+              VideoPlaybackService.playURL(context, response.data as String?);
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Failed to get stream URL: ${response.detailOrUnknown}',
+                    ),
+                  ),
+                );
+              }
+            }
+          }),
+        _buildButton(context, Text("Download"), Icon(Icons.download), () async {
+          final bool storageGranted = await showPermissionDialog(context);
+          if (!storageGranted) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Storage permission is required to download files.',
+                  ),
+                ),
+              );
+            }
+            return;
+          }
+          final result = await item.downloadFile(file);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result?.data != null
+                    ? 'File download started'
+                    : 'Failed to start download',
+              ),
+            ),
+          );
+        }),
+        if (apiService.googleToken != null &&
+            apiService.googleToken!.isNotEmpty &&
+            integrationType != null) ...[
+          SizedBox(width: 8),
+          _buildButton(
+            context,
+            Text("Google Drive"),
+            Icon(FontAwesome.google_drive_brand),
+            () async {
+              final response = await apiService.queueIntegration(
+                QueueableIntegration.google,
+                item.id,
+                fileId: file.id,
+                zip: false,
+                type: integrationType,
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      response.success
+                          ? 'File queued for Google Drive'
+                          : 'Failed to queue file: ${response.detailOrUnknown}',
+                    ),
+                    action: response.success
+                        ? SnackBarAction(
+                            label: "View",
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => JobsStatusPage(),
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ],
     );
   }
 }

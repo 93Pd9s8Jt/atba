@@ -59,6 +59,9 @@ dependencies:
   memoized: ^2.2.6
   icons_plus: ^5.0.0
   background_downloader: ^9.4.1
+  media_kit_video: ^2.0.1
+  media_kit: ^1.2.6
+  media_kit_libs_video: ^1.0.7
 
 flutter_launcher_icons:
   android: true

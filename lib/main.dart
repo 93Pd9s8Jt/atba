@@ -2,8 +2,8 @@ import 'package:atba/services/update_service.dart';
 import 'package:atba/models/downloadable_item.dart';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:media_kit/media_kit.dart';                    
+
 import 'package:provider/provider.dart';
 import 'services/shared_prefs_service.dart';
 import 'services/secure_storage_service.dart';
@@ -19,6 +19,8 @@ import 'app_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
+
   await initSettings();
 
   final sharedPrefsService = SharedPrefsService();

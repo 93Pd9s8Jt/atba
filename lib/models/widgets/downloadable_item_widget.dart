@@ -31,6 +31,7 @@ class DownloadableItemWidget extends StatelessWidget {
                 builder: (context) => DownloadableItemDetailScreen(item: item),
               ),
             );
+            
           }
         }
 

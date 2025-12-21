@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class JobsStatusPage extends StatefulWidget {
   const JobsStatusPage({super.key});
@@ -104,7 +104,7 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
                             }),
                           },
                       } else {
-                        if (job.data.downloadUrl != null) launchUrlString(job.data.downloadUrl!),
+                        if (job.data.downloadUrl != null) launchUrl(Uri.parse(job.data.downloadUrl!)),
                       }
                     },
                     onLongPress: () {

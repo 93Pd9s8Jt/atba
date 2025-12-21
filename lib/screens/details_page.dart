@@ -1,7 +1,6 @@
 import 'package:atba/services/torrentio_service.dart';
 import 'package:atba/services/torrentio_config.dart';
-import 'package:atba/screens/video_player_screen.dart';
-import 'package:atba/config/constants.dart';
+import 'package:atba/services/video_playback_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 // import 'package:extended_sliver/extended_sliver.dart';
@@ -11,8 +10,6 @@ import 'package:flutter/rendering.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailsPage extends StatefulWidget {
@@ -439,27 +436,8 @@ class _DetailsPageState extends State<DetailsPage>
     );
   }
 
-  void _launchIntent(String url) async {
-    AndroidIntent intent = AndroidIntent(
-      action: 'action_view',
-      type: "video/*",
-      data: url,
-    );
-    intent.launch();
-  }
-
   void playURL(String? url) {
-    if (url == null) {
-      _showError('Failed to load stream data');
-      return;
-    }
-    Settings.getValue<bool>(Constants.useInternalVideoPlayer) ?? false
-        ? Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => VideoPlayerScreen(url: url)),
-          )
-        : _launchIntent(url);
+    VideoPlaybackService.playURL(context, url);
   }
 }
 
