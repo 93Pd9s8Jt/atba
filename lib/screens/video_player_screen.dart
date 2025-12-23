@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';                    
-import 'package:media_kit_video/media_kit_video.dart';   
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String url;
@@ -21,7 +21,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     player.open(Media(widget.url));
   }
 
-
   @override
   void dispose() {
     player.dispose();
@@ -30,31 +29,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Center(
-            child: Video(
-              controller: controller,
-            ),
-          ),
-          Positioned(
-            top: 16,
-            left: 16,
-            child: SafeArea(
-              child: FloatingActionButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                mini: true,
-                backgroundColor: Colors.black54,
-                child: const Icon(Icons.arrow_back),
-              ),
-            ),
-          ),
-        ],
+    return MaterialDesktopVideoControlsTheme(
+  normal: MaterialDesktopVideoControlsThemeData(
+    // Modify theme options:
+    seekBarThumbColor: Theme.of(context).colorScheme.primary,
+    seekBarPositionColor: Theme.of(context).colorScheme.primary,
+    toggleFullscreenOnDoublePress: false,
+    // Modify top button bar:
+    topButtonBar: [
+      MaterialDesktopCustomButton(
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+        icon: const Icon(Icons.arrow_back),
       ),
-    );
+      const Spacer(),
+    ],
+  ),
+  fullscreen: const MaterialDesktopVideoControlsThemeData(),
+  child: Scaffold(
+    body: Video(
+      controller: controller,
+    ),
+  ),
+);
   }
 }

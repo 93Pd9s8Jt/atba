@@ -11,7 +11,9 @@ RefreshIndicator buildTorrentsTab(
   return RefreshIndicator(
     key: state.torrentRefreshIndicatorKey,
     onRefresh: () async {
-      await state.refreshTorrents(bypassCache: true);
+      if (context.mounted) {
+        await state.refreshTorrents(bypassCache: true);
+      }
     },
     child: ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(
