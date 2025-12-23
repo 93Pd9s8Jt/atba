@@ -1,5 +1,5 @@
 import 'package:atba/config/constants.dart';
-import 'package:atba/screens/video_player_screen.dart';
+import 'package:atba/screens/video_player_screen/video_player_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:android_intent_plus/android_intent.dart';
