@@ -294,7 +294,7 @@ class DownloadableItemDetailScreen extends StatelessWidget {
             );
             final response = await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
             if (response.success && response.data != null) {
-              VideoPlaybackService.playURL(context, response.data as String?);
+              VideoPlaybackService.playURL(context, response.data as String);
             } else {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -307,6 +307,29 @@ class DownloadableItemDetailScreen extends StatelessWidget {
               }
             }
           }),
+        SizedBox(width: 8),
+        _buildButton(context, Text("Copy link"), Icon(Icons.preview), () async {
+          final link = await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
+          if (link.success && link.data != null) {
+            Clipboard.setData(ClipboardData(text: link.data as String));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Link copied to clipboard'),
+              ),
+            );
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Failed to copy link: ${link.detailOrUnknown}',
+                  ),
+                ),
+              );
+            }
+          }
+        }),
+        SizedBox(width: 8),
         _buildButton(context, Text("Download"), Icon(Icons.download), () async {
           final bool storageGranted = await showPermissionDialog(context);
           if (!storageGranted) {
