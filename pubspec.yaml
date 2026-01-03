@@ -62,6 +62,7 @@ dependencies:
   media_kit_video: ^2.0.1
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
+  sqlite3: ^2.9.4
 
 flutter_launcher_icons:
   android: true

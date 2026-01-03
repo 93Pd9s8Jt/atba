@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:memoized/memoized.dart';
 
-import 'package:atba/services/downloadable_item_cache_service.dart';
+import 'package:atba/services/cache/downloadable_item_cache_service.dart';
 import 'package:collection/collection.dart';
 
 import 'package:atba/models/downloadable_item.dart';

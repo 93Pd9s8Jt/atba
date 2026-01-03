@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:atba/models/widgets/multi_value_change_observer.dart';
 import 'package:atba/services/torbox_service.dart' show TorboxAPI;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:app_links/app_links.dart';
@@ -88,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     initDeepLinks();
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       // Only initialize sharing intent on mobile platforms
       initHandleIntent();
     }

@@ -1,6 +1,6 @@
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
-import 'package:atba/services/downloadable_item_cache_service.dart';
+import 'package:atba/services/cache/downloadable_item_cache_service.dart';
 import 'package:atba/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';

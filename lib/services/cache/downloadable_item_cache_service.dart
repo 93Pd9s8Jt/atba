@@ -4,10 +4,8 @@ import 'package:atba/models/torrent.dart';
 import 'package:atba/models/usenet.dart';
 import 'package:atba/models/webdownload.dart';
 import 'package:drift/drift.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import 'dart:io';
-import 'package:drift/native.dart';
+
+import 'connection.dart';
 
 part 'downloadable_item_cache_service.g.dart';
 
@@ -28,19 +26,19 @@ class AppDatabase extends _$AppDatabase {
     return _instance;
   }
 
-  AppDatabase._internal() : super(_openConnection());
+  AppDatabase._internal() : super(connect());
 
   @override
   int get schemaVersion => 1;
 }
 
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationCacheDirectory();
-    final file = File(p.join(dbFolder.path, 'torbox_cache', 'cache-db.sqlite'));
-    return NativeDatabase(file);
-  });
-}
+// LazyDatabase _openConnection() {
+//   return LazyDatabase(() async {
+//     final dbFolder = await getApplicationCacheDirectory();
+//     final file = File(p.join(dbFolder.path, 'torbox_cache', 'cache-db.sqlite'));
+//     return NativeDatabase(file);
+//   });
+// }
 
 class DownloadableItemCacheService {
   late AppDatabase _db;

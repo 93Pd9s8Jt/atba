@@ -12,7 +12,7 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart'
     show Settings;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:atba/services/cache_http_client.dart';
+import 'package:atba/services/cache/cache_http_client.dart';
 import 'package:atba/services/secure_storage_service.dart';
 
 TorboxAPIResponse _parseTorboxAPIResponse(dynamic json) {

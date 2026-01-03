@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_cache_core/http_cache_core.dart';
 import 'package:http_cache_drift_store/http_cache_drift_store.dart';
@@ -15,8 +16,8 @@ class TorboxCacheHttpClient {
   TorboxCacheHttpClient({this.defaultExpiry = const Duration(minutes: 5)});
 
   Future<void> init() async {
-    final appDocDir = await getApplicationCacheDirectory();
-    store = DriftCacheStore(databasePath: "${appDocDir.path}/torbox_cache");
+    final appDocDir = kIsWeb ? "/cache" : (await getApplicationCacheDirectory()).path;
+    store = DriftCacheStore(databasePath:  "$appDocDir/torbox_cache");
   }
 
   /// Generates a cache key based on Uri and headers.
@@ -199,8 +200,8 @@ class TorboxCacheHttpClient {
   }
 
   Future<void> clearCache() async {
-    final appDocDir = await getApplicationCacheDirectory();
-    await store.delete("${appDocDir.path}/torbox_cache");
+    final appDocDir = kIsWeb ? "/cache" : (await getApplicationCacheDirectory()).path;
+    await store.delete("$appDocDir/torbox_cache");
   }
 }
 
