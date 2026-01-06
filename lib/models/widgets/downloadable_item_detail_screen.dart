@@ -308,7 +308,7 @@ class DownloadableItemDetailScreen extends StatelessWidget {
             }
           }),
         SizedBox(width: 8),
-        _buildButton(context, Text("Copy link"), Icon(Icons.preview), () async {
+        _buildButton(context, Text("Copy link"), Icon(Icons.copy), () async {
           final link = await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
           if (link.success && link.data != null) {
             Clipboard.setData(ClipboardData(text: link.data as String));

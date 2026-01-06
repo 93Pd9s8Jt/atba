@@ -46,6 +46,7 @@ app.*.map.json
 
 # Signing files
 key.properties
+keystore.jks
 
 # extra
 .vscode/

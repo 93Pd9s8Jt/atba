@@ -3,7 +3,18 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 Widget mobileVideoPlayer(BuildContext context, VideoController controller) {
   return MaterialVideoControlsTheme(
-  normal: MaterialVideoControlsThemeData(
+    normal: buildThemeData(context),
+    fullscreen: buildThemeData(context),
+    child: Scaffold(body: Video(controller: controller)),
+  );
+}
+
+MaterialVideoControlsThemeData buildThemeData(BuildContext context) {
+  return MaterialVideoControlsThemeData(
+    volumeGesture: true,
+    brightnessGesture: true,
+    seekGesture: true,
+    seekOnDoubleTap: true,
     // Modify theme options:
     seekBarThumbColor: Theme.of(context).colorScheme.primary,
     seekBarPositionColor: Theme.of(context).colorScheme.primary,
@@ -17,12 +28,5 @@ Widget mobileVideoPlayer(BuildContext context, VideoController controller) {
       ),
       const Spacer(),
     ],
-  ),
-  fullscreen: const MaterialVideoControlsThemeData(),
-  child: Scaffold(
-    body: Video(
-      controller: controller,
-    ),
-  ),
-);
+  );
 }

@@ -3,7 +3,14 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 Widget desktopVideoPlayer(BuildContext context, VideoController controller) {
   return MaterialDesktopVideoControlsTheme(
-  normal: MaterialDesktopVideoControlsThemeData(
+    normal: buildThemeData(context),
+    fullscreen: buildThemeData(context),
+    child: Scaffold(body: Video(controller: controller)),
+  );
+}
+
+MaterialDesktopVideoControlsThemeData buildThemeData(BuildContext context) {
+  return MaterialDesktopVideoControlsThemeData(
     // Modify theme options:
     seekBarThumbColor: Theme.of(context).colorScheme.primary,
     seekBarPositionColor: Theme.of(context).colorScheme.primary,
@@ -18,12 +25,5 @@ Widget desktopVideoPlayer(BuildContext context, VideoController controller) {
       ),
       const Spacer(),
     ],
-  ),
-  fullscreen: const MaterialDesktopVideoControlsThemeData(),
-  child: Scaffold(
-    body: Video(
-      controller: controller,
-    ),
-  ),
-);
+  );
 }

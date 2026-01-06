@@ -233,7 +233,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           for (var provider in providers.keys)
                             CheckboxSettingsTile(
-                              settingKey: '${Constants.keyProviderPrefix}$provider',
+                              settingKey:
+                                  '${Constants.keyProviderPrefix}$provider',
                               title: providers[provider] ?? provider,
                               defaultValue: true,
                             ),
@@ -258,7 +259,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           for (var language in languages.keys.toList()..sort())
                             CheckboxSettingsTile(
-                              settingKey: '${Constants.keyLanguagePrefix}$language',
+                              settingKey:
+                                  '${Constants.keyLanguagePrefix}$language',
                               title: languages[language] ?? language,
                               defaultValue: false,
                             ),
@@ -269,7 +271,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           for (var quality in qualities.keys)
                             CheckboxSettingsTile(
-                              settingKey: '${Constants.keyExcludeQualityPrefix}$quality',
+                              settingKey:
+                                  '${Constants.keyExcludeQualityPrefix}$quality',
                               title: qualities[quality] ?? quality,
                               defaultValue: false,
                             ),
@@ -323,8 +326,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   childrenIfEnabled: <Widget>[
                     CheckboxSettingsTile(
                       title: "Show update animation",
-                      settingKey:
-                          Constants.libraryForegroundUpdateAnimation,
+                      settingKey: Constants.libraryForegroundUpdateAnimation,
                       defaultValue: true,
                     ),
                   ],
@@ -393,7 +395,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           CheckboxSettingsTile(
             settingKey: Constants.useInternalVideoPlayer,
-            title: 'Use internal video player (buggy)',
+            title: 'Use internal video player',
             defaultValue: false,
           ),
           FutureBuilder<PackageInfo>(
