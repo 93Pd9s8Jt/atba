@@ -18,10 +18,10 @@ Another TorBox App.
 | Android | ✅ Stable | Primary target; APK ships with each release |
 | Android TV | ⚠️ Unstable | Partial support, but navigation is broken |
 | Windows | ⚠️ Dev only | Run from source (`flutter run`). I test against this, so mostly functional except for deep linking |
+| Web | ⚠️ Unstable | Runs with minor errors |
 | iOS | ❌ Untested | - |
 | macOS | ❌ Untested | - |
 | Linux | ❌ Untested | - |
-| Web | ❌ Fails | Currently doesn't build due to drift dependency |
 
 ## Contributing
 I'm always happy to review pull requests, and it would be particularly helpful if people could resolve issues on iOS and Android TV which I cannot debug. If you can't contribute code, suggestions and bug reports are also welcome.
@@ -31,3 +31,6 @@ I'm always happy to review pull requests, and it would be particularly helpful i
 - Fully cross platform 
 - Responsive design
   
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=93Pd9s8Jt/atba&type=date&legend=top-left)](https://www.star-history.com/#93Pd9s8Jt/atba&type=date&legend=top-left)
