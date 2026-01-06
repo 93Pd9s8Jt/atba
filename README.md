@@ -27,7 +27,9 @@ Another TorBox App.
 I'm always happy to review pull requests, and it would be particularly helpful if people could resolve issues on iOS and Android TV which I cannot debug. If you can't contribute code, suggestions and bug reports are also welcome.
 
 ## TODO/Upcoming features
-- Fully functonal internal video player (probably media_kit)
+- Automations a la TBM
+- Notifications
+- More integrations
 - Fully cross platform 
 - Responsive design
   
