@@ -22,14 +22,18 @@ class _TorrentsListState extends State<TorrentsList> {
     return CustomScrollView(
       slivers: [
         if (state.isSearching)
-          DownloadsSearchBar(controller: state.searchController),
+          DownloadsSearchBar(
+            controller: state.searchController,
+            focusNode: state.searchControllerFocusNode,
+          ),
         // Queued Torrents
         SliverToBoxAdapter(
           child: ListTile(
             title: Text('${state.queuedTorrents.length} Queued Torrents'),
             onTap: () => setState(() => _queuedExpanded = !_queuedExpanded),
-            trailing:
-                Icon(_queuedExpanded ? Icons.expand_less : Icons.expand_more),
+            trailing: Icon(
+              _queuedExpanded ? Icons.expand_less : Icons.expand_more,
+            ),
           ),
         ),
         if (_queuedExpanded)
@@ -44,13 +48,16 @@ class _TorrentsListState extends State<TorrentsList> {
         // Active Torrents
         SliverToBoxAdapter(
           child: ListTile(
-            title: Text(state.filteredSortedActiveTorrents.length ==
-                    state.activeTorrents.length
-                ? '${state.activeTorrents.length} Active Torrents'
-                : '${state.filteredSortedActiveTorrents.length}/${state.activeTorrents.length} Active Torrents'),
+            title: Text(
+              state.filteredSortedActiveTorrents.length ==
+                      state.activeTorrents.length
+                  ? '${state.activeTorrents.length} Active Torrents'
+                  : '${state.filteredSortedActiveTorrents.length}/${state.activeTorrents.length} Active Torrents',
+            ),
             onTap: () => setState(() => _activeExpanded = !_activeExpanded),
-            trailing:
-                Icon(_activeExpanded ? Icons.expand_less : Icons.expand_more),
+            trailing: Icon(
+              _activeExpanded ? Icons.expand_less : Icons.expand_more,
+            ),
           ),
         ),
         if (_activeExpanded)
@@ -65,13 +72,16 @@ class _TorrentsListState extends State<TorrentsList> {
         // Inactive Torrents
         SliverToBoxAdapter(
           child: ListTile(
-            title: Text(state.filteredSortedInactiveTorrents.length ==
-                    state.inactiveTorrents.length
-                ? '${state.inactiveTorrents.length} Inactive Torrents'
-                : '${state.filteredSortedInactiveTorrents.length}/${state.inactiveTorrents.length} Inactive Torrents'),
+            title: Text(
+              state.filteredSortedInactiveTorrents.length ==
+                      state.inactiveTorrents.length
+                  ? '${state.inactiveTorrents.length} Inactive Torrents'
+                  : '${state.filteredSortedInactiveTorrents.length}/${state.inactiveTorrents.length} Inactive Torrents',
+            ),
             onTap: () => setState(() => _inactiveExpanded = !_inactiveExpanded),
-            trailing:
-                Icon(_inactiveExpanded ? Icons.expand_less : Icons.expand_more),
+            trailing: Icon(
+              _inactiveExpanded ? Icons.expand_less : Icons.expand_more,
+            ),
           ),
         ),
         if (_inactiveExpanded)

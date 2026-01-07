@@ -48,6 +48,7 @@ class LibraryPageState extends ChangeNotifier {
   bool isSearching = false;
   String _searchQuery = "";
   final TextEditingController searchController = TextEditingController();
+  final FocusNode searchControllerFocusNode = FocusNode();
   List<DownloadableItem> selectedItems = [];
   final BuildContext context;
   final GlobalKey<RefreshIndicatorState> torrentRefreshIndicatorKey =
@@ -127,6 +128,7 @@ class LibraryPageState extends ChangeNotifier {
   @override
   void dispose() {
     searchController.dispose();
+    searchControllerFocusNode.dispose();
     for (final subscription in _activeSubscriptions.values) {
       subscription.cancel();
     }
@@ -365,6 +367,7 @@ class LibraryPageState extends ChangeNotifier {
 
   void toggleSearch() {
     isSearching = !isSearching;
+    if (isSearching) searchControllerFocusNode.requestFocus();
     notifyListeners();
   }
 

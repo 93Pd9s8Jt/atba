@@ -4,8 +4,13 @@ import 'package:provider/provider.dart';
 
 class DownloadsSearchBar extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
 
-  const DownloadsSearchBar({super.key, required this.controller});
+  const DownloadsSearchBar({
+    super.key,
+    required this.controller,
+    this.focusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,13 +19,16 @@ class DownloadsSearchBar extends StatelessWidget {
       floating: true,
       title: TextField(
         controller: controller,
+        focusNode: focusNode,
         decoration: InputDecoration(
           hintText: 'Search...',
           suffixIcon: IconButton(
             icon: const Icon(Icons.clear),
             onPressed: () => {
-              if (controller.text.isNotEmpty) controller.clear()
-              else state.toggleSearch()
+              if (controller.text.isNotEmpty)
+                controller.clear()
+              else
+                state.toggleSearch(),
             },
           ),
         ),

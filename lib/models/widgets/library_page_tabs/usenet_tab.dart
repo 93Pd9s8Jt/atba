@@ -14,7 +14,10 @@ class UsenetTab extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         if (state.isSearching)
-          DownloadsSearchBar(controller: state.searchController),
+          DownloadsSearchBar(
+            controller: state.searchController,
+            focusNode: state.searchControllerFocusNode,
+          ),
         SliverFillRemaining(
           hasScrollBody: true,
           child: RefreshIndicator(
@@ -33,19 +36,26 @@ class UsenetTab extends StatelessWidget {
                       child: Center(
                         child: Column(
                           children: [
-                            Text('Failed to fetch data: ${data["detail"]}',
-                                style: const TextStyle(color: Colors.red)),
+                            Text(
+                              'Failed to fetch data: ${data["detail"]}',
+                              style: const TextStyle(color: Colors.red),
+                            ),
                             data["stackTrace"] != null
                                 ? ElevatedButton(
                                     child: const Text('Copy stack trace'),
                                     onPressed: () {
-                                      Clipboard.setData(ClipboardData(
-                                          text: data["stackTrace"].toString()));
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      Clipboard.setData(
+                                        ClipboardData(
+                                          text: data["stackTrace"].toString(),
+                                        ),
+                                      );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                              'Stack trace copied to clipboard'),
+                                            'Stack trace copied to clipboard',
+                                          ),
                                         ),
                                       );
                                     },
@@ -64,13 +74,12 @@ class UsenetTab extends StatelessWidget {
                           itemBuilder: (context, index) {
                             final download =
                                 state.filteredSortedUsenetDownloads[index];
-                            return DownloadableItemWidget(
-                              item: download,
-                            );
+                            return DownloadableItemWidget(item: download);
                           },
                         )
                       : const Center(
-                          child: Text('No usenet downloads available'));
+                          child: Text('No usenet downloads available'),
+                        );
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else {

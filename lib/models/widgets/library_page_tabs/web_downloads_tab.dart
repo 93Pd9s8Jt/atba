@@ -16,6 +16,7 @@ class WebDownloadsTab extends StatelessWidget {
         if (state.isSearching)
           DownloadsSearchBar(
             controller: state.searchController,
+            focusNode: state.searchControllerFocusNode,
           ),
         SliverFillRemaining(
           child: RefreshIndicator(
@@ -34,19 +35,26 @@ class WebDownloadsTab extends StatelessWidget {
                       child: Center(
                         child: Column(
                           children: [
-                            Text('Failed to fetch data: ${data["detail"]}',
-                                style: const TextStyle(color: Colors.red)),
+                            Text(
+                              'Failed to fetch data: ${data["detail"]}',
+                              style: const TextStyle(color: Colors.red),
+                            ),
                             data["stackTrace"] != null
                                 ? ElevatedButton(
                                     child: const Text('Copy stack trace'),
                                     onPressed: () {
-                                      Clipboard.setData(ClipboardData(
-                                          text: data["stackTrace"].toString()));
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      Clipboard.setData(
+                                        ClipboardData(
+                                          text: data["stackTrace"].toString(),
+                                        ),
+                                      );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                              'Stack trace copied to clipboard'),
+                                            'Stack trace copied to clipboard',
+                                          ),
                                         ),
                                       );
                                     },
