@@ -7,14 +7,15 @@ class Constants {
   static const String useCache = 'key-use-cache';
   static const String googleDriveTokenExpiry = 'google_drive_token_expiry';
   static const String googleDriveToken = 'google_drive_token';
-  
+
   // Torrentio related
   static const String keyProviderPrefix = 'key-provider-';
   static const String keyLanguagePrefix = 'key-language-';
   static const String keyExcludeQualityPrefix = 'key-exclude-quality-';
   static const String torrentioSortBy = 'key-sort-by';
   static const String torrentioVideoSizeLimit = 'key-video-size-limit';
-  static const String torrentioMaxResultsPerQuality = 'key-max-results-per-quality';
+  static const String torrentioMaxResultsPerQuality =
+      'key-max-results-per-quality';
 
   // Appearance
   static const String theme = 'key-theme';
@@ -23,9 +24,12 @@ class Constants {
 
   // Library
   static const String libraryForegroundUpdate = 'key-library-foreground-update';
-  static const String libraryForegroundUpdateAnimation = 'key-library-foreground-update-update-animation';
+  static const String libraryForegroundUpdateAnimation =
+      'key-library-foreground-update-update-animation';
   static const String useTorrentNameParsing = 'key-use-torrent-name-parsing';
-  
+  static const String loadUncachedLibraryOnStart =
+      'key-load-uncache-library-on-start';
+
   // Library Page State
   static const String selectedSortingOption = 'key-selected-sorting-option';
   static const String selectedMainFilters = 'key-selected-main-filters';

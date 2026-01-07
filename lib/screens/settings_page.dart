@@ -346,6 +346,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: 'Use torrent name parsing',
                   defaultValue: true,
                 ),
+                CheckboxSettingsTile(
+                  settingKey: Constants.loadUncachedLibraryOnStart,
+                  title: 'Bypass cache on initial startup',
+                  defaultValue: true,
+                ),
               ],
             ),
           ),

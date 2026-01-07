@@ -55,6 +55,10 @@ class _LibraryPageState extends State<LibraryPage>
                   Constants.useCache,
                   defaultValue: true,
                 )! &&
+                Settings.getValue<bool>(
+                  Constants.loadUncachedLibraryOnStart,
+                  defaultValue: true,
+                )! &&
                 (await state.isCacheNotEmpty())) {
               _hasBeenViewedOnce = true;
               state.onLibraryPageFirstView();
