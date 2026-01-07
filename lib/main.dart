@@ -78,6 +78,9 @@ Future<void> main() async {
   );
 }
 
+@JS()
+external JSObject get window;
+
 void sendPostMessage() {
   // 1. Create the inner 'body' object
   final bodyObject = <String, Object?>{
@@ -94,7 +97,9 @@ void sendPostMessage() {
 
   // 3. Access the global 'window' object (globalContext) and call postMessage
   // Note: In a browser, globalContext *is* the window.
-  globalContext.callMethod('postMessage'.toJS, messageObject, '*'.toJS);
+  window.callMethod('postMessage'.toJS, messageObject, '*'.toJS);
+  final console = window['console'] as JSObject;
+  console.callMethod("log".toJS, "JS_interop is working!".toJS);
 }
 
 Future<void> initSettings() async {
