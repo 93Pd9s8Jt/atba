@@ -27,7 +27,7 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   flutter_launcher_icons: ^0.14.4
   flutter_screenutil: ^5.9.3
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
   # TODO: Can use official release after merge of https://github.com/GAM3RG33K/flutter_settings_screens/pull/126, but library is unmaintained
   flutter_settings_screens: 
     git:
