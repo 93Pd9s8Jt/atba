@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/93Pd9s8Jt/atba/compare/v0.7.0...v0.7.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* Add token to trigger release workflow ([26e6774](https://github.com/93Pd9s8Jt/atba/commit/26e67744f4ac721391f0eb01bacc60751a8833de))
+
 ## [0.7.0](https://github.com/93Pd9s8Jt/atba/compare/v0.6.3...v0.7.0) (2026-01-07)
 
 
