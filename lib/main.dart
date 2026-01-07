@@ -1,8 +1,11 @@
+import 'dart:js_interop_unsafe';
+
 import 'package:atba/services/update_service.dart';
 import 'package:atba/models/downloadable_item.dart';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';                    
+import 'package:media_kit/media_kit.dart';
 
 import 'package:provider/provider.dart';
 import 'services/shared_prefs_service.dart';
@@ -16,10 +19,12 @@ import 'screens/setup/api_screen.dart';
 import 'screens/home_page.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'app_state.dart';
+import 'dart:js_interop';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  if (kIsWeb) sendPostMessage();
 
   await initSettings();
 
@@ -71,6 +76,25 @@ Future<void> main() async {
       child: AtbaApp(isFirstRun: isFirstRun, hasApiKey: hasApiKey),
     ),
   );
+}
+
+void sendPostMessage() {
+  // 1. Create the inner 'body' object
+  final bodyObject = <String, Object?>{
+    'ruleId': 'test-rule',
+    'targetDomains': ['api.torbox.app'], // Convert Dart List to JS Array
+  }.toJSBox; // Convert Dart Map to JS Object
+
+  // 2. Create the main message object
+  final messageObject = <String, Object?>{
+    'name': 'prepareStream',
+    'instanceId': 'test',
+    'body': bodyObject,
+  }.toJSBox;
+
+  // 3. Access the global 'window' object (globalContext) and call postMessage
+  // Note: In a browser, globalContext *is* the window.
+  globalContext.callMethod('postMessage'.toJS, messageObject, '*'.toJS);
 }
 
 Future<void> initSettings() async {
