@@ -81,7 +81,7 @@ class LibraryPageState extends ChangeNotifier {
   }
 
   Future<void> _initializeFutures() async {
-    bool cacheNotEmpty = await _isCacheNotEmpty();
+    bool cacheNotEmpty = await isCacheNotEmpty();
     if (Settings.getValue<bool>(Constants.useCache, defaultValue: true)! &&
         cacheNotEmpty) {
       final cacheFuture = _loadFromCache();
@@ -121,7 +121,7 @@ class LibraryPageState extends ChangeNotifier {
     return {"success": true};
   }
 
-  Future<bool> _isCacheNotEmpty() async {
+  Future<bool> isCacheNotEmpty() async {
     return await _cacheService.isNotEmpty();
   }
 

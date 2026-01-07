@@ -49,8 +49,13 @@ class _LibraryPageState extends State<LibraryPage>
       create: (_) => LibraryPageState(context),
       child: Consumer<LibraryPageState>(
         builder: (context, state, child) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!_hasBeenViewedOnce) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!_hasBeenViewedOnce &&
+                Settings.getValue<bool>(
+                  Constants.useCache,
+                  defaultValue: true,
+                )! &&
+                (await state.isCacheNotEmpty())) {
               _hasBeenViewedOnce = true;
               state.onLibraryPageFirstView();
             }
