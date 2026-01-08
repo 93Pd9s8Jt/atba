@@ -195,6 +195,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   selected: 'system',
                 ),
                 CheckboxSettingsTile(
+                  title: "Use custom colour theme",
+                  settingKey: Constants.useCustomColorTheme,
+                  defaultValue: false,
+                  childrenIfEnabled: [
+                    ColorPickerSettingsTile(
+                      settingKey: Constants.colorTheme,
+                      title: 'Accent Color',
+                      defaultValue: Colors.green,
+                    ),
+                  ],
+                ),
+
+                CheckboxSettingsTile(
                   settingKey: Constants.useMaterial3,
                   title: 'Use Material3 theming',
                   defaultValue: true,

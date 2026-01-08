@@ -21,6 +21,8 @@ class Constants {
   static const String theme = 'key-theme';
   static const String useMaterial3 = 'key-use-material-3';
   static const String useTorboxFontFamily = 'key-use-torbox-font-family';
+  static const String useCustomColorTheme = 'key-use-system-color-theme';
+  static const String colorTheme = 'key-theme-color';
 
   // Library
   static const String libraryForegroundUpdate = 'key-library-foreground-update';

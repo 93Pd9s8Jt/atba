@@ -8,12 +8,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:app_links/app_links.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart'
+    show ConversionUtils;
 import 'package:provider/provider.dart';
 import 'package:listen_sharing_intent/listen_sharing_intent.dart';
 
 import 'package:atba/screens/library_page.dart';
 import 'package:atba/screens/watch_page.dart';
 import 'package:atba/screens/settings/settings_page.dart';
+import 'package:atba/config/constants.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -22,9 +25,13 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiValueChangeObserver(
       cacheKeysWithDefaultValues: {
-        "key-use-material-3": true,
-        "key-use-torbox-font-family": false,
-        "key-theme": "system",
+        Constants.useMaterial3: true,
+        Constants.useTorboxFontFamily: false,
+        Constants.theme: "system",
+        Constants.useCustomColorTheme: false,
+        Constants.colorTheme: ConversionUtils.stringFromColor(
+          Color.fromRGBO(0, 246, 33, 1),
+        ),
       },
       builder: (context, values) {
         return DynamicColorBuilder(
@@ -32,7 +39,20 @@ class HomeScreen extends StatelessWidget {
             ColorScheme lightColorScheme;
             ColorScheme darkColorScheme;
 
-            if (lightDynamic != null && darkDynamic != null) {
+            if (values[Constants.useCustomColorTheme]) {
+              lightColorScheme = ColorScheme.fromSeed(
+                seedColor: ConversionUtils.colorFromString(
+                  values[Constants.colorTheme],
+                ),
+                brightness: Brightness.light,
+              );
+              darkColorScheme = ColorScheme.fromSeed(
+                seedColor: ConversionUtils.colorFromString(
+                  values[Constants.colorTheme],
+                ),
+                brightness: Brightness.dark,
+              );
+            } else if (lightDynamic != null && darkDynamic != null) {
               lightColorScheme = lightDynamic;
               darkColorScheme = darkDynamic;
             } else {
@@ -49,15 +69,15 @@ class HomeScreen extends StatelessWidget {
               title: 'TorBox',
               theme: ThemeData(
                 colorScheme: lightColorScheme,
-                useMaterial3: values["key-use-material-3"],
-                fontFamily: (values["key-use-torbox-font-family"])
+                useMaterial3: values[Constants.useMaterial3],
+                fontFamily: (values[Constants.useTorboxFontFamily])
                     ? 'torbox-dotted-all'
                     : null,
               ),
               darkTheme: ThemeData(
                 colorScheme: darkColorScheme,
-                useMaterial3: values["key-use-material-3"],
-                fontFamily: (values["key-use-torbox-font-family"])
+                useMaterial3: values[Constants.useMaterial3],
+                fontFamily: (values[Constants.useTorboxFontFamily])
                     ? 'torbox-dotted-all'
                     : null,
               ),
@@ -66,7 +86,7 @@ class HomeScreen extends StatelessWidget {
                     "system",
                     "light",
                     "dark",
-                  ].indexOf(values["key-theme"])],
+                  ].indexOf(values[Constants.theme])],
               home: const MyHomePage(),
             );
           },
