@@ -20,6 +20,7 @@ class DownloadsSearchBar extends StatelessWidget {
       title: TextField(
         controller: controller,
         focusNode: focusNode,
+        onTapOutside: (_) => focusNode?.unfocus(),
         decoration: InputDecoration(
           hintText: 'Search...',
           suffixIcon: IconButton(
