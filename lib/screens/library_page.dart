@@ -126,6 +126,7 @@ class _LibraryPageState extends State<LibraryPage>
                       )!)
                         IconButton(
                           icon: const Icon(Icons.refresh),
+                          tooltip: "Refresh",
                           onPressed: () {
                             state.torrentRefreshIndicatorKey.currentState
                                 ?.show();
@@ -201,12 +202,14 @@ class _LibraryPageState extends State<LibraryPage>
                       ),
                       IconButton(
                         icon: const Icon(Icons.filter_list),
+                        tooltip: 'Filter',
                         onPressed: () => _showFilterBottomSheet(context),
                       ),
                       IconButton(
                         icon: state.isTorrentNamesCensored
                             ? Icon(Icons.visibility)
                             : Icon(Icons.visibility_off),
+                        tooltip: "Blur names",
                         onPressed: () {
                           state.toggleTorrentNamesCensoring();
                         },
