@@ -47,13 +47,13 @@ class TorboxAPI {
     TorboxCacheHttpClient? client,
     this.baseUrl = '$api_base/$api_version',
     this.apiKey,
-  }) : client = TorboxCacheHttpClient();
+  }) : client = kIsWasm ? null : TorboxCacheHttpClient();
 
   Future<void> init() async {
     final results = await Future.wait([
       secureStorageService.read('api_key'),
       getGoogleToken(),
-      client!.init(),
+      client?.init() ?? Future.value(),
     ]);
     apiKey = results[0] as String?;
     googleToken = results[1] as String?;
@@ -70,7 +70,8 @@ class TorboxAPI {
     Map<String, dynamic>? body,
     String? baseUrl,
   }) async {
-    const multiPartRequestStreamEndpoints = [ // hardcoded due to strange bug that wouldn't let me pass this as a parameter
+    const multiPartRequestStreamEndpoints = [
+      // hardcoded due to strange bug that wouldn't let me pass this as a parameter
       'api/torrents/createtorrent',
       'api/usenet/createusenetdownload',
       'api/webdl/createwebdownload',
@@ -107,7 +108,8 @@ class TorboxAPI {
           queryParameters.cast<String, dynamic>(),
         ); // adds body as query parameters
         final dynamic fetchClient;
-        if (Settings.getValue(Constants.useCache, defaultValue: true)!) {
+        if (client != null &&
+            Settings.getValue(Constants.useCache, defaultValue: true)!) {
           fetchClient = client;
         } else {
           fetchClient = http.Client();
@@ -127,8 +129,8 @@ class TorboxAPI {
         responseReasonPhrase = response.reasonPhrase ?? 'Unknown Error';
         break;
       case 'post':
-        if (useMultipartRequestStream || (body?.values.any((value) => value is PlatformFile) ?? false) 
-            ) {
+        if (useMultipartRequestStream ||
+            (body?.values.any((value) => value is PlatformFile) ?? false)) {
           var request = http.MultipartRequest('POST', url);
           for (String? key in body?.keys ?? []) {
             if (key == null || body?[key] == null || body?[key] == "") continue;
@@ -199,7 +201,8 @@ class TorboxAPI {
       if (returnType == SuccessReturnType.file) {
         // TODO: detect from content type
         final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/torrent_${body!['id']}.torrent'; // only torrents, web, usenet use this
+        final filePath =
+            '${directory.path}/torrent_${body!['id']}.torrent'; // only torrents, web, usenet use this
         final file = File(filePath);
         await file.writeAsString(responseData);
         return TorboxAPIResponse.fromJson({

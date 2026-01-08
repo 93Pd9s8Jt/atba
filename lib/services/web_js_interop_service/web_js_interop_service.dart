@@ -1,1 +1,1 @@
-export 'nonweb.dart' if (dart.library.html) 'web.dart';
+export 'nonweb.dart' if (dart.library.js_interop) 'web.dart';
