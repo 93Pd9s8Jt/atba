@@ -11,9 +11,9 @@ import 'package:app_links/app_links.dart';
 import 'package:provider/provider.dart';
 import 'package:listen_sharing_intent/listen_sharing_intent.dart';
 
-import 'library_page.dart';
-import 'watch_page.dart';
-import 'settings_page.dart';
+import 'package:atba/screens/library_page.dart';
+import 'package:atba/screens/watch_page.dart';
+import 'package:atba/screens/settings/settings_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -61,8 +61,12 @@ class HomeScreen extends StatelessWidget {
                     ? 'torbox-dotted-all'
                     : null,
               ),
-              themeMode: ThemeMode.values[
-                  ["system", "light", "dark"].indexOf(values["key-theme"])],
+              themeMode:
+                  ThemeMode.values[[
+                    "system",
+                    "light",
+                    "dark",
+                  ].indexOf(values["key-theme"])],
               home: const MyHomePage(),
             );
           },
@@ -115,23 +119,24 @@ class _MyHomePageState extends State<MyHomePage> {
           size: await File(file.path).length(),
           bytes: await File(file.path).readAsBytes(),
         );
-        final response =
-            await apiService.createTorrent(dotTorrentFile: platformFile);
+        final response = await apiService.createTorrent(
+          dotTorrentFile: platformFile,
+        );
         if (response.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Torrent added successfully!')),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.detailOrUnknown)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response.detailOrUnknown)));
         }
       } else if (file.type == SharedMediaType.text) {
         final uri = Uri.tryParse(file.path);
         if (uri == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Invalid link: ${file.path}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Invalid link: ${file.path}')));
           continue;
         }
         // Handle text sharing (for links)
@@ -139,15 +144,18 @@ class _MyHomePageState extends State<MyHomePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Adding torrent from link: ${file.path}')),
           );
-          final response =
-              await apiService.createTorrent(magnetLink: file.path);
+          final response = await apiService.createTorrent(
+            magnetLink: file.path,
+          );
           if (response.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Torrent added successfully!')),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to add torrent: ${response.error}')),
+              SnackBar(
+                content: Text('Failed to add torrent: ${response.error}'),
+              ),
             );
           }
         } else {
@@ -155,15 +163,16 @@ class _MyHomePageState extends State<MyHomePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Adding download from link: ${file.path}')),
           );
-          final response =
-              await apiService.createWebDownload(uri.toString());
+          final response = await apiService.createWebDownload(uri.toString());
           if (response.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Download added successfully!')),
-            ); 
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to add download: ${response.error}')),
+              SnackBar(
+                content: Text('Failed to add download: ${response.error}'),
+              ),
             );
           }
         }
@@ -172,12 +181,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> initHandleIntent() async {
-    _intentSubscription =
-        ReceiveSharingIntent.instance.getMediaStream().listen((value) async {
-      await handleTorrentFiles(value);
-    }, onError: (err) {
-      print("getIntentDataStream error: $err");
-    });
+    _intentSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
+      (value) async {
+        await handleTorrentFiles(value);
+      },
+      onError: (err) {
+        print("getIntentDataStream error: $err");
+      },
+    );
 
     // Get the media sharing coming from outside the app while the app is closed (e.g. open torrent file in file app)
     ReceiveSharingIntent.instance.getInitialMedia().then((value) async {
@@ -198,8 +209,9 @@ class _MyHomePageState extends State<MyHomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Adding torrent from link: ${uri.toString()}')),
       );
-      final response =
-          await apiService.createTorrent(magnetLink: uri.toString());
+      final response = await apiService.createTorrent(
+        magnetLink: uri.toString(),
+      );
       if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Torrent added successfully!')),
@@ -234,14 +246,8 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.library_books_outlined),
             label: 'Library',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_arrow),
-            label: 'Watch',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'More',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.play_arrow), label: 'Watch'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'More'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
