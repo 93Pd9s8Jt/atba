@@ -44,6 +44,7 @@ class LibraryPageState extends ChangeNotifier {
   late Future<Map<String, dynamic>> _webDownloadsFuture;
   late Future<Map<String, dynamic>> _usenetFuture;
 
+  DateTime? lastBackPressed;
   bool isSelecting = false;
   bool isSearching = false;
   String _searchQuery = "";

@@ -1,5 +1,6 @@
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/screens/jobs_status_page.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:atba/models/torrent.dart';
 import 'package:atba/config/constants.dart';
@@ -71,7 +72,25 @@ class _LibraryPageState extends State<LibraryPage>
 
               if (focus != null) {
                 focus.unfocus();
+                return;
               }
+              final now = DateTime.now();
+              if (state.lastBackPressed == null ||
+                  now.difference(state.lastBackPressed!) >
+                      const Duration(seconds: 2)) {
+                state.lastBackPressed = now;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Press back again to exit'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                return;
+              }
+
+              // 3️⃣ Second back press → exit app
+              SystemNavigator.pop();
             },
             child: Scaffold(
               appBar: AppBar(
