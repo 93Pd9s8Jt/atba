@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:file_picker/file_picker.dart';
 
 import 'package:atba/screens/home_page.dart';
 import 'package:atba/models/permission_model.dart';
@@ -20,11 +19,6 @@ class _PermissionScreenState extends State<PermissionScreen> {
     return await permission.request();
   }
 
-  Future<String?> selectFolder() async {
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-    return selectedDirectory;
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> permissions = [
@@ -39,7 +33,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
         'title': 'Notifications',
         'description': 'Receive notifications about your downloads.',
         'permission': Permission.notification,
-      }
+      },
     ];
 
     return Scaffold(
@@ -55,8 +49,10 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
                   children: [
-                    Icon(perm['icon'],
-                        color: Theme.of(context).colorScheme.primary),
+                    Icon(
+                      perm['icon'],
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -65,7 +61,9 @@ class _PermissionScreenState extends State<PermissionScreen> {
                           Text(
                             perm['title'],
                             style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             perm['description'],
@@ -89,7 +87,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                          'No folder was selected. You can continue without granting storage.'),
+                                        'No folder was selected. You can continue without granting storage.',
+                                      ),
                                     ),
                                   );
                                 }

@@ -1,4 +1,5 @@
 import 'package:atba/services/torbox_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -41,58 +42,76 @@ class _GoogleDriveIntegrationSectionState
     return ExpandableSettingsTile(
       title: "Google Drive",
       leading: Icon(Icons.drive_file_move),
-      subtitle: (googleToken == null || googleToken!.isEmpty) ? "Not connected" : "Connected",
+      subtitle: (googleToken == null || googleToken!.isEmpty)
+          ? "Not connected"
+          : "Connected",
       children: [
-        ListTile(
-            title: Text((googleToken == null || googleToken!.isEmpty)
-                ? "Connect Google Drive"
-                : "Reconnect Google Drive"),
+        if (!kIsWeb) ...[
+          ListTile(
+            title: Text(
+              (googleToken == null || googleToken!.isEmpty)
+                  ? "Connect Google Drive"
+                  : "Reconnect Google Drive",
+            ),
             leading: const Icon(Icons.drive_file_move),
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return Scaffold(
-                  appBar: AppBar(
-                    title: const Text("Google Drive OAuth"),
-                  ),
-                  body: InAppWebView(
-                    initialSettings: InAppWebViewSettings(
-                      userAgent: Theme.of(context).platform ==
-                              TargetPlatform.android
-                          ? "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
-                          : null,
-                      incognito: true,
-                    ),
-                    initialUrlRequest: URLRequest(
-                        url: WebUri(
-                            'https://api.torbox.app/v1/api/integration/oauth/google')), // TODO: store in apiService as a const
-                    onUpdateVisitedHistory: (controller, url, isReload) async {
-                      if (url == null) return;
-                      if (url.host == "torbox.app" &&
-                          url.path == "/oauth/google/success") {
-                        final token = url.queryParameters['token'];
-                        final expiryDate =
-                            url.queryParameters['expires_at'] ?? "";
-                        _onTokenChanged(token ?? "");
-                        if (token != null) {
-                          await widget.apiService.saveGoogleToken(token, expiryDate);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Google Drive token saved')),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Failed to get token')),
-                          );
-                        }
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                );
-              }));
-            }),
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return Scaffold(
+                      appBar: AppBar(title: const Text("Google Drive OAuth")),
+                      body: InAppWebView(
+                        initialSettings: InAppWebViewSettings(
+                          userAgent:
+                              Theme.of(context).platform ==
+                                  TargetPlatform.android
+                              ? "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
+                              : null,
+                          incognito: true,
+                        ),
+                        initialUrlRequest: URLRequest(
+                          url: WebUri(
+                            'https://api.torbox.app/v1/api/integration/oauth/google',
+                          ),
+                        ), // TODO: store in apiService as a const
+                        onUpdateVisitedHistory:
+                            (controller, url, isReload) async {
+                              if (url == null) return;
+                              if (url.host == "torbox.app" &&
+                                  url.path == "/oauth/google/success") {
+                                final token = url.queryParameters['token'];
+                                final expiryDate =
+                                    url.queryParameters['expires_at'] ?? "";
+                                _onTokenChanged(token ?? "");
+                                if (token != null) {
+                                  await widget.apiService.saveGoogleToken(
+                                    token,
+                                    expiryDate,
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Google Drive token saved'),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Failed to get token'),
+                                    ),
+                                  );
+                                }
+                                Navigator.pop(context);
+                              }
+                            },
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
           child: Column(
@@ -146,10 +165,12 @@ class _GoogleDriveIntegrationSectionState
         ListTile(
           title: const Text("Get token manually"),
           subtitle: const Text(
-              "Opens the authentication page in your browser. After authenticating, you will be redirected to a success page. Copy the token from the URL and paste it in the field above."),
+            "Opens the authentication page in your browser. After authenticating, you will be redirected to a success page. Copy the token from the URL and paste it in the field above.",
+          ),
           onTap: () async {
             final url = Uri.parse(
-                'https://api.torbox.app/v1/api/integration/oauth/google');
+              'https://api.torbox.app/v1/api/integration/oauth/google',
+            );
             if (await canLaunchUrl(url)) {
               await launchUrl(url);
             } else {
@@ -165,12 +186,11 @@ class _GoogleDriveIntegrationSectionState
             leading: const Icon(Icons.copy),
             onTap: () async {
               await Clipboard.setData(
-                  ClipboardData(text: googleToken as String));
+                ClipboardData(text: googleToken as String),
+              );
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Token copied to clipboard'),
-                  ),
+                  const SnackBar(content: Text('Token copied to clipboard')),
                 );
               }
             },
@@ -182,15 +202,13 @@ class _GoogleDriveIntegrationSectionState
               await widget.apiService.deleteGoogleToken();
               _onTokenChanged("");
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Token deleted'),
-                  ),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Token deleted')));
               }
             },
           ),
-        ]
+        ],
       ],
     );
   }

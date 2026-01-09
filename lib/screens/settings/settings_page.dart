@@ -2,6 +2,7 @@ import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
 import 'package:atba/services/cache/downloadable_item_cache_service.dart';
 import 'package:atba/config/constants.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/services/torbox_service.dart';
@@ -373,25 +374,27 @@ class _SettingsPageState extends State<SettingsPage> {
             child: SettingsScreen(
               title: "Storage settings",
               children: <Widget>[
-                ListTile(
-                  title: const Text("Storage location"),
-                  leading: Icon(Icons.storage),
-                  onTap: () async {
-                    // TODO: niceify with methods in permission model (doesn't account for sd card yet)
-                    PermissionModel permissionModel = PermissionModel();
-                    final folderPath = await permissionModel.selectFolder();
-                    if (folderPath == null) return;
-                    await permissionModel.saveFolderPath(folderPath);
-                    setState(() {});
-                  },
-                  subtitle: Text(
-                    Settings.getValue<String>(
-                      Constants.folderPath,
-                      defaultValue: 'No download folder set',
-                    )!,
+                if (!kIsWeb) ...[
+                  ListTile(
+                    title: const Text("Storage location"),
+                    leading: Icon(Icons.storage),
+                    onTap: () async {
+                      // TODO: niceify with methods in permission model (doesn't account for sd card yet)
+                      PermissionModel permissionModel = PermissionModel();
+                      final folderPath = await permissionModel.selectFolder();
+                      if (folderPath == null) return;
+                      await permissionModel.saveFolderPath(folderPath);
+                      setState(() {});
+                    },
+                    subtitle: Text(
+                      Settings.getValue<String>(
+                        Constants.folderPath,
+                        defaultValue: 'No download folder set',
+                      )!,
+                    ),
                   ),
-                ),
-                const Divider(),
+                  const Divider(),
+                ],
                 CheckboxSettingsTile(
                   title: "Use caching",
                   settingKey: Constants.useCache,

@@ -297,7 +297,7 @@ class _LibraryPageState extends State<LibraryPage>
                                     context,
                                   );
                                   if (granted) {
-                                    // Proceed with download
+                                    state.downloadSelectedItems();
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -308,7 +308,6 @@ class _LibraryPageState extends State<LibraryPage>
                                     );
                                   }
                                 } else {
-                                  // Proceed with download
                                   state.downloadSelectedItems();
                                 }
                               },

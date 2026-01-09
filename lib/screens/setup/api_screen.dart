@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:atba/screens/home_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -26,8 +30,10 @@ class ApiKeyScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Welcome!',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Welcome!',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
             const Text('Please provide your API key to continue.'),
             const SizedBox(height: 20),
@@ -50,16 +56,23 @@ class ApiKeyScreen extends StatelessWidget {
                 if (apiKey.isNotEmpty && response.success) {
                   await apiService.saveApiKey(apiKey);
                   Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const PermissionScreen()));
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => !kIsWeb && Platform.isAndroid
+                          ? const PermissionScreen()
+                          : const HomeScreen(),
+                    ),
+                  );
                 } else {
                   apiService.deleteApiKey();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(apiKey.isNotEmpty
+                      content: Text(
+                        apiKey.isNotEmpty
                             ? (response.detailOrUnknown)
-                            : 'API Key is required!')),
+                            : 'API Key is required!',
+                      ),
+                    ),
                   );
                 }
               },

@@ -1,12 +1,17 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/config/constants.dart';
 
-
 class PermissionModel {
-  Future<bool> grantPermission(Permission permission, BuildContext context) async {
+  Future<bool> grantPermission(
+    Permission permission,
+    BuildContext context,
+  ) async {
     if (permission == Permission.storage) {
       return await _grantStoragePermission(context);
     }
@@ -35,7 +40,9 @@ class PermissionModel {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('SD Card Permission Required'),
-              content: Text('The selected folder is on an SD card. To proceed, you need to grant this app permission to manage all external files.'),
+              content: Text(
+                'The selected folder is on an SD card. To proceed, you need to grant this app permission to manage all external files.',
+              ),
               actions: <Widget>[
                 TextButton(
                   child: Text('Grant Permission'),
@@ -60,16 +67,19 @@ class PermissionModel {
           },
         );
 
-        if (result == true) { // grant manageExternalStorage
+        if (result == true) {
+          // grant manageExternalStorage
           if (await Permission.manageExternalStorage.request().isGranted) {
             await saveFolderPath(folderPath);
             return true;
           } else {
             return false;
           }
-        } else if (result == false) { // choose different folder
+        } else if (result == false) {
+          // choose different folder
           continue;
-        } else if (result == null) { // cancel
+        } else if (result == null) {
+          // cancel
           return false;
         }
       } else {
@@ -88,7 +98,8 @@ class PermissionModel {
   }
 
   Future<bool> isPathOnSdCard(String path) async {
-    // only works on Android - TODO: make cross platform
-    return !path.startsWith("/storage/emulated/0/");
+    return !kIsWeb &&
+        Platform.isAndroid &&
+        !path.startsWith("/storage/emulated/0/");
   }
 }

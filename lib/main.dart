@@ -42,15 +42,17 @@ Future<void> main() async {
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
 
-  FileDownloader().configureNotification(
-    tapOpensFile: true,
-    progressBar: true,
-    running: TaskNotification('Downloading', '{progress} | {filename}'),
-    complete: TaskNotification('Download finished', '{filename}'),
-    error: TaskNotification("Error", "{filename}"),
-    paused: TaskNotification("Paused", "{filename}"),
-    canceled: TaskNotification("Canceled", "{filename}"),
-  );
+  if (!kIsWeb) {
+    FileDownloader().configureNotification(
+      tapOpensFile: true,
+      progressBar: true,
+      running: TaskNotification('Downloading', '{progress} | {filename}'),
+      complete: TaskNotification('Download finished', '{filename}'),
+      error: TaskNotification("Error", "{filename}"),
+      paused: TaskNotification("Paused", "{filename}"),
+      canceled: TaskNotification("Canceled", "{filename}"),
+    );
+  }
 
   runApp(
     MultiProvider(

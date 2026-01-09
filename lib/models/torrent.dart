@@ -1,12 +1,13 @@
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:atba/config/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'downloadable_item.dart';
 import 'package:json_annotation/json_annotation.dart';
 part 'torrent.g.dart';
-
 
 /*
 Sample data:
@@ -52,7 +53,6 @@ enum TorrentStatus { idle, loading, success, error }
 
 @JsonSerializable()
 class Torrent extends DownloadableItem {
-
   final String hash;
   final String? magnet;
   final int seeds;
@@ -127,12 +127,19 @@ class Torrent extends DownloadableItem {
       uploadSpeed: json['upload_speed'] as int,
       eta: json['eta'] as int,
       torrentFile: json['torrent_file'] as bool,
-      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at'] as String) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'] as String)
+          : null,
       downloadPresent: json['download_present'] as bool,
       downloadFinished: json['download_finished'] as bool,
-      files: (json['files'] as List?)
-          ?.map((fileJson) => DownloadableFile.fromJson(fileJson as Map<String, dynamic>))
-          .toList() ?? [],
+      files:
+          (json['files'] as List?)
+              ?.map(
+                (fileJson) =>
+                    DownloadableFile.fromJson(fileJson as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
       inactiveCheck: json['inactive_check'] as int?,
       availability: json['availability'] as num?,
       hash: json['hash'] as String,
@@ -153,7 +160,8 @@ class Torrent extends DownloadableItem {
     );
   }
 
-  factory Torrent.fromJsonGenerated(Map<String, dynamic> json) => _$TorrentFromJson(json);
+  factory Torrent.fromJsonGenerated(Map<String, dynamic> json) =>
+      _$TorrentFromJson(json);
 
   @override
   Map<String, dynamic> toJsonGenerated() => _$TorrentToJson(this);
@@ -161,7 +169,10 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> delete() async {
     status = TorrentStatus.loading;
-    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.delete);
+    final response = await DownloadableItem.apiService.controlTorrent(
+      torrentId: id,
+      ControlTorrentType.delete,
+    );
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -174,7 +185,10 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> reannounce() async {
     status = TorrentStatus.loading;
-    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.reannounce);
+    final response = await DownloadableItem.apiService.controlTorrent(
+      torrentId: id,
+      ControlTorrentType.reannounce,
+    );
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -187,7 +201,10 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> pause() async {
     status = TorrentStatus.loading;
-    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.pause);
+    final response = await DownloadableItem.apiService.controlTorrent(
+      torrentId: id,
+      ControlTorrentType.pause,
+    );
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -200,7 +217,10 @@ class Torrent extends DownloadableItem {
   @override
   Future<TorboxAPIResponse> resume() async {
     status = TorrentStatus.loading;
-    final response = await DownloadableItem.apiService.controlTorrent(torrentId: id, ControlTorrentType.resume);
+    final response = await DownloadableItem.apiService.controlTorrent(
+      torrentId: id,
+      ControlTorrentType.resume,
+    );
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -211,59 +231,90 @@ class Torrent extends DownloadableItem {
   }
 
   Future<TorboxAPIResponse> exportAsMagnet() async {
-    final response = await DownloadableItem.apiService.exportTorrentData(id, ExportTorrentDataType.magnet);
+    final response = await DownloadableItem.apiService.exportTorrentData(
+      id,
+      ExportTorrentDataType.magnet,
+    );
     return response;
   }
 
   Future<TorboxAPIResponse> exportAsTorrent() async {
-    final response = await DownloadableItem.apiService.exportTorrentData(id, ExportTorrentDataType.torrentFile);
+    final response = await DownloadableItem.apiService.exportTorrentData(
+      id,
+      ExportTorrentDataType.torrentFile,
+    );
     return response; // data has path to file
   }
 
   @override
   Future<TorboxAPIResponse> download() async {
+    final response = await DownloadableItem.apiService.getTorrentDownloadUrl(
+      id,
+      zipLink: true,
+    );
+
+    if (!response.success) {
+      return response; // Return early if the response is not successful
+    }
+
+    if (kIsWeb) {
+      launchUrl(Uri.parse(response.data as String));
+      return response;
+    }
+
     final folderPath = Settings.getValue<String>(Constants.folderPath);
     if (folderPath == null) {
       throw Exception('Folder path not set');
     }
-    final response = await DownloadableItem.apiService.getTorrentDownloadUrl(id, zipLink: true);
-    if (!response.success) {
-      return response; // Return early if the response is not successful
-    }
-    await FileDownloader().enqueue(DownloadTask(
-      url: response.data as String,
-      baseDirectory: BaseDirectory.root,
-      directory: folderPath,
-      filename: "$name.zip",
-      allowPause: true
-    ));
+
+    await FileDownloader().enqueue(
+      DownloadTask(
+        url: response.data as String,
+        baseDirectory: BaseDirectory.root,
+        directory: folderPath,
+        filename: "$name.zip",
+        allowPause: true,
+      ),
+    );
     return response;
   }
 
   @override
   Future<TorboxAPIResponse> downloadFile(DownloadableFile file) async {
-    final folderPath = Settings.getValue<String>(Constants.folderPath);
-    if (folderPath == null) {
-      throw Exception('Folder path not set');
-    }
-    final response = await DownloadableItem.apiService.getTorrentDownloadUrl(id, fileId: file.id);
+    final response = await DownloadableItem.apiService.getTorrentDownloadUrl(
+      id,
+      fileId: file.id,
+    );
     if (!response.success) {
       return response;
     }
 
-    await FileDownloader().enqueue(DownloadTask(
-      url: response.data as String,
-      directory: folderPath,
-      baseDirectory: BaseDirectory.root,
-      filename: file.name.split('/').last,
-      allowPause: true
-    ));
+    if (kIsWeb) {
+      launchUrl(Uri.parse(response.data as String));
+      return response;
+    }
+
+    final folderPath = Settings.getValue<String>(Constants.folderPath);
+    if (folderPath == null) {
+      throw Exception('Folder path not set');
+    }
+
+    await FileDownloader().enqueue(
+      DownloadTask(
+        url: response.data as String,
+        directory: folderPath,
+        baseDirectory: BaseDirectory.root,
+        filename: file.name.split('/').last,
+        allowPause: true,
+      ),
+    );
     return response;
   }
 }
 
 @JsonSerializable()
-class QueuedTorrent extends DownloadableItem { // Technically not downloadable though
+class QueuedTorrent extends DownloadableItem {
+  // Technically not downloadable though
   final String? magnet;
   final String? torrentFileLink;
   final String hash;
@@ -284,23 +335,23 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
     required this.hash,
     this.type,
   }) : super(
-          updatedAt: createdAt,
-          size: 0,
-          active: false,
-          authId: '',
-          downloadState: '',
-          progress: 0,
-          downloadSpeed: 0,
-          uploadSpeed: 0,
-          eta: 0,
-          torrentFile: null,
-          expiresAt: null,
-          downloadPresent: false,
-          downloadFinished: false,
-          files: [],
-          inactiveCheck: null,
-          availability: null,
-        );
+         updatedAt: createdAt,
+         size: 0,
+         active: false,
+         authId: '',
+         downloadState: '',
+         progress: 0,
+         downloadSpeed: 0,
+         uploadSpeed: 0,
+         eta: 0,
+         torrentFile: null,
+         expiresAt: null,
+         downloadPresent: false,
+         downloadFinished: false,
+         files: [],
+         inactiveCheck: null,
+         availability: null,
+       );
 
   factory QueuedTorrent.fromJson(Map<String, dynamic> json) {
     return QueuedTorrent(
@@ -314,7 +365,8 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
     );
   }
 
-  factory QueuedTorrent.fromJsonStub(Map<String, dynamic> json) { // e.g. when created
+  factory QueuedTorrent.fromJsonStub(Map<String, dynamic> json) {
+    // e.g. when created
     return QueuedTorrent(
       id: json['queued_id'] as int,
       hash: json['hash'] as String,
@@ -323,15 +375,18 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
     );
   }
 
-  factory QueuedTorrent.fromJsonGenerated(Map<String, dynamic> json) => _$QueuedTorrentFromJson(json);
+  factory QueuedTorrent.fromJsonGenerated(Map<String, dynamic> json) =>
+      _$QueuedTorrentFromJson(json);
   @override
   Map<String, dynamic> toJsonGenerated() => _$QueuedTorrentToJson(this);
 
   @override
   Future<TorboxAPIResponse> delete() async {
     status = TorrentStatus.loading;
-    final response = await DownloadableItem.apiService
-        .controlQueuedItem(QueuedItemOperation.delete, queuedId: id);
+    final response = await DownloadableItem.apiService.controlQueuedItem(
+      QueuedItemOperation.delete,
+      queuedId: id,
+    );
     if (response.success) {
       status = TorrentStatus.success;
     } else {
@@ -344,8 +399,10 @@ class QueuedTorrent extends DownloadableItem { // Technically not downloadable t
   @override
   Future<TorboxAPIResponse> resume() async {
     status = TorrentStatus.loading;
-    final response = await DownloadableItem.apiService
-        .controlQueuedItem(QueuedItemOperation.start, queuedId: id);
+    final response = await DownloadableItem.apiService.controlQueuedItem(
+      QueuedItemOperation.start,
+      queuedId: id,
+    );
     if (response.success) {
       status = TorrentStatus.success;
     } else {
