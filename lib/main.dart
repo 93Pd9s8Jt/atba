@@ -61,7 +61,7 @@ Future<void> main() async {
         Provider<SecureStorageService>.value(value: secureStorageService),
         Provider<TorboxAPI>.value(value: apiService),
         ProxyProvider<TorboxAPI, UpdateService>(
-          update: (_, torboxApi, __) => UpdateService(torboxApi),
+          update: (_, torboxApi, _) => UpdateService(torboxApi),
         ),
         ChangeNotifierProvider<StremioRequests>.value(value: stremioService),
         ChangeNotifierProvider<TorrentioAPI>.value(value: torrentioService),

@@ -8,8 +8,9 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<bool> showPermissionDialog(BuildContext context) async {
-  if (kIsWeb || Settings.getValue<String>(Constants.folderPath) != null)
+  if (kIsWeb || Settings.getValue<String>(Constants.folderPath) != null) {
     return true;
+  }
   return Platform.isAndroid
       ? await showDialog<bool>(
               context: context,
