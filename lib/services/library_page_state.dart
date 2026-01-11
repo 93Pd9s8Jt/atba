@@ -225,6 +225,10 @@ class LibraryPageState extends ChangeNotifier {
   List<Usenet> get filteredSortedUsenetDownloads =>
       _sortAndFilter(usenetDownloads);
 
+  void guardedNotifyListeners() {
+    if (context.mounted) notifyListeners();
+  }
+
   Future<void> refreshTorrents({bool bypassCache = false}) async {
     _torrentsFuture = _fetchTorrents();
     await _torrentsFuture;
@@ -293,17 +297,6 @@ class LibraryPageState extends ChangeNotifier {
     _cacheService.saveItems(items);
   }
 
-  DownloadableItemStatus? setItemStatus<T extends DownloadableItem>(
-    int id,
-    DownloadableItemStatus newStatus,
-  ) {
-    final item = _getDownloads<T>().where((item) => item.id == id).first;
-    final oldItemStatus = item.itemStatus;
-    item.itemStatus = newStatus;
-    notifyListeners();
-    return oldItemStatus;
-  }
-
   void startPeriodicUpdate<T extends DownloadableItem>(int id) {
     if (!Settings.getValue(
       Constants.libraryForegroundUpdate,
@@ -331,7 +324,7 @@ class LibraryPageState extends ChangeNotifier {
           if (index != -1) {
             _downloads[index].itemStatus = DownloadableItemStatus.loading;
           }
-          notifyListeners();
+          guardedNotifyListeners();
           return;
         }
         // Find the item in temporary list and update it.
@@ -344,7 +337,7 @@ class LibraryPageState extends ChangeNotifier {
         }
 
         // Update the UI
-        notifyListeners();
+        guardedNotifyListeners();
         // update the cache
         _cacheService.saveItems([updatedItem]);
       },
