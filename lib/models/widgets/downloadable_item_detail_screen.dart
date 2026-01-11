@@ -1,4 +1,5 @@
 import 'package:atba/models/downloadable_item.dart';
+import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/screens/jobs_status_page.dart';
@@ -285,45 +286,39 @@ class DownloadableItemDetailScreen extends StatelessWidget {
   ) {
     return Row(
       children: [
-                  SizedBox(width: 8),
-          _buildButton(context, Text("Watch"), Icon(Icons.play_arrow), () async {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Fetching stream URL...'),
-              ),
-            );
-            final response = await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
-            if (response.success && response.data != null) {
-              VideoPlaybackService.playURL(context, response.data as String);
-            } else {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Failed to get stream URL: ${response.detailOrUnknown}',
-                    ),
-                  ),
-                );
-              }
-            }
-          }),
         SizedBox(width: 8),
-        _buildButton(context, Text("Copy link"), Icon(Icons.copy), () async {
-          final link = await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
-          if (link.success && link.data != null) {
-            Clipboard.setData(ClipboardData(text: link.data as String));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Link copied to clipboard'),
-              ),
-            );
+        _buildButton(context, Text("Watch"), Icon(Icons.play_arrow), () async {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Fetching stream URL...')));
+          final response = await getDownloadUrl(apiService, file);
+          if (response.success && response.data != null) {
+            VideoPlaybackService.playURL(context, response.data as String);
           } else {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Failed to copy link: ${link.detailOrUnknown}',
+                    'Failed to get stream URL: ${response.detailOrUnknown}',
                   ),
+                ),
+              );
+            }
+          }
+        }),
+        SizedBox(width: 8),
+        _buildButton(context, Text("Copy link"), Icon(Icons.copy), () async {
+          final link = await getDownloadUrl(apiService, file);
+          if (link.success && link.data != null) {
+            Clipboard.setData(ClipboardData(text: link.data as String));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Link copied to clipboard')));
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to copy link: ${link.detailOrUnknown}'),
                 ),
               );
             }
@@ -398,5 +393,20 @@ class DownloadableItemDetailScreen extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  Future<TorboxAPIResponse> getDownloadUrl(
+    TorboxAPI apiService,
+    DownloadableFile file,
+  ) async {
+    if (item is Torrent) {
+      return await apiService.getTorrentDownloadUrl(item.id, fileId: file.id);
+    } else if (item is WebDownload) {
+      return await apiService.getWebDownloadUrl(item.id, fileId: file.id);
+    } else if (item is Usenet) {
+      return await apiService.getUsenetDownloadUrl(item.id, fileId: file.id);
+    } else {
+      throw Error();
+    }
   }
 }
