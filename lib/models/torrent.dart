@@ -199,11 +199,11 @@ class Torrent extends DownloadableItem {
   }
 
   @override
-  Future<TorboxAPIResponse> pause() async {
+  Future<TorboxAPIResponse> stop() async {
     status = TorrentStatus.loading;
     final response = await DownloadableItem.apiService.controlTorrent(
       torrentId: id,
-      ControlTorrentType.pause,
+      ControlTorrentType.stop,
     );
     if (response.success) {
       status = TorrentStatus.success;

@@ -689,8 +689,8 @@ class LibraryPageState extends ChangeNotifier {
     await _handleSelectedItems((item) => item.delete(), actionIsDelete: true);
   }
 
-  Future<void> pauseSelectedItems() async {
-    await _handleSelectedItems((item) => item.pause());
+  Future<void> stopSelectedItems() async {
+    await _handleSelectedItems((item) => item.stop());
   }
 
   Future<void> resumeSelectedItems() async {

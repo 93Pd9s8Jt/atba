@@ -1043,7 +1043,7 @@ extension SeedingPreferenceExtension on SeedingPreference {
   }
 }
 
-enum ControlTorrentType { reannounce, delete, resume, pause }
+enum ControlTorrentType { reannounce, delete, resume, stop }
 
 extension ControlTorrentTypeExtension on ControlTorrentType {
   String get name {
@@ -1054,13 +1054,13 @@ extension ControlTorrentTypeExtension on ControlTorrentType {
         return 'delete';
       case ControlTorrentType.resume:
         return 'resume';
-      case ControlTorrentType.pause:
+      case ControlTorrentType.stop:
         return 'stop_seeding';
     }
   }
 }
 
-enum ControlUsenetType { delete, resume, pause }
+enum ControlUsenetType { delete, resume, stop }
 
 extension ControlUsenetTypeExtension on ControlUsenetType {
   String get name {
@@ -1069,7 +1069,7 @@ extension ControlUsenetTypeExtension on ControlUsenetType {
         return 'delete';
       case ControlUsenetType.resume:
         return 'resume';
-      case ControlUsenetType.pause:
+      case ControlUsenetType.stop:
         return 'pause';
     }
   }

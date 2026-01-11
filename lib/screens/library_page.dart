@@ -263,15 +263,9 @@ class _LibraryPageState extends State<LibraryPage>
                             ),
                           ] else ...[
                             IconButton(
-                              icon: Icon(Icons.pause),
+                              icon: Icon(Icons.stop),
                               onPressed: () {
-                                state.pauseSelectedItems();
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.play_arrow),
-                              onPressed: () {
-                                state.resumeSelectedItems();
+                                state.stopSelectedItems();
                               },
                             ),
                             IconButton(

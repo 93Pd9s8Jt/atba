@@ -29,7 +29,6 @@ abstract class DownloadableItem {
   DownloadableItemStatus? itemStatus;
   String? errorMessage;
 
-
   DownloadableItem({
     required this.id,
     required this.name,
@@ -59,7 +58,7 @@ abstract class DownloadableItem {
   }
 
   Future<TorboxAPIResponse> delete();
-  Future<TorboxAPIResponse?> pause() async => null;
+  Future<TorboxAPIResponse?> stop() async => null;
   Future<TorboxAPIResponse?> resume() async => null;
   Future<TorboxAPIResponse?> start() async => null;
   Future<TorboxAPIResponse?> reannounce() async => null;
@@ -68,7 +67,6 @@ abstract class DownloadableItem {
   Future<TorboxAPIResponse?> downloadFile(DownloadableFile file) async => null;
 
   Map<String, dynamic> toJsonGenerated();
-
 }
 
 @JsonSerializable()
@@ -95,20 +93,18 @@ class DownloadableFile {
     return DownloadableFile(
       id: json['id'],
       md5: json['md5'],
-      s3Path: json['s3Path'] ?? json['s3_path'], // apparently api can use both ??
+      s3Path:
+          json['s3Path'] ?? json['s3_path'], // apparently api can use both ??
       name: json['name'],
       size: json['size'],
       mimetype: json['mimetype'],
       shortName: json['shortName'] ?? json['short_name'], // ditto
     );
   }
-  factory DownloadableFile.fromJsonGenerated(Map<String, dynamic> json) => _$DownloadableFileFromJson(json);
+  factory DownloadableFile.fromJsonGenerated(Map<String, dynamic> json) =>
+      _$DownloadableFileFromJson(json);
 
   Map<String, dynamic> toJson() => _$DownloadableFileToJson(this);
 }
 
-
-
-enum DownloadableItemStatus {
-  idle, loading, success, error
-}
+enum DownloadableItemStatus { idle, loading, success, error }
