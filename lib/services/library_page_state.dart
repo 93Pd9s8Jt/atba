@@ -232,7 +232,7 @@ class LibraryPageState extends ChangeNotifier {
   Future<void> refreshTorrents({bool bypassCache = false}) async {
     _torrentsFuture = _fetchTorrents();
     await _torrentsFuture;
-    notifyListeners();
+    guardedNotifyListeners();
   }
 
   Future<void> refreshWebDownloads({bool bypassCache = false}) async {

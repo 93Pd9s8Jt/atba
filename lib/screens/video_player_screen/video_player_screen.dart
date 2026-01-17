@@ -14,7 +14,7 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late final player = Player();
+  late final player = Player(configuration: PlayerConfiguration(libass: true));
   late final controller = VideoController(player);
 
   @override
@@ -38,7 +38,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       case TargetPlatform.macOS:
       case TargetPlatform.windows:
       case TargetPlatform.linux:
-        return desktopVideoPlayer(context, controller);
+        return desktopVideoPlayer(context, controller, player);
       default:
         return Scaffold(body: Video(controller: controller));
     }
