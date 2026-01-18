@@ -416,11 +416,12 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-          CheckboxSettingsTile(
-            settingKey: Constants.useInternalVideoPlayer,
-            title: 'Use internal video player',
-            defaultValue: (kIsWeb || !Platform.isAndroid),
-          ),
+          if (!kIsWeb && Platform.isAndroid)
+            CheckboxSettingsTile(
+              settingKey: Constants.useInternalVideoPlayer,
+              title: 'Use internal video player',
+              defaultValue: (kIsWeb || !Platform.isAndroid),
+            ),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
