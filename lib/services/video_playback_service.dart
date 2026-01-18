@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:atba/config/constants.dart';
 import 'package:atba/screens/video_player_screen/video_player_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:android_intent_plus/android_intent.dart';
@@ -14,14 +17,13 @@ class VideoPlaybackService {
     }
 
     final useInternalPlayer =
-        Settings.getValue<bool>(Constants.useInternalVideoPlayer) ?? false;
+        Settings.getValue<bool>(Constants.useInternalVideoPlayer) ??
+        (kIsWeb || !Platform.isAndroid);
 
     if (useInternalPlayer) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => VideoPlayerScreen(url: url),
-        ),
+        MaterialPageRoute(builder: (context) => VideoPlayerScreen(url: url)),
       );
     } else {
       _launchIntent(url);

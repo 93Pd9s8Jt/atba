@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
 import 'package:atba/services/cache/downloadable_item_cache_service.dart';
@@ -417,7 +419,7 @@ class _SettingsPageState extends State<SettingsPage> {
           CheckboxSettingsTile(
             settingKey: Constants.useInternalVideoPlayer,
             title: 'Use internal video player',
-            defaultValue: false,
+            defaultValue: (kIsWeb || !Platform.isAndroid),
           ),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
