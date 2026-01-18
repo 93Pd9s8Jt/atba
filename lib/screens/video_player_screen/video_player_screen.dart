@@ -16,11 +16,16 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final player = Player(configuration: PlayerConfiguration(libass: true));
   late final controller = VideoController(player);
+  late final GlobalKey<VideoState> key = GlobalKey<VideoState>();
 
   @override
   void initState() {
     super.initState();
     player.open(Media(widget.url));
+    player.stream.error.listen((error) => debugPrint(error));
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      key.currentState?.enterFullscreen();
+    });
   }
 
   @override
@@ -34,13 +39,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     switch (Theme.of(context).platform) {
       case TargetPlatform.android:
       case TargetPlatform.iOS:
-        return mobileVideoPlayer(context, controller);
+        return mobileVideoPlayer(context, controller, key);
       case TargetPlatform.macOS:
       case TargetPlatform.windows:
       case TargetPlatform.linux:
-        return desktopVideoPlayer(context, controller, player);
+        return desktopVideoPlayer(context, controller, key);
       default:
-        return Scaffold(body: Video(controller: controller));
+        return Scaffold(
+          body: Video(controller: controller, key: key),
+        );
     }
   }
 }

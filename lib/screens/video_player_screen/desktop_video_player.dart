@@ -6,14 +6,18 @@ import 'widgets/track_selector.dart';
 Widget desktopVideoPlayer(
   BuildContext context,
   VideoController controller,
-  Player player,
+  GlobalKey<VideoState> key,
 ) {
   return MaterialDesktopVideoControlsTheme(
-    normal: buildThemeData(context, controller),
-    fullscreen: buildThemeData(context, controller),
+    normal: buildThemeData(context, key),
+    fullscreen: buildThemeData(context, key),
     child: Scaffold(
       body: Column(
-        children: [Expanded(child: Video(controller: controller))],
+        children: [
+          Expanded(
+            child: Video(controller: controller, key: key),
+          ),
+        ],
       ),
     ),
   );
@@ -21,7 +25,7 @@ Widget desktopVideoPlayer(
 
 MaterialDesktopVideoControlsThemeData buildThemeData(
   BuildContext context,
-  VideoController controller,
+  GlobalKey<VideoState> key,
 ) {
   return MaterialDesktopVideoControlsThemeData(
     // Modify theme options:
@@ -32,7 +36,10 @@ MaterialDesktopVideoControlsThemeData buildThemeData(
     topButtonBar: [
       MaterialDesktopCustomButton(
         onPressed: () {
-          Navigator.of(context).pop();
+          if (key.currentState?.isFullscreen() ?? false) {
+            key.currentState?.exitFullscreen();
+          }
+          Navigator.of(context).popUntil((route) => route.isFirst);
         },
         icon: const Icon(Icons.arrow_back),
       ),
