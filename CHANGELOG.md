@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.8.0](https://github.com/93Pd9s8Jt/atba/compare/v0.7.1...v0.8.0) (2026-01-18)
+
+
+### Features
+
+* Add custom theme colours ([d0093b7](https://github.com/93Pd9s8Jt/atba/commit/d0093b70ea74c9e7d58cce8b0452e051a1527a2c))
+* Add more tooltips ([c4e667c](https://github.com/93Pd9s8Jt/atba/commit/c4e667cabd7388e282ed3c41177c44f727d360d9))
+* **android:** Go back twice to exit ([2b37e20](https://github.com/93Pd9s8Jt/atba/commit/2b37e20be973210228b2b4dd4b309347ef56bd73))
+* **player:** Add mobile subtitle & audio switching ([47f13f5](https://github.com/93Pd9s8Jt/atba/commit/47f13f5bf3e46940b365be3fb4f3ac7e8db2def7))
+* **player:** Add support for rendering ass subtitles & subtitle and audio switching ([9dae688](https://github.com/93Pd9s8Jt/atba/commit/9dae688a9c4984cc1d18402b185c29725ba1a8dd))
+
+
+### Bug Fixes
+
+* Add JS call for pstream userscript to bypass cors on web ([3ec3db7](https://github.com/93Pd9s8Jt/atba/commit/3ec3db747229126a08523fb991557c4cde23a19f))
+* **android:** Better onBackInvoked handling ([f1f6fa5](https://github.com/93Pd9s8Jt/atba/commit/f1f6fa5b177f3359318d09d7f952eb6b1bcfc868))
+* **android:** Prevent dismissing keyboard closing app ([dd9b041](https://github.com/93Pd9s8Jt/atba/commit/dd9b0416c9ff2b85a531948e2d1a3b27ef53386d))
+* Attempt to fix the js calls ([593a2d7](https://github.com/93Pd9s8Jt/atba/commit/593a2d733f6cad61a098e2328d9c94fa60658752))
+* Call the correct method for web and usenet download links (and direct streaming) ([528161d](https://github.com/93Pd9s8Jt/atba/commit/528161d35f751051b4a3a998bb053ce74e5f21d9))
+* Disable Android-specific permission screens on other platforms ([3a18c34](https://github.com/93Pd9s8Jt/atba/commit/3a18c3496f64b6f3409a73d2a114783776e2a60b))
+* **downloads:** Actually start the download when triggering a bulk download and no folder is set ([3a18c34](https://github.com/93Pd9s8Jt/atba/commit/3a18c3496f64b6f3409a73d2a114783776e2a60b))
+* Guard notifyListener in background checks ([aab60cf](https://github.com/93Pd9s8Jt/atba/commit/aab60cf96865cf337611bdc1a8dfb4a69e44ce3c))
+* Guard notifyListener when refreshing torrents ([9dae688](https://github.com/93Pd9s8Jt/atba/commit/9dae688a9c4984cc1d18402b185c29725ba1a8dd))
+* Hide player option on non-Android platforms; currently will just error if you try to use it ([c19c68f](https://github.com/93Pd9s8Jt/atba/commit/c19c68fab850cb4fa35cd1db6bc91154cd943009))
+* Improve web compatibility & bulk downloading ([3a18c34](https://github.com/93Pd9s8Jt/atba/commit/3a18c3496f64b6f3409a73d2a114783776e2a60b))
+* Only load web-specific code on web, handle window.postMessage correctly ([4d0592e](https://github.com/93Pd9s8Jt/atba/commit/4d0592e796d864c6926ab5e279b3d0e686ab8ee5))
+* **player:** Default to internal player on non-Android platforms ([ef477c7](https://github.com/93Pd9s8Jt/atba/commit/ef477c7f9ba1e11a0cabb475950bce8890f55875))
+* **player:** Don't show divider if there are no tracks ([8b1a4e3](https://github.com/93Pd9s8Jt/atba/commit/8b1a4e3a545c89f124b753a594d4ecbb68634885))
+* **player:** Fix exit button when in fullscreen ([47f13f5](https://github.com/93Pd9s8Jt/atba/commit/47f13f5bf3e46940b365be3fb4f3ac7e8db2def7))
+* **player:** Hide divider correctly ([2929bdc](https://github.com/93Pd9s8Jt/atba/commit/2929bdcedb01c030410a14689969045916f8f087))
+* **player:** Only fullscreen by default on ios or android ([b12816e](https://github.com/93Pd9s8Jt/atba/commit/b12816e360b8e6903ea6f1fb2d0352370a5041ad))
+* **queued:** Make queued torrents blur instantly and have selectable text ([240fe84](https://github.com/93Pd9s8Jt/atba/commit/240fe84571e02c0f607429311dd1f229fa724e45))
+* Remove useless resume button, change pause button to stop button ([22a1a19](https://github.com/93Pd9s8Jt/atba/commit/22a1a190c9fde558660e12d5647d4ef571955f7e))
+* **web:** Check for  dart.library.html to ensure wasm builds run correctly ([d4bf9f7](https://github.com/93Pd9s8Jt/atba/commit/d4bf9f7eb203293dde6838491ffc2828fa24c865))
+* **web:** Correct icon paths in manifest.json ([2cf15ab](https://github.com/93Pd9s8Jt/atba/commit/2cf15ab7166920154469cb5eba7732d676c0895c))
+* **web:** Fix downloads on web to open in new tab ([3a18c34](https://github.com/93Pd9s8Jt/atba/commit/3a18c3496f64b6f3409a73d2a114783776e2a60b))
+* **web:** Fix wasm compatibility, disable some caching ([c7735ed](https://github.com/93Pd9s8Jt/atba/commit/c7735ed79f61c0ab033b9131a0e786bfa8b7147c))
+* **web:** Remove features that don't work on web such as google iframe ([3a18c34](https://github.com/93Pd9s8Jt/atba/commit/3a18c3496f64b6f3409a73d2a114783776e2a60b))
+* **web:** Rename Icon-192.png to icon-192.png ([46f5fee](https://github.com/93Pd9s8Jt/atba/commit/46f5fee491a858f9cb4b9a21f34698bae416138c))
+* **web:** Rename Icon-512.png to icon-512.png ([4dbcbed](https://github.com/93Pd9s8Jt/atba/commit/4dbcbeda10554b278915afd070e24a825d2c86d0))
+* **web:** Update icons & manifest from placeholders ([3d9b2e1](https://github.com/93Pd9s8Jt/atba/commit/3d9b2e18d1fcf84e281bfd37da351201bdde8404))
+
 ## [0.7.1](https://github.com/93Pd9s8Jt/atba/compare/v0.7.0...v0.7.1) (2026-01-07)
 
 
