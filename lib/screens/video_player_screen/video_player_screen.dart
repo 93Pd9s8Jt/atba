@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:atba/screens/video_player_screen/desktop_video_player.dart';
 import 'package:atba/screens/video_player_screen/mobile_video_player.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -24,7 +27,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     player.open(Media(widget.url));
     player.stream.error.listen((error) => debugPrint(error));
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      key.currentState?.enterFullscreen();
+      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+        key.currentState?.enterFullscreen();
+      }
     });
   }
 
