@@ -71,7 +71,8 @@ class _PlayerDropdownButtonState extends State<PlayerDropdownButton> {
           label: "Auto",
           subLabel: null,
         ),
-        if (tracks.isNotEmpty) const PopupMenuDivider(height: 1),
+        if (tracks.length > 2)
+          const PopupMenuDivider(height: 1), // 2 default, no & auto
         // Actual Tracks
         ...tracks
             .where((track) {
