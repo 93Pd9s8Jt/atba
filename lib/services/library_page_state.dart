@@ -142,9 +142,9 @@ class LibraryPageState extends ChangeNotifier {
   Future<Map<String, dynamic>> get torrentsFuture =>
       _initFuture.then((_) => _torrentsFuture);
   Future<Map<String, dynamic>> get webDownloadsFuture =>
-      _initFuture.then((_) => _torrentsFuture);
+      _initFuture.then((_) => _webDownloadsFuture);
   Future<Map<String, dynamic>> get usenetFuture =>
-      _initFuture.then((_) => _torrentsFuture);
+      _initFuture.then((_) => _usenetFuture);
 
   // exclude dups, temporary items override permanent ones because they ate newer
   List<T> _getDownloads<T extends DownloadableItem>() =>
@@ -430,11 +430,12 @@ class LibraryPageState extends ChangeNotifier {
         await _cacheService.deleteItemByType<WebDownload>();
         await _cacheService.saveItems(webDownloads);
       });
-
+      print("Success: true");
       return {"success": true};
     } catch (e, stackTrace) {
       debugPrint('Error in _fetchWebDownloads: $e');
       debugPrint('Stack trace: $stackTrace');
+      print("Success: false");
       return {
         "success": false,
         "detail": e.toString(),
