@@ -65,7 +65,7 @@ class WebDownload extends DownloadableItem {
     required super.uploadSpeed,
     required super.eta,
     required super.torrentFile,
-    required DateTime super.expiresAt,
+    required super.expiresAt,
     required super.downloadPresent,
     required super.downloadFinished,
     required super.files,
@@ -90,7 +90,9 @@ class WebDownload extends DownloadableItem {
       uploadSpeed: json['upload_speed'],
       eta: json['eta'],
       torrentFile: json['torrent_file'],
-      expiresAt: DateTime.parse(json['expires_at']),
+      expiresAt: json['expires_at'] == null
+          ? null
+          : DateTime.parse(json['expires_at']),
       downloadPresent: json['download_present'],
       downloadFinished: json['download_finished'],
       files: (json['files'] as List)
@@ -134,7 +136,7 @@ class WebDownload extends DownloadableItem {
         url: response.data as String,
         directory: folderPath,
         filename: "$name.zip",
-        allowPause: true
+        allowPause: true,
       ),
     );
     return response;
@@ -158,7 +160,7 @@ class WebDownload extends DownloadableItem {
         url: response.data as String,
         directory: folderPath,
         filename: file.name.split('/').last,
-        allowPause: true
+        allowPause: true,
       ),
     );
     return response;
