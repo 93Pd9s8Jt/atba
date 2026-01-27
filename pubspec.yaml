@@ -11,7 +11,6 @@ dependencies:
   app_links: ^6.4.1
   async: ^2.13.0
   build_runner: ^2.10.1
-  chewie: ^1.12.1
   collection: ^1.19.0
   crypto: ^3.0.6
   dartz: ^0.10.1
@@ -42,7 +41,6 @@ dependencies:
   http_cache_hive_store: ^5.0.1
   http_cache_sembast_store: ^1.0.0
   icon_craft: ^0.1.1
-  implicitly_animated_reorderable_list_2: ^0.6.0
   json_annotation: ^4.9.0
   listen_sharing_intent: ^1.9.2
   package_info_plus: ^8.3.1
@@ -54,7 +52,6 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.40
   url_launcher: ^6.3.2
   uuid: ^4.5.1
-  video_player: ^2.10.0
   webview_flutter: ^4.13.0
   memoized: ^2.2.6
   icons_plus: ^5.0.0
@@ -63,7 +60,6 @@ dependencies:
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
   sqlite3: ^2.9.4
-  js: ^0.6.7
   web: ^1.1.1
 
 flutter_launcher_icons:
