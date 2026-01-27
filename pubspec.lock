@@ -333,10 +333,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: e7e16c9d15c36330b94ca0e2ad8cb61f93cd5282d0158c09805aed13b5452f22
+      sha256: b9c6bbfe174bcc1ec1e3a0de92e9b839fe553a46dd91862debfbbb5055ca876f
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.2"
+    version: "10.3.9"
   fixnum:
     dependency: transitive
     description:
