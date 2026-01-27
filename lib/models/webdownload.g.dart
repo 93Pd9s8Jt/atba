@@ -21,7 +21,9 @@ WebDownload _$WebDownloadFromJson(Map<String, dynamic> json) =>
         uploadSpeed: (json['uploadSpeed'] as num?)?.toInt(),
         eta: (json['eta'] as num).toInt(),
         torrentFile: json['torrentFile'] as bool?,
-        expiresAt: DateTime.parse(json['expiresAt'] as String),
+        expiresAt: json['expiresAt'] == null
+            ? null
+            : DateTime.parse(json['expiresAt'] as String),
         downloadPresent: json['downloadPresent'] as bool,
         downloadFinished: json['downloadFinished'] as bool,
         files: (json['files'] as List<dynamic>)

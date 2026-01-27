@@ -113,10 +113,10 @@ QueuedTorrent _$QueuedTorrentFromJson(Map<String, dynamic> json) =>
         id: (json['id'] as num).toInt(),
         name: json['name'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
-        magnet: json['magnet'] as String,
+        magnet: json['magnet'] as String?,
         torrentFileLink: json['torrentFileLink'] as String?,
         hash: json['hash'] as String,
-        type: json['type'] as String,
+        type: json['type'] as String?,
       )
       ..status = $enumDecode(_$TorrentStatusEnumMap, json['status'])
       ..itemStatus = $enumDecodeNullable(
