@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'usenet.dart';
+part of 'webdownload.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Usenet _$UsenetFromJson(Map<String, dynamic> json) =>
-    Usenet(
+WebDownload _$WebDownloadFromJson(Map<String, dynamic> json) =>
+    WebDownload(
         id: (json['id'] as num).toInt(),
         name: json['name'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
@@ -17,7 +17,7 @@ Usenet _$UsenetFromJson(Map<String, dynamic> json) =>
         authId: json['authId'] as String,
         downloadState: json['downloadState'] as String,
         progress: (json['progress'] as num).toDouble(),
-        downloadSpeed: (json['downloadSpeed'] as num).toInt(),
+        downloadSpeed: (json['downloadSpeed'] as num?)?.toInt(),
         uploadSpeed: (json['uploadSpeed'] as num?)?.toInt(),
         eta: (json['eta'] as num).toInt(),
         torrentFile: json['torrentFile'] as bool?,
@@ -31,6 +31,8 @@ Usenet _$UsenetFromJson(Map<String, dynamic> json) =>
             .toList(),
         inactiveCheck: (json['inactiveCheck'] as num?)?.toInt(),
         availability: json['availability'] as num?,
+        state: $enumDecode(_$WebDownloadStateEnumMap, json['state']),
+        error: json['error'] as String,
       )
       ..itemStatus = $enumDecodeNullable(
         _$DownloadableItemStatusEnumMap,
@@ -38,28 +40,38 @@ Usenet _$UsenetFromJson(Map<String, dynamic> json) =>
       )
       ..errorMessage = json['errorMessage'] as String?;
 
-Map<String, dynamic> _$UsenetToJson(Usenet instance) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'createdAt': instance.createdAt.toIso8601String(),
-  'updatedAt': instance.updatedAt.toIso8601String(),
-  'size': instance.size,
-  'active': instance.active,
-  'authId': instance.authId,
-  'downloadState': instance.downloadState,
-  'progress': instance.progress,
-  'downloadSpeed': instance.downloadSpeed,
-  'uploadSpeed': instance.uploadSpeed,
-  'eta': instance.eta,
-  'torrentFile': instance.torrentFile,
-  'expiresAt': instance.expiresAt?.toIso8601String(),
-  'downloadPresent': instance.downloadPresent,
-  'downloadFinished': instance.downloadFinished,
-  'files': instance.files,
-  'inactiveCheck': instance.inactiveCheck,
-  'availability': instance.availability,
-  'itemStatus': _$DownloadableItemStatusEnumMap[instance.itemStatus],
-  'errorMessage': instance.errorMessage,
+Map<String, dynamic> _$WebDownloadToJson(WebDownload instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
+      'size': instance.size,
+      'active': instance.active,
+      'authId': instance.authId,
+      'downloadState': instance.downloadState,
+      'progress': instance.progress,
+      'downloadSpeed': instance.downloadSpeed,
+      'uploadSpeed': instance.uploadSpeed,
+      'eta': instance.eta,
+      'torrentFile': instance.torrentFile,
+      'expiresAt': instance.expiresAt?.toIso8601String(),
+      'downloadPresent': instance.downloadPresent,
+      'downloadFinished': instance.downloadFinished,
+      'inactiveCheck': instance.inactiveCheck,
+      'availability': instance.availability,
+      'itemStatus': _$DownloadableItemStatusEnumMap[instance.itemStatus],
+      'errorMessage': instance.errorMessage,
+      'files': instance.files,
+      'state': _$WebDownloadStateEnumMap[instance.state]!,
+      'error': instance.error,
+    };
+
+const _$WebDownloadStateEnumMap = {
+  WebDownloadState.downloading: 'downloading',
+  WebDownloadState.finished: 'finished',
+  WebDownloadState.error: 'error',
+  WebDownloadState.unknown: 'unknown',
 };
 
 const _$DownloadableItemStatusEnumMap = {

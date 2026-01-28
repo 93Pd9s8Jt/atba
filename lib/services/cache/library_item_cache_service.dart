@@ -1,16 +1,17 @@
 import 'dart:convert';
-import 'package:atba/models/downloadable_item.dart';
-import 'package:atba/models/torrent.dart';
-import 'package:atba/models/usenet.dart';
-import 'package:atba/models/webdownload.dart';
+import 'package:atba/models/library_items/library_item.dart';
+import 'package:atba/models/library_items/queued_torrent.dart';
+import 'package:atba/models/library_items/torrent.dart';
+import 'package:atba/models/library_items/usenet.dart';
+import 'package:atba/models/library_items/webdownload.dart';
 import 'package:drift/drift.dart';
 
 import 'connection.dart';
 
-part 'downloadable_item_cache_service.g.dart';
+part 'library_item_cache_service.g.dart';
 
-@DataClassName('DownloadableItemEntry')
-class DownloadableItemCache extends Table {
+@DataClassName('LibraryItemEntry')
+class LibraryItemCache extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get itemId => integer().unique()();
   TextColumn get itemType => text()();
@@ -18,7 +19,7 @@ class DownloadableItemCache extends Table {
   DateTimeColumn get lastUpdated => dateTime()();
 }
 
-@DriftDatabase(tables: [DownloadableItemCache])
+@DriftDatabase(tables: [LibraryItemCache])
 class AppDatabase extends _$AppDatabase {
   static final AppDatabase _instance = AppDatabase._internal();
 
@@ -40,21 +41,21 @@ class AppDatabase extends _$AppDatabase {
 //   });
 // }
 
-class DownloadableItemCacheService {
+class LibraryItemCacheService {
   late AppDatabase _db;
 
-  DownloadableItemCacheService() {
+  LibraryItemCacheService() {
     _db = AppDatabase();
   }
 
-  Future<void> saveItems(List<DownloadableItem> items) async {
+  Future<void> saveItems(List<LibraryItem> items) async {
     await _db.batch((batch) {
       for (var item in items) {
         final itemJson = jsonEncode(item.toJsonGenerated());
         final itemType = _getItemType(item);
         batch.insert(
-          _db.downloadableItemCache,
-          DownloadableItemCacheCompanion.insert(
+          _db.libraryItemCache,
+          LibraryItemCacheCompanion.insert(
             itemId: item.id,
             itemType: itemType,
             itemJson: itemJson,
@@ -66,8 +67,8 @@ class DownloadableItemCacheService {
     });
   }
 
-  Future<List<DownloadableItem>> getItems(List<int> ids) async {
-    final query = _db.select(_db.downloadableItemCache)
+  Future<List<LibraryItem>> getItems(List<int> ids) async {
+    final query = _db.select(_db.libraryItemCache)
       ..where((tbl) => tbl.itemId.isIn(ids));
     final entries = await query.get();
     return entries
@@ -75,40 +76,38 @@ class DownloadableItemCacheService {
         .toList();
   }
 
-  Future<List<DownloadableItem>> getAllItems() async {
-    final entries = await _db.select(_db.downloadableItemCache).get();
+  Future<List<LibraryItem>> getAllItems() async {
+    final entries = await _db.select(_db.libraryItemCache).get();
     return entries
         .map((entry) => _deserializeItem(entry.itemJson, entry.itemType))
         .toList();
   }
 
   Future<void> deleteItems(List<int> ids) async {
-    final query = _db.delete(_db.downloadableItemCache)
+    final query = _db.delete(_db.libraryItemCache)
       ..where((tbl) => tbl.itemId.isIn(ids));
     await query.go();
   }
 
-  Future<void> deleteItemByType<T extends DownloadableItem>() async {
-    final query = _db.delete(_db.downloadableItemCache)
-      ..where((tbl) =>
-          tbl.itemType.equals(_getTypeString<T>()));
+  Future<void> deleteItemByType<T extends LibraryItem>() async {
+    final query = _db.delete(_db.libraryItemCache)
+      ..where((tbl) => tbl.itemType.equals(_getTypeString<T>()));
     await query.go();
   }
 
   Future<void> clearCache() async {
-    await _db.delete(_db.downloadableItemCache).go();
+    await _db.delete(_db.libraryItemCache).go();
   }
 
   Future<bool> isNotEmpty() async {
-    final countExp = _db.downloadableItemCache.id.count();
-    final query = _db.selectOnly(_db.downloadableItemCache)
-      ..addColumns([countExp]);
+    final countExp = _db.libraryItemCache.id.count();
+    final query = _db.selectOnly(_db.libraryItemCache)..addColumns([countExp]);
     final result = await query.getSingle();
     final count = result.read(countExp) ?? 0;
     return count > 0;
   }
 
-  String _getItemType(DownloadableItem item) {
+  String _getItemType(LibraryItem item) {
     if (item is Torrent) {
       return 'torrent';
     } else if (item is WebDownload) {
@@ -118,10 +117,10 @@ class DownloadableItemCacheService {
     } else if (item is QueuedTorrent) {
       return 'queuedtorrent';
     }
-    throw Exception('Unknown DownloadableItem type');
+    throw Exception('Unknown LibraryItem type');
   }
 
-  String _getTypeString<T extends DownloadableItem>() {
+  String _getTypeString<T extends LibraryItem>() {
     if (T == Torrent) {
       return 'torrent';
     } else if (T == WebDownload) {
@@ -131,10 +130,10 @@ class DownloadableItemCacheService {
     } else if (T == QueuedTorrent) {
       return 'queuedtorrent';
     }
-    throw Exception('Unknown DownloadableItem type');
+    throw Exception('Unknown LibraryItem type');
   }
 
-  DownloadableItem _deserializeItem(String json, String type) {
+  LibraryItem _deserializeItem(String json, String type) {
     final Map<String, dynamic> itemJson = jsonDecode(json);
     switch (type) {
       case 'torrent':
@@ -146,7 +145,7 @@ class DownloadableItemCacheService {
       case 'queuedtorrent':
         return QueuedTorrent.fromJsonGenerated(itemJson);
       default:
-        throw Exception('Unknown DownloadableItem type');
+        throw Exception('Unknown LibraryItem type');
     }
   }
 }

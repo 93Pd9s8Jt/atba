@@ -71,9 +71,9 @@ Map<String, dynamic> _$TorrentToJson(Torrent instance) => <String, dynamic>{
   'expiresAt': instance.expiresAt?.toIso8601String(),
   'downloadPresent': instance.downloadPresent,
   'downloadFinished': instance.downloadFinished,
-  'files': instance.files,
   'inactiveCheck': instance.inactiveCheck,
   'availability': instance.availability,
+  'files': instance.files,
   'hash': instance.hash,
   'magnet': instance.magnet,
   'seeds': instance.seeds,
@@ -107,34 +107,3 @@ const _$DownloadableItemStatusEnumMap = {
   DownloadableItemStatus.success: 'success',
   DownloadableItemStatus.error: 'error',
 };
-
-QueuedTorrent _$QueuedTorrentFromJson(Map<String, dynamic> json) =>
-    QueuedTorrent(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        magnet: json['magnet'] as String?,
-        torrentFileLink: json['torrentFileLink'] as String?,
-        hash: json['hash'] as String,
-        type: json['type'] as String?,
-      )
-      ..status = $enumDecode(_$TorrentStatusEnumMap, json['status'])
-      ..itemStatus = $enumDecodeNullable(
-        _$DownloadableItemStatusEnumMap,
-        json['itemStatus'],
-      )
-      ..errorMessage = json['errorMessage'] as String?;
-
-Map<String, dynamic> _$QueuedTorrentToJson(QueuedTorrent instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'magnet': instance.magnet,
-      'torrentFileLink': instance.torrentFileLink,
-      'hash': instance.hash,
-      'type': instance.type,
-      'status': _$TorrentStatusEnumMap[instance.status]!,
-      'itemStatus': _$DownloadableItemStatusEnumMap[instance.itemStatus],
-      'errorMessage': instance.errorMessage,
-    };

@@ -1,4 +1,4 @@
-import 'package:atba/models/downloadable_item.dart';
+import 'package:atba/models/library_items/downloadable_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/services/torbox_service.dart';
@@ -6,9 +6,9 @@ import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/services/video_playback_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:atba/models/torrent.dart';
-import 'package:atba/models/usenet.dart';
-import 'package:atba/models/webdownload.dart';
+import 'package:atba/models/library_items/torrent.dart';
+import 'package:atba/models/library_items/usenet.dart';
+import 'package:atba/models/library_items/webdownload.dart';
 import 'package:atba/utils.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
@@ -343,7 +343,7 @@ class DownloadableItemDetailScreen extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                result?.data != null
+                result.data != null
                     ? 'File download started'
                     : 'Failed to start download',
               ),

@@ -1,5 +1,5 @@
+import 'package:atba/models/library_items/library_item.dart';
 import 'package:atba/services/update_service.dart';
-import 'package:atba/models/downloadable_item.dart';
 import 'package:atba/services/web_js_interop_service/web_js_interop_service.dart';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
@@ -38,7 +38,7 @@ Future<void> main() async {
 
   final hasApiKey = apiService.apiKey != null;
 
-  DownloadableItem.initApiService(apiService);
+  LibraryItem.initApiService(apiService);
   final stremioService = StremioRequests();
   final torrentioService = TorrentioAPI(secureStorageService);
 

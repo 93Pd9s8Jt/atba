@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:atba/models/library_items/library_item.dart';
+import 'package:atba/models/library_items/queued_torrent.dart';
 import 'package:memoized/memoized.dart';
 
-import 'package:atba/services/cache/downloadable_item_cache_service.dart';
+import 'package:atba/services/cache/library_item_cache_service.dart';
 import 'package:collection/collection.dart';
 
-import 'package:atba/models/downloadable_item.dart';
+import 'package:atba/models/library_items/downloadable_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torrent_name_parser.dart';
 import 'package:atba/services/update_service.dart';
 import 'package:flutter/material.dart';
-import 'package:atba/models/torrent.dart';
-import 'package:atba/models/webdownload.dart';
-import 'package:atba/models/usenet.dart';
+import 'package:atba/models/library_items/torrent.dart';
+import 'package:atba/models/library_items/webdownload.dart';
+import 'package:atba/models/library_items/usenet.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/config/constants.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +39,7 @@ class LibraryPageState extends ChangeNotifier {
 
   final Map<int, StreamSubscription> _activeSubscriptions = {};
 
-  final List<DownloadableItem> _downloads = [];
+  final List<LibraryItem> _libraryItems = [];
 
   late Future<void> _initFuture;
   late Future<Map<String, dynamic>> _torrentsFuture;
@@ -49,7 +51,7 @@ class LibraryPageState extends ChangeNotifier {
   String _searchQuery = "";
   final TextEditingController searchController = TextEditingController();
   final FocusNode searchControllerFocusNode = FocusNode();
-  List<DownloadableItem> selectedItems = [];
+  List<LibraryItem> selectedItems = [];
   final BuildContext context;
   final GlobalKey<RefreshIndicatorState> torrentRefreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
@@ -59,7 +61,7 @@ class LibraryPageState extends ChangeNotifier {
       GlobalKey<RefreshIndicatorState>();
   late final TorboxAPI apiService;
   late final UpdateService updateService;
-  late final DownloadableItemCacheService _cacheService;
+  late final LibraryItemCacheService _cacheService;
 
   static final Memoized1<String, String> handleTorrentName = Memoized1(
     (String name) => _handleTorrentNameImpl(name),
@@ -69,7 +71,7 @@ class LibraryPageState extends ChangeNotifier {
   LibraryPageState(this.context) {
     apiService = Provider.of<TorboxAPI>(context, listen: false);
     updateService = Provider.of<UpdateService>(context, listen: false);
-    _cacheService = DownloadableItemCacheService();
+    _cacheService = LibraryItemCacheService();
     apiService.setDownloadsPageState(this);
 
     _initFuture = _initializeFutures();
@@ -115,8 +117,8 @@ class LibraryPageState extends ChangeNotifier {
 
   Future<Map<String, dynamic>> _loadFromCache() async {
     final cachedItems = await _cacheService.getAllItems();
-    _downloads.clear();
-    _downloads.addAll(cachedItems);
+    _libraryItems.clear();
+    _libraryItems.addAll(cachedItems);
     return {"success": true};
   }
 
@@ -147,8 +149,8 @@ class LibraryPageState extends ChangeNotifier {
       _initFuture.then((_) => _usenetFuture);
 
   // exclude dups, temporary items override permanent ones because they ate newer
-  List<T> _getDownloads<T extends DownloadableItem>() =>
-      _downloads.whereType<T>().toList();
+  List<T> _getDownloads<T extends LibraryItem>() =>
+      _libraryItems.whereType<T>().toList();
 
   List<Torrent> get activeTorrents =>
       _getDownloads<Torrent>().where((torrent) => torrent.active).toList();
@@ -162,8 +164,7 @@ class LibraryPageState extends ChangeNotifier {
     return a is QueuedTorrent && b is QueuedTorrent;
   }
 
-  static Map<String, int? Function(DownloadableItem, DownloadableItem)>
-  sortingOptions = {
+  static Map<String, int? Function(LibraryItem, LibraryItem)> sortingOptions = {
     "Default": (a, b) => null,
     "A to Z": (a, b) => (handleTorrentName(
       a.name,
@@ -181,7 +182,7 @@ class LibraryPageState extends ChangeNotifier {
         _areQueuedTorrents(a, b) ? null : a.updatedAt.compareTo(b.updatedAt),
   };
 
-  static final Map<String, bool? Function(DownloadableItem)> filters = {
+  static final Map<String, bool? Function(LibraryItem)> filters = {
     "Download Ready": (torrent) => torrent.downloadFinished,
     "Uploading": (torrent) => (torrent.uploadSpeed ?? 0) > 0 && torrent.active,
     "Downloading": (torrent) =>
@@ -189,7 +190,7 @@ class LibraryPageState extends ChangeNotifier {
     "Cached": (torrent) => torrent is Torrent ? torrent.cached : null,
   };
 
-  List<T> _sortAndFilter<T extends DownloadableItem>(List<T> items) {
+  List<T> _sortAndFilter<T extends LibraryItem>(List<T> items) {
     if (items.isEmpty) {
       return [];
     }
@@ -288,12 +289,12 @@ class LibraryPageState extends ChangeNotifier {
     });
   }
 
-  void addQueuedTorrent(QueuedTorrent torrent) {
-    _downloads.add(torrent);
+  void addQueuedTorrent(QueuedTorrent queuedTorrent) {
+    _libraryItems.add(queuedTorrent);
     notifyListeners();
   }
 
-  void addItemsToCache(List<DownloadableItem> items) {
+  void addItemsToCache(List<LibraryItem> items) {
     _cacheService.saveItems(items);
   }
 
@@ -311,7 +312,7 @@ class LibraryPageState extends ChangeNotifier {
 
     _activeSubscriptions[id] = stream.listen(
       (json) {
-        final index = _downloads.indexWhere(
+        final index = _libraryItems.indexWhere(
           (item) => item.id == id && item is T,
         );
         if (json["type"] == "updating") {
@@ -322,7 +323,7 @@ class LibraryPageState extends ChangeNotifier {
             return;
           }
           if (index != -1) {
-            _downloads[index].itemStatus = DownloadableItemStatus.loading;
+            _libraryItems[index].itemStatus = DownloadableItemStatus.loading;
           }
           guardedNotifyListeners();
           return;
@@ -330,10 +331,10 @@ class LibraryPageState extends ChangeNotifier {
         // Find the item in temporary list and update it.
         T updatedItem = json["updatedItem"] as T;
         if (index != -1) {
-          _downloads[index] = updatedItem;
+          _libraryItems[index] = updatedItem;
         } else {
           // Or add it if it's not there for some reason
-          _downloads.add(updatedItem);
+          _libraryItems.add(updatedItem);
         }
 
         // Update the UI
@@ -391,14 +392,14 @@ class LibraryPageState extends ChangeNotifier {
       final List<QueuedTorrent> queuedTorrents = (responses[1].data as List)
           .map((json) => QueuedTorrent.fromJson(json))
           .toList();
-      _downloads.removeWhere(
+      _libraryItems.removeWhere(
         (item) => item is Torrent || item is QueuedTorrent,
       );
-      _downloads.addAll([...postQueuedTorrents, ...queuedTorrents]);
+      _libraryItems.addAll([...postQueuedTorrents, ...queuedTorrents]);
       Future.microtask(() async {
         await _cacheService.deleteItemByType<Torrent>();
         await _cacheService.deleteItemByType<QueuedTorrent>();
-        await _cacheService.saveItems(_downloads);
+        await _cacheService.saveItems(_libraryItems);
       });
 
       return {"success": true};
@@ -424,8 +425,8 @@ class LibraryPageState extends ChangeNotifier {
           .map((json) => WebDownload.fromJson(json))
           .toList();
 
-      _downloads.removeWhere((item) => item is WebDownload);
-      _downloads.addAll(webDownloads);
+      _libraryItems.removeWhere((item) => item is WebDownload);
+      _libraryItems.addAll(webDownloads);
       Future.microtask(() async {
         await _cacheService.deleteItemByType<WebDownload>();
         await _cacheService.saveItems(webDownloads);
@@ -454,8 +455,8 @@ class LibraryPageState extends ChangeNotifier {
         return {"success": false, "detail": response.detail};
       }
 
-      _downloads.removeWhere((item) => item is Usenet);
-      _downloads.addAll(usenetDownloads);
+      _libraryItems.removeWhere((item) => item is Usenet);
+      _libraryItems.addAll(usenetDownloads);
       Future.microtask(() async {
         await _cacheService.deleteItemByType<Usenet>();
         await _cacheService.saveItems(usenetDownloads);
@@ -473,13 +474,13 @@ class LibraryPageState extends ChangeNotifier {
     }
   }
 
-  void startSelection(DownloadableItem item) {
+  void startSelection(LibraryItem item) {
     selectedItems.add(item);
     isSelecting = true;
     notifyListeners();
   }
 
-  void toggleSelection(DownloadableItem item) {
+  void toggleSelection(LibraryItem item) {
     if (selectedItems.any((selectedItem) => selectedItem.id == item.id)) {
       selectedItems.removeWhere((selectedItem) => selectedItem.id == item.id);
       if (selectedItems.isEmpty) {
@@ -520,32 +521,30 @@ class LibraryPageState extends ChangeNotifier {
 
     if (selectedTypes.length == 1) {
       final type = selectedTypes.first;
-      late final List<DownloadableItem> newSelectedItems;
+      late final List<LibraryItem> newSelectedItems;
       switch (type) {
         case 'active':
-          newSelectedItems = List<DownloadableItem>.from(
+          newSelectedItems = List<LibraryItem>.from(
             filteredSortedActiveTorrents,
           );
           break;
         case 'inactive':
-          newSelectedItems = List<DownloadableItem>.from(
+          newSelectedItems = List<LibraryItem>.from(
             filteredSortedInactiveTorrents,
           );
           break;
         case 'queued':
-          newSelectedItems = List<DownloadableItem>.from(
+          newSelectedItems = List<LibraryItem>.from(
             filteredSortedQueuedTorrents,
           );
           break;
         case 'usenet':
-          newSelectedItems = List<DownloadableItem>.from(
+          newSelectedItems = List<LibraryItem>.from(
             filteredSortedUsenetDownloads,
           );
           break;
         case 'web':
-          newSelectedItems = List<DownloadableItem>.from(
-            filteredSortedWebDownloads,
-          );
+          newSelectedItems = List<LibraryItem>.from(filteredSortedWebDownloads);
           break;
       }
       if (ListEquality().equals(newSelectedItems, selectedItems)) {
@@ -559,7 +558,7 @@ class LibraryPageState extends ChangeNotifier {
         ];
       } else {
         // Otherwise, select all items of that type
-        selectedItems = List<DownloadableItem>.from(newSelectedItems);
+        selectedItems = List<LibraryItem>.from(newSelectedItems);
       }
     } else {
       // If multiple types are selected, select all items of all types
@@ -651,11 +650,11 @@ class LibraryPageState extends ChangeNotifier {
   }
 
   Future<void> _handleSelectedItems(
-    Future<TorboxAPIResponse?>? Function(DownloadableItem) action, {
+    Future<TorboxAPIResponse?>? Function(LibraryItem) action, {
     bool actionIsDelete = false,
   }) async {
     // Iterate over a copy to avoid concurrent modification errors
-    final itemsToDelete = List<DownloadableItem>.from(selectedItems);
+    final itemsToDelete = List<LibraryItem>.from(selectedItems);
     for (var item in itemsToDelete) {
       if (actionIsDelete) {
         stopPeriodicUpdate(item.id);
@@ -667,7 +666,7 @@ class LibraryPageState extends ChangeNotifier {
         if (response.success) {
           item.itemStatus = DownloadableItemStatus.success;
           if (actionIsDelete) {
-            _downloads.remove(item);
+            _libraryItems.remove(item);
           }
         } else {
           item.itemStatus = DownloadableItemStatus.error;
@@ -703,7 +702,13 @@ class LibraryPageState extends ChangeNotifier {
   }
 
   Future<void> downloadSelectedItems() async {
-    await _handleSelectedItems((item) => item.download());
+    await _handleSelectedItems((item) {
+      if (item is DownloadableItem) {
+        return item.download();
+      } else {
+        return null;
+      }
+    });
   }
 
   static String _handleTorrentNameImpl(String name) {

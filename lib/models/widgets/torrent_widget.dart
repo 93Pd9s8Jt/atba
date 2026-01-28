@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:atba/config/constants.dart';
-import 'package:atba/models/downloadable_item.dart';
-import 'package:atba/models/torrent.dart';
+import 'package:atba/models/library_items/downloadable_item.dart';
+import 'package:atba/models/library_items/library_item.dart';
+import 'package:atba/models/library_items/queued_torrent.dart';
+import 'package:atba/models/library_items/torrent.dart';
 import 'package:atba/models/widgets/downloadable_item_detail_screen.dart';
 import 'package:atba/services/library_page_state.dart';
 import 'package:atba/services/torrent_name_parser.dart';
@@ -80,25 +82,23 @@ class TorrentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final torrentState =
-        torrent.active
-            ? torrent.downloadState
-            : torrent.downloadState == "uploading"
-            ? "cached"
-            : torrent.downloadState;
+    final torrentState = torrent.active
+        ? torrent.downloadState
+        : torrent.downloadState == "uploading"
+        ? "cached"
+        : torrent.downloadState;
 
     return _BaseTorrentWidget(
       item: torrent,
       leading: _buildLeading(torrentState),
       subtitle: _buildSubtitle(torrentState),
       trailing: Text(getReadableSize(torrent.size)),
-      onDetailTap:
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DownloadableItemDetailScreen(item: torrent),
-            ),
-          ),
+      onDetailTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DownloadableItemDetailScreen(item: torrent),
+        ),
+      ),
     );
   }
 
@@ -208,7 +208,7 @@ class QueuedTorrentWidget extends StatelessWidget {
 }
 
 class _BaseTorrentWidget extends StatelessWidget {
-  final DownloadableItem item;
+  final LibraryItem item;
   final Widget? leading;
   final Widget? subtitle;
   final Widget? trailing;
@@ -272,4 +272,3 @@ class _BaseTorrentWidget extends StatelessWidget {
     );
   }
 }
-

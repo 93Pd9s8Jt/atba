@@ -35,11 +35,9 @@
         }
 */
 
+import 'package:atba/models/library_items/library_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torbox_service.dart';
-import 'package:background_downloader/background_downloader.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:atba/config/constants.dart';
 import 'downloadable_item.dart';
 import 'package:json_annotation/json_annotation.dart';
 part 'webdownload.g.dart';
@@ -115,54 +113,19 @@ class WebDownload extends DownloadableItem {
 
   @override
   Future<TorboxAPIResponse> delete() async {
-    return await DownloadableItem.apiService.controlWebDownload(
+    return await LibraryItem.apiService.controlWebDownload(
       ControlWebdlType.delete,
       webId: id,
     );
   }
 
   @override
-  Future<TorboxAPIResponse> download() async {
-    final folderPath = Settings.getValue<String>(Constants.folderPath);
-    if (folderPath == null) {
-      throw Exception('Folder path not set');
-    }
-    final response = await DownloadableItem.apiService.getWebDownloadUrl(
-      id,
-      zipLink: true,
-    );
-    await FileDownloader().enqueue(
-      DownloadTask(
-        url: response.data as String,
-        directory: folderPath,
-        filename: "$name.zip",
-        allowPause: true,
-      ),
-    );
-    return response;
+  Future<TorboxAPIResponse> getZippedDownloadUrlById(int id) {
+    return LibraryItem.apiService.getWebDownloadUrl(id, zipLink: true);
   }
 
   @override
-  Future<TorboxAPIResponse> downloadFile(DownloadableFile file) async {
-    final folderPath = Settings.getValue<String>(Constants.folderPath);
-    if (folderPath == null) {
-      throw Exception('Folder path not set');
-    }
-    final response = await DownloadableItem.apiService.getWebDownloadUrl(
-      id,
-      fileId: file.id,
-    );
-    if (!response.success) {
-      return response;
-    }
-    await FileDownloader().enqueue(
-      DownloadTask(
-        url: response.data as String,
-        directory: folderPath,
-        filename: file.name.split('/').last,
-        allowPause: true,
-      ),
-    );
-    return response;
+  Future<TorboxAPIResponse> getDownloadUrlByFileId(int id, int fileId) {
+    return LibraryItem.apiService.getWebDownloadUrl(id, fileId: fileId);
   }
 }

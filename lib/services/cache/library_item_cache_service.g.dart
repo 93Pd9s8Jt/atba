@@ -1,14 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'downloadable_item_cache_service.dart';
+part of 'library_item_cache_service.dart';
 
 // ignore_for_file: type=lint
-class $DownloadableItemCacheTable extends DownloadableItemCache
-    with TableInfo<$DownloadableItemCacheTable, DownloadableItemEntry> {
+class $LibraryItemCacheTable extends LibraryItemCache
+    with TableInfo<$LibraryItemCacheTable, LibraryItemEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $DownloadableItemCacheTable(this.attachedDatabase, [this._alias]);
+  $LibraryItemCacheTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -77,10 +77,10 @@ class $DownloadableItemCacheTable extends DownloadableItemCache
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'downloadable_item_cache';
+  static const String $name = 'library_item_cache';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DownloadableItemEntry> instance, {
+    Insertable<LibraryItemEntry> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -129,9 +129,9 @@ class $DownloadableItemCacheTable extends DownloadableItemCache
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DownloadableItemEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+  LibraryItemEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DownloadableItemEntry(
+    return LibraryItemEntry(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -156,19 +156,19 @@ class $DownloadableItemCacheTable extends DownloadableItemCache
   }
 
   @override
-  $DownloadableItemCacheTable createAlias(String alias) {
-    return $DownloadableItemCacheTable(attachedDatabase, alias);
+  $LibraryItemCacheTable createAlias(String alias) {
+    return $LibraryItemCacheTable(attachedDatabase, alias);
   }
 }
 
-class DownloadableItemEntry extends DataClass
-    implements Insertable<DownloadableItemEntry> {
+class LibraryItemEntry extends DataClass
+    implements Insertable<LibraryItemEntry> {
   final int id;
   final int itemId;
   final String itemType;
   final String itemJson;
   final DateTime lastUpdated;
-  const DownloadableItemEntry({
+  const LibraryItemEntry({
     required this.id,
     required this.itemId,
     required this.itemType,
@@ -186,8 +186,8 @@ class DownloadableItemEntry extends DataClass
     return map;
   }
 
-  DownloadableItemCacheCompanion toCompanion(bool nullToAbsent) {
-    return DownloadableItemCacheCompanion(
+  LibraryItemCacheCompanion toCompanion(bool nullToAbsent) {
+    return LibraryItemCacheCompanion(
       id: Value(id),
       itemId: Value(itemId),
       itemType: Value(itemType),
@@ -196,12 +196,12 @@ class DownloadableItemEntry extends DataClass
     );
   }
 
-  factory DownloadableItemEntry.fromJson(
+  factory LibraryItemEntry.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DownloadableItemEntry(
+    return LibraryItemEntry(
       id: serializer.fromJson<int>(json['id']),
       itemId: serializer.fromJson<int>(json['itemId']),
       itemType: serializer.fromJson<String>(json['itemType']),
@@ -221,21 +221,21 @@ class DownloadableItemEntry extends DataClass
     };
   }
 
-  DownloadableItemEntry copyWith({
+  LibraryItemEntry copyWith({
     int? id,
     int? itemId,
     String? itemType,
     String? itemJson,
     DateTime? lastUpdated,
-  }) => DownloadableItemEntry(
+  }) => LibraryItemEntry(
     id: id ?? this.id,
     itemId: itemId ?? this.itemId,
     itemType: itemType ?? this.itemType,
     itemJson: itemJson ?? this.itemJson,
     lastUpdated: lastUpdated ?? this.lastUpdated,
   );
-  DownloadableItemEntry copyWithCompanion(DownloadableItemCacheCompanion data) {
-    return DownloadableItemEntry(
+  LibraryItemEntry copyWithCompanion(LibraryItemCacheCompanion data) {
+    return LibraryItemEntry(
       id: data.id.present ? data.id.value : this.id,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
       itemType: data.itemType.present ? data.itemType.value : this.itemType,
@@ -248,7 +248,7 @@ class DownloadableItemEntry extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('DownloadableItemEntry(')
+    return (StringBuffer('LibraryItemEntry(')
           ..write('id: $id, ')
           ..write('itemId: $itemId, ')
           ..write('itemType: $itemType, ')
@@ -263,7 +263,7 @@ class DownloadableItemEntry extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DownloadableItemEntry &&
+      (other is LibraryItemEntry &&
           other.id == this.id &&
           other.itemId == this.itemId &&
           other.itemType == this.itemType &&
@@ -271,21 +271,20 @@ class DownloadableItemEntry extends DataClass
           other.lastUpdated == this.lastUpdated);
 }
 
-class DownloadableItemCacheCompanion
-    extends UpdateCompanion<DownloadableItemEntry> {
+class LibraryItemCacheCompanion extends UpdateCompanion<LibraryItemEntry> {
   final Value<int> id;
   final Value<int> itemId;
   final Value<String> itemType;
   final Value<String> itemJson;
   final Value<DateTime> lastUpdated;
-  const DownloadableItemCacheCompanion({
+  const LibraryItemCacheCompanion({
     this.id = const Value.absent(),
     this.itemId = const Value.absent(),
     this.itemType = const Value.absent(),
     this.itemJson = const Value.absent(),
     this.lastUpdated = const Value.absent(),
   });
-  DownloadableItemCacheCompanion.insert({
+  LibraryItemCacheCompanion.insert({
     this.id = const Value.absent(),
     required int itemId,
     required String itemType,
@@ -295,7 +294,7 @@ class DownloadableItemCacheCompanion
        itemType = Value(itemType),
        itemJson = Value(itemJson),
        lastUpdated = Value(lastUpdated);
-  static Insertable<DownloadableItemEntry> custom({
+  static Insertable<LibraryItemEntry> custom({
     Expression<int>? id,
     Expression<int>? itemId,
     Expression<String>? itemType,
@@ -311,14 +310,14 @@ class DownloadableItemCacheCompanion
     });
   }
 
-  DownloadableItemCacheCompanion copyWith({
+  LibraryItemCacheCompanion copyWith({
     Value<int>? id,
     Value<int>? itemId,
     Value<String>? itemType,
     Value<String>? itemJson,
     Value<DateTime>? lastUpdated,
   }) {
-    return DownloadableItemCacheCompanion(
+    return LibraryItemCacheCompanion(
       id: id ?? this.id,
       itemId: itemId ?? this.itemId,
       itemType: itemType ?? this.itemType,
@@ -350,7 +349,7 @@ class DownloadableItemCacheCompanion
 
   @override
   String toString() {
-    return (StringBuffer('DownloadableItemCacheCompanion(')
+    return (StringBuffer('LibraryItemCacheCompanion(')
           ..write('id: $id, ')
           ..write('itemId: $itemId, ')
           ..write('itemType: $itemType, ')
@@ -364,25 +363,26 @@ class DownloadableItemCacheCompanion
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
-  late final $DownloadableItemCacheTable downloadableItemCache =
-      $DownloadableItemCacheTable(this);
+  late final $LibraryItemCacheTable libraryItemCache = $LibraryItemCacheTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [downloadableItemCache];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [libraryItemCache];
 }
 
-typedef $$DownloadableItemCacheTableCreateCompanionBuilder =
-    DownloadableItemCacheCompanion Function({
+typedef $$LibraryItemCacheTableCreateCompanionBuilder =
+    LibraryItemCacheCompanion Function({
       Value<int> id,
       required int itemId,
       required String itemType,
       required String itemJson,
       required DateTime lastUpdated,
     });
-typedef $$DownloadableItemCacheTableUpdateCompanionBuilder =
-    DownloadableItemCacheCompanion Function({
+typedef $$LibraryItemCacheTableUpdateCompanionBuilder =
+    LibraryItemCacheCompanion Function({
       Value<int> id,
       Value<int> itemId,
       Value<String> itemType,
@@ -390,9 +390,9 @@ typedef $$DownloadableItemCacheTableUpdateCompanionBuilder =
       Value<DateTime> lastUpdated,
     });
 
-class $$DownloadableItemCacheTableFilterComposer
-    extends Composer<_$AppDatabase, $DownloadableItemCacheTable> {
-  $$DownloadableItemCacheTableFilterComposer({
+class $$LibraryItemCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $LibraryItemCacheTable> {
+  $$LibraryItemCacheTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -425,9 +425,9 @@ class $$DownloadableItemCacheTableFilterComposer
   );
 }
 
-class $$DownloadableItemCacheTableOrderingComposer
-    extends Composer<_$AppDatabase, $DownloadableItemCacheTable> {
-  $$DownloadableItemCacheTableOrderingComposer({
+class $$LibraryItemCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $LibraryItemCacheTable> {
+  $$LibraryItemCacheTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -460,9 +460,9 @@ class $$DownloadableItemCacheTableOrderingComposer
   );
 }
 
-class $$DownloadableItemCacheTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DownloadableItemCacheTable> {
-  $$DownloadableItemCacheTableAnnotationComposer({
+class $$LibraryItemCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LibraryItemCacheTable> {
+  $$LibraryItemCacheTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -487,50 +487,41 @@ class $$DownloadableItemCacheTableAnnotationComposer
   );
 }
 
-class $$DownloadableItemCacheTableTableManager
+class $$LibraryItemCacheTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $DownloadableItemCacheTable,
-          DownloadableItemEntry,
-          $$DownloadableItemCacheTableFilterComposer,
-          $$DownloadableItemCacheTableOrderingComposer,
-          $$DownloadableItemCacheTableAnnotationComposer,
-          $$DownloadableItemCacheTableCreateCompanionBuilder,
-          $$DownloadableItemCacheTableUpdateCompanionBuilder,
+          $LibraryItemCacheTable,
+          LibraryItemEntry,
+          $$LibraryItemCacheTableFilterComposer,
+          $$LibraryItemCacheTableOrderingComposer,
+          $$LibraryItemCacheTableAnnotationComposer,
+          $$LibraryItemCacheTableCreateCompanionBuilder,
+          $$LibraryItemCacheTableUpdateCompanionBuilder,
           (
-            DownloadableItemEntry,
+            LibraryItemEntry,
             BaseReferences<
               _$AppDatabase,
-              $DownloadableItemCacheTable,
-              DownloadableItemEntry
+              $LibraryItemCacheTable,
+              LibraryItemEntry
             >,
           ),
-          DownloadableItemEntry,
+          LibraryItemEntry,
           PrefetchHooks Function()
         > {
-  $$DownloadableItemCacheTableTableManager(
+  $$LibraryItemCacheTableTableManager(
     _$AppDatabase db,
-    $DownloadableItemCacheTable table,
+    $LibraryItemCacheTable table,
   ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$DownloadableItemCacheTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$LibraryItemCacheTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$DownloadableItemCacheTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$LibraryItemCacheTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$DownloadableItemCacheTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$LibraryItemCacheTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -538,7 +529,7 @@ class $$DownloadableItemCacheTableTableManager
                 Value<String> itemType = const Value.absent(),
                 Value<String> itemJson = const Value.absent(),
                 Value<DateTime> lastUpdated = const Value.absent(),
-              }) => DownloadableItemCacheCompanion(
+              }) => LibraryItemCacheCompanion(
                 id: id,
                 itemId: itemId,
                 itemType: itemType,
@@ -552,7 +543,7 @@ class $$DownloadableItemCacheTableTableManager
                 required String itemType,
                 required String itemJson,
                 required DateTime lastUpdated,
-              }) => DownloadableItemCacheCompanion.insert(
+              }) => LibraryItemCacheCompanion.insert(
                 id: id,
                 itemId: itemId,
                 itemType: itemType,
@@ -567,31 +558,27 @@ class $$DownloadableItemCacheTableTableManager
       );
 }
 
-typedef $$DownloadableItemCacheTableProcessedTableManager =
+typedef $$LibraryItemCacheTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $DownloadableItemCacheTable,
-      DownloadableItemEntry,
-      $$DownloadableItemCacheTableFilterComposer,
-      $$DownloadableItemCacheTableOrderingComposer,
-      $$DownloadableItemCacheTableAnnotationComposer,
-      $$DownloadableItemCacheTableCreateCompanionBuilder,
-      $$DownloadableItemCacheTableUpdateCompanionBuilder,
+      $LibraryItemCacheTable,
+      LibraryItemEntry,
+      $$LibraryItemCacheTableFilterComposer,
+      $$LibraryItemCacheTableOrderingComposer,
+      $$LibraryItemCacheTableAnnotationComposer,
+      $$LibraryItemCacheTableCreateCompanionBuilder,
+      $$LibraryItemCacheTableUpdateCompanionBuilder,
       (
-        DownloadableItemEntry,
-        BaseReferences<
-          _$AppDatabase,
-          $DownloadableItemCacheTable,
-          DownloadableItemEntry
-        >,
+        LibraryItemEntry,
+        BaseReferences<_$AppDatabase, $LibraryItemCacheTable, LibraryItemEntry>,
       ),
-      DownloadableItemEntry,
+      LibraryItemEntry,
       PrefetchHooks Function()
     >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$DownloadableItemCacheTableTableManager get downloadableItemCache =>
-      $$DownloadableItemCacheTableTableManager(_db, _db.downloadableItemCache);
+  $$LibraryItemCacheTableTableManager get libraryItemCache =>
+      $$LibraryItemCacheTableTableManager(_db, _db.libraryItemCache);
 }

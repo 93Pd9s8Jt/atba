@@ -1,7 +1,7 @@
+import 'package:atba/models/library_items/queued_torrent.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:atba/models/torrent.dart';
 import 'package:atba/config/constants.dart';
 import 'package:atba/models/widgets/library_page_tabs/torrents_tab.dart';
 import 'package:atba/models/widgets/library_page_tabs/web_downloads_tab.dart';

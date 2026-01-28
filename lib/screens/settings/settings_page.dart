@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
-import 'package:atba/services/cache/downloadable_item_cache_service.dart';
+import 'package:atba/services/cache/library_item_cache_service.dart';
 import 'package:atba/config/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final apiService = Provider.of<TorboxAPI>(context, listen: false);
-    final cacheService = DownloadableItemCacheService();
+    final cacheService = LibraryItemCacheService();
     final TextEditingController apiKeyController = TextEditingController();
     final TextEditingController googleTokenController = TextEditingController();
     // yts,eztv,rarbg,1337x,thepiratebay,kickasstorrents,torrentgalaxy,magnetdl,horriblesubs,nyaasi,tokyotosho,anidex,rutor,rutracker,comando,bludv,torrent9,ilcorsaronero,mejortorrent,wolfmax4k,cinecalidad
