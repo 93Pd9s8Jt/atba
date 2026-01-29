@@ -30,7 +30,19 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase._internal() : super(connect());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          await m.deleteTable('downloadable_item_cache');
+          await m.createTable(libraryItemCache);
+        }
+      },
+    );
+  }
 }
 
 // LazyDatabase _openConnection() {
