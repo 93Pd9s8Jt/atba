@@ -83,10 +83,7 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
                       int successCount = 0;
                       for (var url in urls) {
                         var response = await widget.apiService
-                            .createWebDownload(
-                              url.trim(),
-                              password: password,
-                            );
+                            .createWebDownload(url.trim(), password: password);
                         if (response.success == true) {
                           successCount++;
                         } else {
@@ -673,9 +670,54 @@ class _AddSearchTabState extends State<AddSearchTab> {
     setState(() {
       _isLoading = true;
     });
-    final response = await (widget.type == SearchTabType.torrent
-        ? apiService.searchTorrents(_searchController.text, checkCache: true)
-        : apiService.searchUsenet(_searchController.text, checkCache: true));
+    late final TorboxAPIResponse response;
+    final searchQuery = _searchController.text.trim();
+    final isImdb = RegExp(r"^tt(\d+)\b");
+    final idPrefixes = torbox.IdType.values;
+    final matchingIds = idPrefixes.where(
+      (idPrefix) => searchQuery.startsWith("${idPrefix.name}:"),
+    );
+    assert(matchingIds.length <= 1, "There cannot be multiple ids matched.");
+    if (isImdb.hasMatch(searchQuery) || matchingIds.isNotEmpty) {
+      // search by id instead
+      late final torbox.IdType matchedIdPrefix;
+      late final String matchedIdValue;
+      if (isImdb.hasMatch(searchQuery)) {
+        matchedIdPrefix = torbox.IdType.imdb;
+        matchedIdValue = isImdb.firstMatch(searchQuery)!.group(1) ?? "";
+      } else {
+        matchedIdPrefix = matchingIds.first;
+        matchedIdValue =
+            RegExp(
+              "${matchedIdPrefix.name}:(\\w+)",
+            ).firstMatch(searchQuery)?.group(1) ??
+            "";
+      }
+      // print(matchedIdPrefix.name + " " + matchedIdValue);
+      if (widget.type == SearchTabType.torrent) {
+        response = await apiService.searchTorrentsById(
+          matchedIdPrefix,
+          matchedIdValue,
+          checkCache: true,
+        );
+      } else {
+        response = await apiService.searchUsenetById(
+          matchedIdPrefix,
+          matchedIdValue,
+          checkCache: true,
+        );
+      }
+    } else {
+      if (widget.type == SearchTabType.torrent) {
+        response = await apiService.searchTorrents(
+          searchQuery,
+          checkCache: true,
+        );
+      } else {
+        response = await apiService.searchUsenet(searchQuery, checkCache: true);
+      }
+    }
+
     setState(() {
       _hasSearched = true;
     });

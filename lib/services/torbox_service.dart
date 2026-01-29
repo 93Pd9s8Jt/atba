@@ -3,8 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:atba/models/library_items/queued_torrent.dart';
 import 'package:atba/models/torbox_api_response.dart';
-import 'package:atba/models/library_items/torrent.dart'
-    show QueuedTorrent, Torrent;
+import 'package:atba/models/library_items/torrent.dart' show Torrent;
 import 'package:atba/services/library_page_state.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
@@ -907,7 +906,7 @@ class TorboxAPI {
     );
   }
 
-  Future<TorboxAPIResponse> getTorrentsById(
+  Future<TorboxAPIResponse> searchTorrentsById(
     IdType idType,
     String id, {
     bool? metadata,
@@ -952,7 +951,7 @@ class TorboxAPI {
     );
   }
 
-  Future<TorboxAPIResponse> getUsenetById(
+  Future<TorboxAPIResponse> searchUsenetById(
     IdType idType,
     String id, {
     bool? metadata,
