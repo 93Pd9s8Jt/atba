@@ -52,7 +52,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.40
   url_launcher: ^6.3.2
   uuid: ^4.5.1
-  webview_flutter: ^4.13.0
+  webview_flutter: ^4.13.1
   memoized: ^2.2.6
   icons_plus: ^5.0.0
   background_downloader: ^9.4.1
