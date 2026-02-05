@@ -10,7 +10,7 @@ dependencies:
   android_intent_plus: ^6.0.0
   app_links: ^6.4.1
   async: ^2.13.0
-  build_runner: ^2.10.1
+  build_runner: ^2.10.5
   collection: ^1.19.0
   crypto: ^3.0.6
   dartz: ^0.10.1
