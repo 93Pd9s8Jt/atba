@@ -14,14 +14,20 @@ class MultiValueChangeObserver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> cacheKeysWithListenedValues = {};
-    return _create(cacheKeysWithDefaultValues, cacheKeysWithListenedValues, context, 0);
+    return _create(
+      cacheKeysWithDefaultValues,
+      cacheKeysWithListenedValues,
+      context,
+      0,
+    );
   }
 
   Widget _create(
-      Map<String, dynamic> cacheKeysWithDefaultValues,
-      Map<String, dynamic> cacheKeysWithListenedValues,
-      BuildContext context,
-      int index) {
+    Map<String, dynamic> cacheKeysWithDefaultValues,
+    Map<String, dynamic> cacheKeysWithListenedValues,
+    BuildContext context,
+    int index,
+  ) {
     final keys = cacheKeysWithDefaultValues.keys.toList();
     if (index >= keys.length) {
       return builder(context, cacheKeysWithListenedValues);
@@ -33,7 +39,12 @@ class MultiValueChangeObserver extends StatelessWidget {
       defaultValue: defaultValue,
       builder: (BuildContext context, dynamic value, _) {
         cacheKeysWithListenedValues[key] = value;
-        return _create(cacheKeysWithDefaultValues, cacheKeysWithListenedValues, context, index + 1);
+        return _create(
+          cacheKeysWithDefaultValues,
+          cacheKeysWithListenedValues,
+          context,
+          index + 1,
+        );
       },
     );
   }

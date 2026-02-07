@@ -2,8 +2,6 @@ class Constants {
   static const String jobQueueSelectedSort = 'job-queue-selected-sort';
   static const String useInternalVideoPlayer = 'key-use-internal-video-player';
   static const String folderPath = 'folder_path';
-  static const String showJobsStatusShortcut = 'key-show-jobs-status-shortcut';
-  static const String showRefreshIcon = 'key-show-refresh-icon';
   static const String useCache = 'key-use-cache';
   static const String googleDriveTokenExpiry = 'google_drive_token_expiry';
   static const String googleDriveToken = 'google_drive_token';
@@ -31,6 +29,9 @@ class Constants {
   static const String useTorrentNameParsing = 'key-use-torrent-name-parsing';
   static const String loadUncachedLibraryOnStart =
       'key-load-uncache-library-on-start';
+  static const String libraryIconsOrdering =
+      "key-library-top-bar-icons-ordering";
+  static const String libraryIconsEnabled = "key-library-top-bar-icons-enabled";
 
   // Library Page State
   static const String selectedSortingOption = 'key-selected-sorting-option';

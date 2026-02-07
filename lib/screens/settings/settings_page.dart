@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
+import 'package:atba/screens/settings/library_settings_widget.dart';
 import 'package:atba/services/cache/library_item_cache_service.dart';
 import 'package:atba/config/constants.dart';
 import 'package:flutter/foundation.dart';
@@ -329,47 +330,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-          SimpleSettingsTile(
-            title: "Library",
-            leading: Icon(Icons.library_books),
-            child: SettingsScreen(
-              title: "Library settings",
-              children: <Widget>[
-                CheckboxSettingsTile(
-                  title: "Update items in the foreground",
-                  settingKey: Constants.libraryForegroundUpdate,
-                  defaultValue: true,
-                  childrenIfEnabled: <Widget>[
-                    CheckboxSettingsTile(
-                      title: "Show update animation",
-                      settingKey: Constants.libraryForegroundUpdateAnimation,
-                      defaultValue: true,
-                    ),
-                  ],
-                ),
-                CheckboxSettingsTile(
-                  title: "Show refresh icon",
-                  settingKey: Constants.showRefreshIcon,
-                  defaultValue: true,
-                ),
-                CheckboxSettingsTile(
-                  title: "Show shortcut to jobs statuses",
-                  settingKey: Constants.showJobsStatusShortcut,
-                  defaultValue: true,
-                ),
-                CheckboxSettingsTile(
-                  settingKey: Constants.useTorrentNameParsing,
-                  title: 'Use torrent name parsing',
-                  defaultValue: true,
-                ),
-                CheckboxSettingsTile(
-                  settingKey: Constants.loadUncachedLibraryOnStart,
-                  title: 'Bypass cache on initial startup',
-                  defaultValue: true,
-                ),
-              ],
-            ),
-          ),
+          LibrarySettingsTile(),
           SimpleSettingsTile(
             title: "Storage",
             leading: Icon(Icons.storage),

@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:atba/models/library_items/queued_torrent.dart';
 import 'package:atba/models/widgets/downloads_prompt.dart';
 import 'package:atba/screens/jobs_status_page.dart';
+import 'package:atba/screens/settings/library_settings_widget.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:atba/config/constants.dart';
 import 'package:atba/models/widgets/library_page_tabs/torrents_tab.dart';
@@ -112,125 +115,7 @@ class _LibraryPageState extends State<LibraryPage>
                       ],
                     )
                   else
-                    Row(
-                      children: [
-                        if (Settings.getValue(
-                          Constants.showJobsStatusShortcut,
-                          defaultValue: true,
-                        )!)
-                          IconButton(
-                            icon: const Icon(Icons.work),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const JobsStatusPage(),
-                                ),
-                              );
-                            },
-                            tooltip: "Jobs Status",
-                          ),
-                        if (Settings.getValue(
-                          Constants.showRefreshIcon,
-                          defaultValue: true,
-                        )!)
-                          IconButton(
-                            icon: const Icon(Icons.refresh),
-                            tooltip: "Refresh",
-                            onPressed: () {
-                              state.torrentRefreshIndicatorKey.currentState
-                                  ?.show();
-                              state.webRefreshIndicatorKey.currentState?.show();
-                              state.usenetRefreshIndicatorKey.currentState
-                                  ?.show();
-                            },
-                          ),
-                        IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () {
-                            state.toggleSearch();
-                          },
-                          tooltip: "Search",
-                        ),
-                        // reimplement popup menu with MenuAnchor
-                        // animation issues due to https://github.com/flutter/flutter/issues/143781
-                        // TODO: so we will need to manually implement animations
-                        MenuAnchor(
-                          builder:
-                              (
-                                BuildContext context,
-                                MenuController controlller,
-                                Widget? child,
-                              ) {
-                                return IconButton(
-                                  icon: const Icon(Icons.sort),
-                                  onPressed: () {
-                                    if (controlller.isOpen) {
-                                      controlller.close();
-                                    } else {
-                                      controlller.open();
-                                    }
-                                  },
-                                  tooltip: "Sort downloads",
-                                );
-                              },
-                          menuChildren: List<MenuItemButton>.generate(
-                            LibraryPageState.sortingOptions.length,
-                            (int index) => MenuItemButton(
-                              onPressed: () {
-                                state.updateSortingOption(
-                                  LibraryPageState.sortingOptions.keys
-                                      .elementAt(index),
-                                );
-                                // Navigator.pop(context);
-                              },
-                              child: Row(
-                                children: [
-                                  Text(
-                                    LibraryPageState.sortingOptions.keys
-                                        .elementAt(index),
-                                  ),
-                                  if (state.selectedSortingOption ==
-                                      LibraryPageState.sortingOptions.keys
-                                          .elementAt(index))
-                                    Row(
-                                      children: [
-                                        SizedBox(width: 4),
-                                        Icon(
-                                          Icons.check,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.filter_list),
-                          tooltip: 'Filter',
-                          onPressed: () => _showFilterBottomSheet(context),
-                        ),
-                        IconButton(
-                          icon: state.isTorrentNamesCensored
-                              ? Icon(Icons.visibility)
-                              : Icon(Icons.visibility_off),
-                          tooltip: "Blur names",
-                          onPressed: () {
-                            state.toggleTorrentNamesCensoring();
-                          },
-                        ),
-                        // IconButton(
-                        //   icon: Icon(Icons.search),
-                        //   onPressed: () {
-                        //     // Implement search functionality here.
-                        //   },
-                        // )
-                      ],
-                    ),
+                    Row(children: buildIcons(context, state)),
                 ],
               ),
               body: TabBarView(
@@ -468,6 +353,136 @@ class _LibraryPageState extends State<LibraryPage>
         },
       ),
     );
+  }
+
+  IconButton buildBlurIcon(LibraryPageState state) {
+    return IconButton(
+      icon: state.isTorrentNamesCensored
+          ? Icon(Icons.visibility)
+          : Icon(Icons.visibility_off),
+      tooltip: "Blur names",
+      onPressed: () {
+        state.toggleTorrentNamesCensoring();
+      },
+    );
+  }
+
+  IconButton buildFilterIcon(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.filter_list),
+      tooltip: 'Filter',
+      onPressed: () => _showFilterBottomSheet(context),
+    );
+  }
+
+  MenuAnchor buildSortIcon(LibraryPageState state, BuildContext context) {
+    return MenuAnchor(
+      builder:
+          (BuildContext context, MenuController controlller, Widget? child) {
+            return IconButton(
+              icon: const Icon(Icons.sort),
+              onPressed: () {
+                if (controlller.isOpen) {
+                  controlller.close();
+                } else {
+                  controlller.open();
+                }
+              },
+              tooltip: "Sort downloads",
+            );
+          },
+      menuChildren: List<MenuItemButton>.generate(
+        LibraryPageState.sortingOptions.length,
+        (int index) => MenuItemButton(
+          onPressed: () {
+            state.updateSortingOption(
+              LibraryPageState.sortingOptions.keys.elementAt(index),
+            );
+            // Navigator.pop(context);
+          },
+          child: Row(
+            children: [
+              Text(LibraryPageState.sortingOptions.keys.elementAt(index)),
+              if (state.selectedSortingOption ==
+                  LibraryPageState.sortingOptions.keys.elementAt(index))
+                Row(
+                  children: [
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.check,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconButton buildSearchIcon(LibraryPageState state) {
+    return IconButton(
+      icon: const Icon(Icons.search),
+      onPressed: () {
+        state.toggleSearch();
+      },
+      tooltip: "Search",
+    );
+  }
+
+  IconButton buildRefreshIcon(LibraryPageState state) {
+    return IconButton(
+      icon: const Icon(Icons.refresh),
+      tooltip: "Refresh",
+      onPressed: () {
+        state.torrentRefreshIndicatorKey.currentState?.show();
+        state.webRefreshIndicatorKey.currentState?.show();
+        state.usenetRefreshIndicatorKey.currentState?.show();
+      },
+    );
+  }
+
+  IconButton buildJobsIcon(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.work),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const JobsStatusPage()),
+        );
+      },
+      tooltip: "Jobs Status",
+    );
+  }
+
+  List<Widget> buildIcons(BuildContext context, LibraryPageState state) {
+    List<String> sortedIcons = jsonDecode(
+      Settings.getValue(
+        Constants.libraryIconsOrdering,
+        defaultValue:
+            LibrarySettingsTile.valueMaps[Constants.libraryIconsOrdering],
+      )!,
+    ).cast<String>();
+    Map<String, bool> enabledIcons = jsonDecode(
+      Settings.getValue(Constants.libraryIconsEnabled, defaultValue: "{}")!,
+    ).cast<String, bool>();
+    return sortedIcons.where((i) => enabledIcons[i] ?? true).map((iconString) {
+      switch (LibraryIcons.fromString(iconString)) {
+        case LibraryIcons.jobs:
+          return buildJobsIcon(context);
+        case LibraryIcons.reload:
+          return buildRefreshIcon(state);
+        case LibraryIcons.search:
+          return buildSearchIcon(state);
+        case LibraryIcons.sort:
+          return buildSortIcon(state, context);
+        case LibraryIcons.filter:
+          return buildFilterIcon(context);
+        case LibraryIcons.blur:
+          return buildBlurIcon(state);
+      }
+    }).toList();
   }
 
   void _showFilterBottomSheet(BuildContext context) {
