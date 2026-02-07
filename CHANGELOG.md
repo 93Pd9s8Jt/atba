@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.0](https://github.com/93Pd9s8Jt/atba/compare/v0.8.0...v0.9.0) (2026-02-07)
+
+
+### Features
+
+* Add support for external ids (tmdb, tvdb, imdb, and mal) when searching from usenet/torrent tabs [#64](https://github.com/93Pd9s8Jt/atba/issues/64) ([24b510d](https://github.com/93Pd9s8Jt/atba/commit/24b510d5f12e2834a9cac5789275148c79503a75))
+* **library:** Add reodering / disabling the icons ([0ac1d95](https://github.com/93Pd9s8Jt/atba/commit/0ac1d95a6b16983b3cee9ab309a19257a0d45dfa))
+
+
+### Bug Fixes
+
+* Add basic migration strategy (delete table & rebuild) ([f79f662](https://github.com/93Pd9s8Jt/atba/commit/f79f662038368931ffb9185e810136f3ac164425))
+* web & usenet futures weren't fetched correctly, potentially causing erroneous no downloads found ([976e25e](https://github.com/93Pd9s8Jt/atba/commit/976e25e83c07316e1ceccefa5449520f6b018125))
+* **webdl:** Remove invalid type annotation, caused parsing errors in some cases ([f02175c](https://github.com/93Pd9s8Jt/atba/commit/f02175c8ea421f5d223a758f46537f16010834e9))
+* **web:** Fix downloads for webdl and usenet on web ([d1d37ac](https://github.com/93Pd9s8Jt/atba/commit/d1d37ac1a1957a299f53538b78befb73a2f27eb4))
+
 ## [0.8.0](https://github.com/93Pd9s8Jt/atba/compare/v0.7.1...v0.8.0) (2026-01-18)
 
 
