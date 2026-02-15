@@ -41,7 +41,7 @@ dependencies:
   http_cache_hive_store: ^5.0.1
   http_cache_sembast_store: ^1.0.0
   icon_craft: ^0.1.1
-  json_annotation: ^4.9.0
+  json_annotation: ^4.10.0
   listen_sharing_intent: ^1.9.2
   package_info_plus: ^9.0.0
   path: ^1.9.1
