@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/93Pd9s8Jt/atba/compare/v0.9.0...v0.9.1) (2026-02-15)
+
+
+### Bug Fixes
+
+* For the setting "load uncached library on start", wait for cached content to load before loading uncached content ([1de779a](https://github.com/93Pd9s8Jt/atba/commit/1de779a4d5f668a913d532a7874d65a04b053242))
+
 ## [0.9.0](https://github.com/93Pd9s8Jt/atba/compare/v0.8.0...v0.9.0) (2026-02-07)
 
 
