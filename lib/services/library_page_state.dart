@@ -254,6 +254,7 @@ class LibraryPageState extends ChangeNotifier {
   }
 
   void onLibraryPageFirstView() async {
+    await Future.wait([_torrentsFuture, _webDownloadsFuture, _usenetFuture]);
     if (!_libraryPageFirstViewHasOccurred) {
       _libraryPageFirstViewHasOccurred = true;
 
