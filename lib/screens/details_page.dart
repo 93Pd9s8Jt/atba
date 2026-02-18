@@ -1,4 +1,5 @@
-import 'package:atba/services/torrentio_service.dart';
+import 'package:atba/services/stremio_addons/multi_addon_service.dart';
+import 'package:atba/services/torbox_service.dart';
 import 'package:atba/services/torrentio_config.dart';
 import 'package:atba/services/video_playback_service.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class DetailsPage extends StatefulWidget {
+class DetailsPage extends StatelessWidget {
   final String title;
   final String type;
   final String id;
@@ -23,12 +24,35 @@ class DetailsPage extends StatefulWidget {
     required this.id,
     super.key,
   });
-
   @override
-  _DetailsPageState createState() => _DetailsPageState();
+  Widget build(BuildContext context) {
+    final torboxService = context.read<TorboxAPI>();
+    return ChangeNotifierProvider(
+      create: (_) => MultiStremioAddonAPI(torboxService.apiKey),
+      builder: (context, child) {
+        return DetailsPageView(title: title, type: type, id: id);
+      },
+    );
+  }
 }
 
-class _DetailsPageState extends State<DetailsPage>
+class DetailsPageView extends StatefulWidget {
+  final String title;
+  final String type;
+  final String id;
+
+  const DetailsPageView({
+    required this.title,
+    required this.type,
+    required this.id,
+    super.key,
+  });
+
+  @override
+  _DetailsPageViewState createState() => _DetailsPageViewState();
+}
+
+class _DetailsPageViewState extends State<DetailsPageView>
     with SingleTickerProviderStateMixin {
   Map<String, dynamic>? _metaData;
   bool _isLoading = true;
@@ -113,24 +137,20 @@ class _DetailsPageState extends State<DetailsPage>
       children: [
         Scaffold(
           appBar: widget.type == "movie"
-              ? AppBar(
-                  title: Text(widget.title),
-                )
+              ? AppBar(title: Text(widget.title))
               : null,
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _hasError
-                  ? const Center(child: Text('Failed to load data'))
-                  : widget.type == "movie"
-                      ? buildMovieDetailBody()
-                      : buildSeriesDetailBody(),
+              ? const Center(child: Text('Failed to load data'))
+              : widget.type == "movie"
+              ? buildMovieDetailBody()
+              : buildSeriesDetailBody(),
         ),
         if (_isPlaying)
           Container(
             color: Colors.black.withOpacity(0.5),
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: const Center(child: CircularProgressIndicator()),
           ),
       ],
     );
@@ -144,18 +164,14 @@ class _DetailsPageState extends State<DetailsPage>
     // bodge solution - scrolling is really janky. but it will do for now.
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: buildMetaData(),
-        ),
+        SliverToBoxAdapter(child: buildMetaData()),
         if (_tabController != null)
           SliverToBoxAdapter(
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabs: _seasonData.keys.map((season) {
-                return Tab(
-                  text: season == 0 ? "Specials" : "Season $season",
-                );
+                return Tab(text: season == 0 ? "Specials" : "Season $season");
               }).toList(),
             ),
           ),
@@ -178,7 +194,11 @@ class _DetailsPageState extends State<DetailsPage>
                     },
                     trailing: IconButton(
                       icon: Icon(Icons.more_vert),
-                      onPressed: () => showQualitySelector(context, episode["id"], SearchType.tv),
+                      onPressed: () => showQualitySelector(
+                        context,
+                        episode["id"],
+                        SearchType.tv,
+                      ),
                     ),
                   );
                 },
@@ -252,88 +272,98 @@ class _DetailsPageState extends State<DetailsPage>
       key: _contentKey,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (_metaData?['background'] != null)
-            networkImage(
-              _metaData!['background'],
-              BoxFit.cover,
-              height: 200,
-              width: double.infinity,
-            ),
-          const SizedBox(height: 16),
-          // if (_metaData?['poster'] != null)
-          //   Center(
-          //     child: Image.network(
-          //       _metaData!['poster'],
-          //       height: 200,
-          //     ),
-          //   ),
-          if (showButton) // play button & video file change
-            Row(
-              children: [
-                FilledButton.icon(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_metaData?['background'] != null)
+              networkImage(
+                _metaData!['background'],
+                BoxFit.cover,
+                height: 200,
+                width: double.infinity,
+              ),
+            const SizedBox(height: 16),
+            // if (_metaData?['poster'] != null)
+            //   Center(
+            //     child: Image.network(
+            //       _metaData!['poster'],
+            //       height: 200,
+            //     ),
+            //   ),
+            if (showButton) // play button & video file change
+              Row(
+                children: [
+                  FilledButton.icon(
                     onPressed: () {
                       playMovie(widget.id);
                     },
                     label: const Text('Play'),
-                    icon: const Icon(Icons.play_arrow)),
-                IconButton(
+                    icon: const Icon(Icons.play_arrow),
+                  ),
+                  IconButton(
                     icon: Icon(Icons.more_vert),
-                    onPressed: () => showQualitySelector(context, widget.id, SearchType.movie),
+                    onPressed: () => showQualitySelector(
+                      context,
+                      widget.id,
+                      SearchType.movie,
                     ),
-              ],
-            ),
-          // const SizedBox(height: 16),
-          // video file change 3 dot menu (minor) icon
+                  ),
+                ],
+              ),
 
-          const SizedBox(height: 16),
-          if (_metaData?['description'] != null)
-            Text(
-              _metaData!['description'],
-              style: const TextStyle(fontSize: 16),
-            ),
-          const SizedBox(height: 16),
-          if (_metaData?['imdbRating'] != null)
-            Text('IMDB Rating: ${_metaData!['imdbRating']}'),
-          const SizedBox(height: 8),
-          if (_metaData?['year'] != null) Text('Year: ${_metaData!['year']}'),
-          const SizedBox(height: 8),
-          if (_metaData?['runtime'] != null)
-            Text('Runtime: ${_metaData!['runtime']}'),
-          const SizedBox(height: 8),
-          if (_metaData?['country'] != null)
-            Text('Country: ${_metaData!['country']}'),
-          const SizedBox(height: 8),
-          if (_metaData?['awards'] != null)
-            Text('Awards: ${_metaData!['awards']}'),
-          const SizedBox(height: 16),
-          if (_metaData?['cast'] != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Cast:',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ..._metaData!['cast'].map<Widget>((actor) => Text(actor))
-              ],
-            ),
-          const SizedBox(height: 16),
-          if (_metaData?['director'] != null &&
-              (_metaData!['director'] as List).isNotEmpty)
-            Text('Director: ${(_metaData!['director'] as List).join(', ')}'),
-          const SizedBox(height: 16),
-          if (_metaData?['genre'] != null &&
-              (_metaData!['genre'] as List).isNotEmpty)
-            Text('Genres: ${(_metaData!['genre'] as List).join(', ')}'),
-          const SizedBox(height: 16),
-          if (_metaData?['trailers'] != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Trailers:',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ..._metaData!['trailers'].map<Widget>((trailer) => ListTile(
+            // const SizedBox(height: 16),
+            // video file change 3 dot menu (minor) icon
+            const SizedBox(height: 16),
+            if (_metaData?['description'] != null)
+              Text(
+                _metaData!['description'],
+                style: const TextStyle(fontSize: 16),
+              ),
+            const SizedBox(height: 16),
+            if (_metaData?['imdbRating'] != null)
+              Text('IMDB Rating: ${_metaData!['imdbRating']}'),
+            const SizedBox(height: 8),
+            if (_metaData?['year'] != null) Text('Year: ${_metaData!['year']}'),
+            const SizedBox(height: 8),
+            if (_metaData?['runtime'] != null)
+              Text('Runtime: ${_metaData!['runtime']}'),
+            const SizedBox(height: 8),
+            if (_metaData?['country'] != null)
+              Text('Country: ${_metaData!['country']}'),
+            const SizedBox(height: 8),
+            if (_metaData?['awards'] != null)
+              Text('Awards: ${_metaData!['awards']}'),
+            const SizedBox(height: 16),
+            if (_metaData?['cast'] != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Cast:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  ..._metaData!['cast'].map<Widget>((actor) => Text(actor)),
+                ],
+              ),
+            const SizedBox(height: 16),
+            if (_metaData?['director'] != null &&
+                (_metaData!['director'] as List).isNotEmpty)
+              Text('Director: ${(_metaData!['director'] as List).join(', ')}'),
+            const SizedBox(height: 16),
+            if (_metaData?['genre'] != null &&
+                (_metaData!['genre'] as List).isNotEmpty)
+              Text('Genres: ${(_metaData!['genre'] as List).join(', ')}'),
+            const SizedBox(height: 16),
+            if (_metaData?['trailers'] != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Trailers:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  ..._metaData!['trailers'].map<Widget>(
+                    (trailer) => ListTile(
                       leading: const Icon(Icons.play_arrow),
                       title: const Text('Trailer'),
                       onTap: () {
@@ -342,10 +372,12 @@ class _DetailsPageState extends State<DetailsPage>
                             'https://www.youtube.com/watch?v=${trailer['source']}';
                         _launchURL(url);
                       },
-                    )),
-              ],
-            ),
-        ]),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -356,48 +388,63 @@ class _DetailsPageState extends State<DetailsPage>
       fit: fit,
       height: height,
       width: width,
-      loadingBuilder: (BuildContext context, Widget child,
-          ImageChunkEvent? loadingProgress) {
-        if (loadingProgress == null) {
-          return child;
-        }
-        return Center(
-          child: CircularProgressIndicator(
-            value: loadingProgress.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded /
-                    (loadingProgress.expectedTotalBytes ?? 1)
-                : null,
-          ),
-        );
-      },
+      loadingBuilder:
+          (
+            BuildContext context,
+            Widget child,
+            ImageChunkEvent? loadingProgress,
+          ) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                          (loadingProgress.expectedTotalBytes ?? 1)
+                    : null,
+              ),
+            );
+          },
       errorBuilder:
           (BuildContext context, Object error, StackTrace? stackTrace) {
-        return const Center(
-          child: Text(
-            'Failed to load image.',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
-        );
-      },
+            return const Center(
+              child: Text(
+                'Failed to load image.',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          },
     );
   }
 
-    void showQualitySelector(BuildContext context, String id, SearchType type) {
+  void showQualitySelector(BuildContext context, String id, SearchType type) {
+    final addonApi = Provider.of<MultiStremioAddonAPI>(context, listen: false);
+    addonApi.fetchStreamData(id, type);
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return QualitySelector(id, type, onStreamSelected: (stream) {
-          setState(() {
-            _selectedStreams[id] = stream;
-          });
-        });
+        return ChangeNotifierProvider<MultiStremioAddonAPI>.value(
+          value: addonApi,
+          child: QualitySelector(
+            id,
+            type,
+            onStreamSelected: (stream) {
+              setState(() {
+                _selectedStreams[id] = stream;
+              });
+            },
+          ),
+        );
       },
     );
   }
-  
 
   void _launchURL(String url) async {
     await launchUrl(Uri.parse(url));
@@ -408,11 +455,11 @@ class _DetailsPageState extends State<DetailsPage>
       _isPlaying = true;
     });
 
-    final torrentioApi = Provider.of<TorrentioAPI>(context, listen: false);
+    final addonApi = Provider.of<MultiStremioAddonAPI>(context, listen: false);
 
     if (_selectedStreams[id] == null) {
-      await torrentioApi.fetchStreamData(id, type);
-      _selectedStreams[id] = torrentioApi.selectedStreams[id]!;
+      await addonApi.fetchStreamData(id, type);
+      _selectedStreams[id] = addonApi.selectedStreams[id]!;
     }
 
     playURL(_selectedStreams[id]?['url']);
@@ -431,9 +478,9 @@ class _DetailsPageState extends State<DetailsPage>
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void playURL(String? url) {
@@ -446,7 +493,12 @@ class QualitySelector extends StatefulWidget {
   final String id;
   final SearchType type;
 
-   const QualitySelector(this.id, this.type, {required this.onStreamSelected, super.key});
+  const QualitySelector(
+    this.id,
+    this.type, {
+    required this.onStreamSelected,
+    super.key,
+  });
 
   @override
   _QualitySelectorState createState() => _QualitySelectorState();
@@ -456,56 +508,59 @@ class _QualitySelectorState extends State<QualitySelector> {
   bool expanded = false;
   @override
   Widget build(BuildContext context) {
-    final torrentioProvider = Provider.of<TorrentioAPI>(context, listen: false);
+    final addonProvider = context.watch<MultiStremioAddonAPI>();
 
-    return FutureBuilder<void>(
-      future: torrentioProvider.fetchStreamData(widget.id, widget.type),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          return Container(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Choose video quality:",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 10),
-                Expanded(
-                  child: StreamList(torrentioProvider: torrentioProvider, widget: widget),
-                ),
-              ],
+    if (addonProvider.isLoading && addonProvider.streams.isEmpty) {
+      return Center(child: CircularProgressIndicator());
+    } else if (false) {
+      return Center(child: Text('Error: '));
+    } else if (!addonProvider.isLoading && addonProvider.streams.isEmpty) {
+      return Center(child: const Text("No streams found."));
+    } else {
+      return Container(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Choose video quality:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-          );
-        }
-      },
-    );
+            SizedBox(height: 10),
+            Expanded(
+              child: StreamList(addonProvider: addonProvider, widget: widget),
+            ),
+            if (addonProvider.isLoading)
+              Center(child: CircularProgressIndicator()),
+          ],
+        ),
+      );
+    }
   }
 }
 
 class StreamList extends StatelessWidget {
   const StreamList({
     super.key,
-    required this.torrentioProvider,
+    required this.addonProvider,
     required this.widget,
   });
 
-  final TorrentioAPI torrentioProvider;
+  final MultiStremioAddonAPI addonProvider;
   final QualitySelector widget;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: torrentioProvider.streamData['streams']?.length ?? 0,
+      itemCount: addonProvider.streams.length,
       itemBuilder: (context, index) {
-        final stream = torrentioProvider.streamData['streams'][index];
+        final stream = addonProvider.streams[index];
         return ListTile(
-          title: Text("${stream["name"]}\n${stream['title']}"),
+          title: Text(
+            "${stream["name"]}\n${stream['title'] ?? stream["description"]}",
+          ),
           onTap: () {
-            torrentioProvider.setStream(widget.id, stream);
+            addonProvider.setStream(widget.id, stream);
             widget.onStreamSelected(stream);
             Navigator.pop(context);
           },

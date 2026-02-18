@@ -11,7 +11,6 @@ import 'services/shared_prefs_service.dart';
 import 'services/secure_storage_service.dart';
 import 'services/torbox_service.dart';
 import 'services/stremio_service.dart';
-import 'services/torrentio_service.dart';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'screens/setup/api_screen.dart';
@@ -40,7 +39,6 @@ Future<void> main() async {
 
   LibraryItem.initApiService(apiService);
   final stremioService = StremioRequests();
-  final torrentioService = TorrentioAPI(secureStorageService);
 
   if (!kIsWeb) {
     FileDownloader().configureNotification(
@@ -64,7 +62,6 @@ Future<void> main() async {
           update: (_, torboxApi, _) => UpdateService(torboxApi),
         ),
         ChangeNotifierProvider<StremioRequests>.value(value: stremioService),
-        ChangeNotifierProvider<TorrentioAPI>.value(value: torrentioService),
         ChangeNotifierProvider<AppState>(
           create: (_) => AppState(
             sharedPrefsService: sharedPrefsService,

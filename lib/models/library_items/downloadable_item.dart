@@ -101,6 +101,7 @@ abstract class DownloadableItem extends LibraryItem {
     return response;
   }
 
+  @override
   Map<String, dynamic> toJsonGenerated();
 }
 

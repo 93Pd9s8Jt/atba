@@ -14,6 +14,10 @@ class Constants {
   static const String torrentioVideoSizeLimit = 'key-video-size-limit';
   static const String torrentioMaxResultsPerQuality =
       'key-max-results-per-quality';
+  static const String torrentioEnabled = "key-torrentio-enabled";
+
+  // Stremio addons
+  static const String torboxAddonEnabled = "key-torbox-addon-enabled";
 
   // Appearance
   static const String theme = 'key-theme';

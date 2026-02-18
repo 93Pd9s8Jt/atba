@@ -896,7 +896,7 @@ class TorboxAPI {
 
   Future<TorboxAPIResponse> searchMetadata(
     String query, {
-    SearchType? type,
+    TorboxSearchType? type,
   }) async {
     return _makeRequest(
       'search/$query',
@@ -1279,14 +1279,14 @@ extension IdTypeExtension on IdType {
   }
 }
 
-enum SearchType { media, file }
+enum TorboxSearchType { media, file }
 
-extension SearchTypeExtension on SearchType {
+extension SearchTypeExtension on TorboxSearchType {
   String get name {
     switch (this) {
-      case SearchType.media:
+      case TorboxSearchType.media:
         return 'media';
-      case SearchType.file:
+      case TorboxSearchType.file:
         return 'file';
     }
   }
