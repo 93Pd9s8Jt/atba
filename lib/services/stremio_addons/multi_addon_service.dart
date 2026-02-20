@@ -38,11 +38,16 @@ class MultiStremioAddonAPI with ChangeNotifier {
     notifyListeners();
   }
 
-  void _handleStream(http.Response res, String id) {
-    bool streamsWereEmpty = streams.isEmpty;
-    Map<String, dynamic> json = jsonDecode(res.body);
+  List<Map<String, dynamic>> _parseStreams(String body) {
+    Map<String, dynamic> json = jsonDecode(body);
     List<Map<String, dynamic>> foundStreams = json["streams"]
         .cast<Map<String, dynamic>>();
+    return foundStreams;
+  }
+
+  void _handleStream(http.Response res, String id) {
+    bool streamsWereEmpty = streams.isEmpty;
+    List<Map<String, dynamic>> foundStreams = _parseStreams(res.body);
     streams.addAll(foundStreams);
     if (streamsWereEmpty && streams.isNotEmpty) {
       setStream(
@@ -72,11 +77,33 @@ class MultiStremioAddonAPI with ChangeNotifier {
       requests,
     ).where((res) => res.statusCode >= 200 && res.statusCode < 300);
 
+    bool firstReceived = false;
+    final firstValueCompleter = Completer<http.Response?>();
+
     _responseStreamController = responseStream.listen(
-      (res) => _handleStream(res, id),
+      (res) {
+        // Handle first matching event
+        if (!firstReceived && _parseStreams(res.body).isNotEmpty) {
+          firstReceived = true;
+          // You can complete a Completer or notify the caller here
+          firstValueCompleter.complete(res);
+        }
+
+        _handleStream(res, id); // handle all events
+      },
       onError: (e) => print('Error: $e'),
-      onDone: () => _handleDone(),
+      onDone: () {
+        if (!firstValueCompleter.isCompleted) {
+          firstValueCompleter.complete(null);
+        }
+        _handleDone();
+      },
     );
+
+    // Create a Completer to await the first matching value
+
+    await firstValueCompleter.future;
+    return;
   }
 
   @override

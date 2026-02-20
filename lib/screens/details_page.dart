@@ -459,6 +459,13 @@ class _DetailsPageViewState extends State<DetailsPageView>
 
     if (_selectedStreams[id] == null) {
       await addonApi.fetchStreamData(id, type);
+      if (addonApi.selectedStreams[id] == null) {
+        setState(() {
+          _isPlaying = false;
+        });
+        _showError("No streams found.");
+        return;
+      }
       _selectedStreams[id] = addonApi.selectedStreams[id]!;
     }
 
