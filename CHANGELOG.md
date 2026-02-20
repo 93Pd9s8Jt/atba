@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.0](https://github.com/93Pd9s8Jt/atba/compare/v0.9.0...v0.10.0) (2026-02-20)
+
+
+### Features
+
+* **watch:** Add torbox stremio addon [#49](https://github.com/93Pd9s8Jt/atba/issues/49) ([a99e824](https://github.com/93Pd9s8Jt/atba/commit/a99e82452ca9aa560a0b3e0d8d53a9badd696afc))
+
+
+### Bug Fixes
+
+* For the setting "load uncached library on start", wait for cached content to load before loading uncached content ([1de779a](https://github.com/93Pd9s8Jt/atba/commit/1de779a4d5f668a913d532a7874d65a04b053242))
+* **watch:** Display comprehensible error message when no streams found (not "bad state") ([a99e824](https://github.com/93Pd9s8Jt/atba/commit/a99e82452ca9aa560a0b3e0d8d53a9badd696afc))
+* **watch:** Fix various issues with loading streams ([82b938d](https://github.com/93Pd9s8Jt/atba/commit/82b938d871f44f9df8bae97ab79338e769e154b0))
+
 ## [0.9.0](https://github.com/93Pd9s8Jt/atba/compare/v0.8.0...v0.9.0) (2026-02-07)
 
 
