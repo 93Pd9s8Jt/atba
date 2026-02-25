@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atba/models/library_items/library_item.dart';
 import 'package:atba/services/update_service.dart';
 import 'package:atba/services/web_js_interop_service/web_js_interop_service.dart';
@@ -5,6 +7,8 @@ import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:provider/provider.dart';
 import 'services/shared_prefs_service.dart';
@@ -44,13 +48,47 @@ Future<void> main() async {
     FileDownloader().configureNotification(
       tapOpensFile: true,
       progressBar: true,
-      running: TaskNotification('Downloading', '{progress} | {filename}'),
+      running: TaskNotification('Downloading', '{progress} {filename}'),
       complete: TaskNotification('Download finished', '{filename}'),
       error: TaskNotification("Error", "{filename}"),
       paused: TaskNotification("Paused", "{filename}"),
       canceled: TaskNotification("Canceled", "{filename}"),
     );
   }
+  FileDownloader().configure(
+    globalConfig: (Config.useExternalStorage, "always"),
+  );
+
+  // Store exceptions mapped by taskId
+  final Map<String, TaskException?> errorDetails = {};
+
+  //  to listen for task status updates
+  void taskStatusCallback(TaskStatusUpdate update) {
+    if (update.status == TaskStatus.failed) {
+      errorDetails[update.task.taskId] = update.exception;
+    }
+  }
+
+  Future<void> notificationTapCallback(
+    Task task,
+    NotificationType notificationType,
+  ) async {
+    if (notificationType == NotificationType.error) {
+      final exception = errorDetails[task.taskId];
+      if (exception != null) {
+        print('Error for task ${task.taskId}: ${exception.description}');
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/downloadError.txt');
+        file.writeAsString(exception.description);
+        OpenFile.open(file.path);
+      }
+    }
+  }
+
+  FileDownloader().registerCallbacks(
+    taskStatusCallback: taskStatusCallback,
+    taskNotificationTapCallback: notificationTapCallback,
+  );
 
   runApp(
     MultiProvider(

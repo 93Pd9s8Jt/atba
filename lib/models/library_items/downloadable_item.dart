@@ -61,10 +61,9 @@ abstract class DownloadableItem extends LibraryItem {
     }
 
     await FileDownloader().enqueue(
-      DownloadTask(
+      UriDownloadTask(
         url: response.data as String,
-        baseDirectory: BaseDirectory.root,
-        directory: folderPath,
+        directoryUri: Uri.parse(folderPath),
         filename: "$name.zip",
         allowPause: true,
       ),
@@ -90,10 +89,9 @@ abstract class DownloadableItem extends LibraryItem {
     }
 
     await FileDownloader().enqueue(
-      DownloadTask(
+      UriDownloadTask(
         url: response.data as String,
-        directory: folderPath,
-        baseDirectory: BaseDirectory.root,
+        directoryUri: Uri.parse(folderPath),
         filename: file.name.split('/').last,
         allowPause: true,
       ),

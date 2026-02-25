@@ -55,13 +55,18 @@ dependencies:
   webview_flutter: ^4.13.1
   memoized: ^2.2.6
   icons_plus: ^5.0.0
-  background_downloader: ^9.4.1
+  background_downloader:
+    git:
+      url: https://github.com/781flyingdutchman/background_downloader.git
+      ref: fix-notification-uri-separator
   media_kit_video: ^2.0.1
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
   sqlite3: ^2.9.4
   web: ^1.1.1
   meta: ^1.17.0
+  open_file: ^3.5.11
+  saf_util: ^0.11.0
 
 flutter_launcher_icons:
   android: true

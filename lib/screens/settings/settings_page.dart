@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:atba/models/saf_uri.dart';
 import 'package:atba/screens/jobs_status_page.dart';
 import 'package:atba/screens/settings/google_oauth.dart';
 import 'package:atba/screens/settings/library_settings_widget.dart';
@@ -256,24 +257,37 @@ class _SettingsPageState extends State<SettingsPage> {
               title: "Storage settings",
               children: <Widget>[
                 if (!kIsWeb) ...[
-                  ListTile(
-                    title: const Text("Storage location"),
-                    leading: Icon(Icons.storage),
-                    onTap: () async {
-                      // TODO: niceify with methods in permission model (doesn't account for sd card yet)
-                      PermissionModel permissionModel = PermissionModel();
-                      final folderPath = await permissionModel.selectFolder();
-                      if (folderPath == null) return;
-                      await permissionModel.saveFolderPath(folderPath);
-                      setState(() {});
-                    },
-                    subtitle: Text(
-                      Settings.getValue<String>(
-                        Constants.folderPath,
-                        defaultValue: 'No download folder set',
-                      )!,
-                    ),
+                  ValueChangeObserver<String>(
+                    cacheKey: Constants.folderPath,
+                    defaultValue: 'No download folder set',
+                    builder:
+                        (
+                          BuildContext context,
+                          String value,
+                          OnChanged<String> onChanged,
+                        ) {
+                          return ListTile(
+                            title: const Text("Storage location"),
+                            leading: Icon(Icons.storage),
+                            onTap: () async {
+                              // TODO: niceify with methods in permission model
+                              PermissionModel permissionModel =
+                                  PermissionModel();
+                              final folderPath = await permissionModel
+                                  .selectFolder();
+                              if (folderPath == null) return;
+                              await Settings.setValue<String>(
+                                Constants.folderPath,
+                                folderPath,
+                                notify: true,
+                              );
+                              setState(() {});
+                            },
+                            subtitle: Text(parseStorageFolderPath(value)),
+                          );
+                        },
                   ),
+
                   const Divider(),
                 ],
                 CheckboxSettingsTile(
@@ -325,5 +339,11 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  String parseStorageFolderPath(String path) {
+    final parsed = SafUriInfo.tryParseUri(path);
+    if (parsed == null) return path;
+    return "/${parsed.volume!}/${parsed.relativePath!}";
   }
 }
