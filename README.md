@@ -24,7 +24,7 @@ Another TorBox App.
 | Linux | ❌ Untested | - |
 
 ## Contributing
-I'm always happy to review pull requests, and it would be particularly helpful if people could resolve issues on iOS and Android TV which I cannot debug. If you can't contribute code, suggestions and bug reports are also welcome.
+I'm always happy to review pull requests, and it would be particularly helpful if people could resolve issues on iOS and Android TV which I cannot debug. If you can't contribute code, suggestions and bug reports are also welcome, as are design suggestions; I am not a great UI/UX designer, so any suggestions on that front are appreciated.
 
 ## TODO/Upcoming features
 - Automations a la TBM
