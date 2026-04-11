@@ -18,6 +18,7 @@ class Constants {
 
   // Stremio addons
   static const String torboxAddonEnabled = "key-torbox-addon-enabled";
+  static const String customStremioAddons = "key-custom-stremio-addons";
 
   // Appearance
   static const String theme = 'key-theme';

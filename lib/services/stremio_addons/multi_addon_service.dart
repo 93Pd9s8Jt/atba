@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:atba/config/constants.dart';
+import 'package:atba/models/custom_addon.dart';
+import 'package:atba/services/stremio_addons/custom_addon_service.dart';
 import 'package:atba/services/stremio_addons/stremio_addon_service.dart';
 import 'package:atba/services/stremio_addons/torbox_addon_service.dart';
 import 'package:atba/services/stremio_addons/torrentio_service.dart';
@@ -28,9 +30,26 @@ class MultiStremioAddonAPI with ChangeNotifier {
       Constants.torrentioEnabled,
       defaultValue: true,
     )!;
+    String? customAddonsString = Settings.getValue<String>(
+      Constants.customStremioAddons,
+    );
+    List<CustomAddon> customAddons;
+    if (customAddonsString == null) {
+      customAddons = [];
+    } else {
+      final decoded = jsonDecode(customAddonsString);
+      if (decoded is List) {
+        customAddons = decoded.map((e) => CustomAddon.fromJson(e)).toList();
+      } else {
+        customAddons = [];
+      }
+    }
     _addons = [];
     if (torboxEnabled) _addons.add(TorboxAddonAPI(apiKey));
     if (torrentioEnabled) _addons.add(TorrentioAPI(apiKey));
+    for (var addon in customAddons) {
+      _addons.add(CustomAddonAPI(addon.url));
+    }
   }
 
   void setStream(String id, Map<String, dynamic> stream) {
