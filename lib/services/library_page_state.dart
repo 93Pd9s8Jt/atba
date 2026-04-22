@@ -455,6 +455,9 @@ class LibraryPageState extends ChangeNotifier {
       if (!response.success) {
         return {"success": false, "detail": response.detail};
       }
+      final List<Usenet> usenetDownloads = (response.data as List)
+          .map((json) => Usenet.fromJson(json))
+          .toList();
 
       _libraryItems.removeWhere((item) => item is Usenet);
       _libraryItems.addAll(usenetDownloads);
