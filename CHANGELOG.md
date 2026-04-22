@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.1](https://github.com/93Pd9s8Jt/atba/compare/v0.10.0...v0.10.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* **ios:** change app name to ATBA, add background permission ([9e82773](https://github.com/93Pd9s8Jt/atba/commit/9e8277359bfb25524db9ba9dacae51a15d55e06d))
+* **usenet:** Correctly populate the state with usenet downloads, previously this would mean usenet always showed as empty ([19286a8](https://github.com/93Pd9s8Jt/atba/commit/19286a8f3e1d4cc28f209521dc623fabb34cc9bc))
+
 ## [0.10.0](https://github.com/93Pd9s8Jt/atba/compare/v0.9.0...v0.10.0) (2026-04-11)
 
 
