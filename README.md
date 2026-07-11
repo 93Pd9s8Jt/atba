@@ -11,7 +11,7 @@ Another TorBox App.
 <img width="410" height="900" alt="image" src="https://github.com/user-attachments/assets/8c885631-9e5e-49c4-8ee1-0d6210bd8721" />
 
 
-## 🧭 Platform Snapshot
+## Platform Snapshot
 
 | Platform | Status | Notes |
 |----------|--------|-------|
@@ -35,4 +35,10 @@ I'm always happy to review pull requests, and it would be particularly helpful i
   
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=93Pd9s8Jt/atba&type=date&legend=top-left)](https://www.star-history.com/#93Pd9s8Jt/atba&type=date&legend=top-left)
+<a href="https://www.star-history.com/?repos=93Pd9s8Jt%2Fatba&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=93Pd9s8Jt/atba&type=date&theme=dark&legend=top-left&sealed_token=hLQTq9TAGoxHjNGOEGDt9edACRxufVa90uMAUKe5GCI_zP6eYkTGKjdErQyn81_XUaF0AmaMgAq4dUQZTQgEWLlQcAY1fYVPbZ1FIra-Tfo4FybDdSuLQadAhwF2eHLkgiyU9T9h7zYdPXXeZZLIIZgKGGMfb9LQRNbVl1RO8NDg7q3ATOB-Dl3potLS" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=93Pd9s8Jt/atba&type=date&legend=top-left&sealed_token=hLQTq9TAGoxHjNGOEGDt9edACRxufVa90uMAUKe5GCI_zP6eYkTGKjdErQyn81_XUaF0AmaMgAq4dUQZTQgEWLlQcAY1fYVPbZ1FIra-Tfo4FybDdSuLQadAhwF2eHLkgiyU9T9h7zYdPXXeZZLIIZgKGGMfb9LQRNbVl1RO8NDg7q3ATOB-Dl3potLS" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=93Pd9s8Jt/atba&type=date&legend=top-left&sealed_token=hLQTq9TAGoxHjNGOEGDt9edACRxufVa90uMAUKe5GCI_zP6eYkTGKjdErQyn81_XUaF0AmaMgAq4dUQZTQgEWLlQcAY1fYVPbZ1FIra-Tfo4FybDdSuLQadAhwF2eHLkgiyU9T9h7zYdPXXeZZLIIZgKGGMfb9LQRNbVl1RO8NDg7q3ATOB-Dl3potLS" />
+ </picture>
+</a>
