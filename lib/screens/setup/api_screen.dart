@@ -58,7 +58,11 @@ class ApiKeyScreen extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => !kIsWeb && Platform.isAndroid
+                      builder: (context) =>
+                          !kIsWeb &&
+                              (Platform.isAndroid ||
+                                  Platform
+                                      .isIOS) // only IOS and Android have permission-based models
                           ? const PermissionScreen()
                           : const HomeScreen(),
                     ),

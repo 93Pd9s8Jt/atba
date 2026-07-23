@@ -278,12 +278,17 @@ class _SettingsPageState extends State<SettingsPage> {
                               if (folderPath == null) return;
                               await Settings.setValue<String>(
                                 Constants.folderPath,
-                                folderPath,
+                                folderPath.toString(),
                                 notify: true,
                               );
+
                               setState(() {});
                             },
-                            subtitle: Text(parseStorageFolderPath(value)),
+                            subtitle: Text(
+                              parseStorageFolderPath(value),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         },
                   ),
@@ -342,6 +347,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   String parseStorageFolderPath(String path) {
+    // TODO: parse urlbookmark somehow for ios
     final parsed = SafUriInfo.tryParseUri(path);
     if (parsed == null) return path;
     return "/${parsed.volume!}/${parsed.relativePath!}";

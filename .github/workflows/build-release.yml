@@ -80,8 +80,7 @@ jobs:
           prerelease: false
 
   build-and-release-ios:
-    if: false  
-    name: Build and Release iOS IPA (Experimental)
+    name: Build and Release iOS IPA
     runs-on: macos-latest
 
     steps:

@@ -16,12 +16,14 @@ class AppState with ChangeNotifier {
   AppState({
     required this.sharedPrefsService,
     required this.secureStorageService,
-    required this.apiService
+    required this.apiService,
   });
 
   Future<void> initializeApp() async {
     try {
-      isFirstRun = sharedPrefsService.getString('isFirstRun') == null; // todo, make better
+      isFirstRun =
+          sharedPrefsService.getString('isFirstRun') ==
+          null; // todo, make better
       apiKey = await secureStorageService.read('api_key');
     } catch (e) {
       hasError = true;
