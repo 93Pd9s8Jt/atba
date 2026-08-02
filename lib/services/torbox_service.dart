@@ -237,6 +237,59 @@ class TorboxAPI {
     }
   }
 
+  Future<TorboxAPIResponse> _getDownloadUrl(
+    String route,
+    String idKey,
+    int id, {
+    int? fileId,
+    bool? zipLink,
+    bool? returnTorrentFile,
+    String? userIP,
+    bool? appendName,
+  }) async {
+    assert(
+      fileId != null || zipLink != null,
+      'Either fileId or zipLink must be provided',
+    );
+    assert(
+      zipLink == null || returnTorrentFile == null,
+      'Only one of zipLink or returnTorrentFile can be provided',
+    );
+
+    final TorboxAPIResponse response = await _makeRequest(
+      route,
+      method: 'get',
+      returnType: returnTorrentFile == null
+          ? SuccessReturnType.jsonResponse
+          : SuccessReturnType.file,
+      body: {
+        'token': apiKey,
+        idKey: id, // Dynamically passes web_id, torrent_id, or usenet_id
+        'file_id': fileId,
+        'zip_link': zipLink,
+        'torrent_file': returnTorrentFile,
+        'user_ip': userIP,
+        if (appendName != null) 'append_name': appendName,
+      },
+    );
+
+    // Clean up response if needed
+    if (response.data != null && (appendName ?? false)) {
+      final Uri originalUri = Uri.parse(response.data);
+      final Uri fixedUri = originalUri.replace(
+        queryParameters: originalUri.queryParameters,
+      );
+      return TorboxAPIResponse.fromJson({
+        'success': response.success,
+        'error': response.error,
+        'detail': response.detail,
+        'data': fixedUri.toString(),
+      });
+    }
+
+    return response;
+  }
+
   Future<void> deleteTorboxCache() async {
     await client?.store.clean();
   }
@@ -349,25 +402,17 @@ class TorboxAPI {
     bool? zipLink,
     bool? returnTorrentFile,
     String? userIP,
-  }) async {
-    assert(
-      fileId != null || zipLink != null,
-      'Either fileId or zipLink must be provided',
-    );
-    return _makeRequest(
+    bool? appendName,
+  }) {
+    return _getDownloadUrl(
       'api/torrents/requestdl',
-      method: 'get',
-      returnType: returnTorrentFile == null
-          ? SuccessReturnType.jsonResponse
-          : SuccessReturnType.file,
-      body: {
-        'token': apiKey,
-        'torrent_id': torrentId,
-        'file_id': fileId,
-        'zip_link': zipLink,
-        'torrent_file': returnTorrentFile,
-        'user_ip': userIP,
-      },
+      'torrent_id',
+      torrentId,
+      fileId: fileId,
+      zipLink: zipLink,
+      returnTorrentFile: returnTorrentFile,
+      userIP: userIP,
+      appendName: appendName,
     );
   }
 
@@ -491,33 +536,17 @@ class TorboxAPI {
     bool? zipLink,
     bool? returnTorrentFile,
     String? userIP,
-  }) async {
-    assert(
-      fileId != null || zipLink != null,
-      'Either fileId or zipLink must be provided',
-    );
-    assert(
-      zipLink == null || returnTorrentFile == null,
-      'Only one of zipLink or returnTorrentFile can be provided',
-    );
-    assert(
-      zipLink == null || returnTorrentFile == null,
-      'Only one of zipLink or returnTorrentFile can be provided',
-    );
-    return _makeRequest(
+    bool? appendName,
+  }) {
+    return _getDownloadUrl(
       'api/usenet/requestdl',
-      method: 'get',
-      returnType: returnTorrentFile == null
-          ? SuccessReturnType.jsonResponse
-          : SuccessReturnType.file,
-      body: {
-        'token': apiKey,
-        'usenet_id': usenetId,
-        'file_id': fileId,
-        'zip_link': zipLink,
-        'torrent_file': returnTorrentFile,
-        'user_ip': userIP,
-      },
+      'usenet_id',
+      usenetId,
+      fileId: fileId,
+      zipLink: zipLink,
+      returnTorrentFile: returnTorrentFile,
+      userIP: userIP,
+      appendName: appendName,
     );
   }
 
@@ -593,29 +622,17 @@ class TorboxAPI {
     bool? zipLink,
     bool? returnTorrentFile,
     String? userIP,
-  }) async {
-    assert(
-      fileId != null || zipLink != null,
-      'Either fileId or zipLink must be provided',
-    );
-    assert(
-      zipLink == null || returnTorrentFile == null,
-      'Only one of zipLink or returnTorrentFile can be provided',
-    );
-    return _makeRequest(
+    bool? appendName,
+  }) {
+    return _getDownloadUrl(
       'api/webdl/requestdl',
-      method: 'get',
-      returnType: returnTorrentFile == null
-          ? SuccessReturnType.jsonResponse
-          : SuccessReturnType.file,
-      body: {
-        'token': apiKey,
-        'web_id': webId,
-        'file_id': fileId,
-        'zip_link': zipLink,
-        'torrent_file': returnTorrentFile,
-        'user_ip': userIP,
-      },
+      'web_id',
+      webId,
+      fileId: fileId,
+      zipLink: zipLink,
+      returnTorrentFile: returnTorrentFile,
+      userIP: userIP,
+      appendName: appendName,
     );
   }
 
