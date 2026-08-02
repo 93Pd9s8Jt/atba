@@ -1,0 +1,15 @@
+{
+  "project": "atba",
+  "platform": "ios",
+  "github": {
+    "owner": "93Pd9s8Jt",
+    "repo": "atba"
+  },
+  "ios": {},
+  "flutter": {
+    "version": "3.38.5",
+    "watch": {}
+  },
+  "reactNative": {},
+  "mobai": {}
+}
