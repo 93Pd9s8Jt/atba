@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/93Pd9s8Jt/atba/compare/v0.11.0...v0.12.0) (2026-08-02)
+
+
+### Features
+
+* **ios:** Add support for downloading by handling storage locations properly ([75d4301](https://github.com/93Pd9s8Jt/atba/commit/75d4301946f16e1f3b15eb7db8aa09677a7fed3d))
+
 ## [0.11.0](https://github.com/93Pd9s8Jt/atba/compare/v0.10.1...v0.11.0) (2026-06-01)
 
 
