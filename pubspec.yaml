@@ -14,7 +14,7 @@ dependencies:
   collection: ^1.19.0
   crypto: ^3.0.6
   dartz: ^0.10.1
-  dio: ^5.9.0
+  dio: ^5.9.1
   dio_cache_interceptor: ^4.0.3
   drift: ^2.29.0
   dynamic_color: ^1.8.1
