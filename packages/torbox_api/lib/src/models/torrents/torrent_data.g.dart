@@ -1,0 +1,96 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'torrent_data.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_TorrentData _$TorrentDataFromJson(Map<String, dynamic> json) => _TorrentData(
+  id: (json['id'] as num).toInt(),
+  authId: json['auth_id'] as String?,
+  server: (json['server'] as num?)?.toInt(),
+  hash: json['hash'] as String?,
+  name: json['name'] as String?,
+  magnet: json['magnet'] as String?,
+  size: (json['size'] as num?)?.toInt(),
+  active: json['active'] as bool?,
+  createdAt: json['created_at'] as String?,
+  updatedAt: json['updated_at'] as String?,
+  downloadState: json['download_state'] as String?,
+  seeds: (json['seeds'] as num?)?.toInt(),
+  peers: (json['peers'] as num?)?.toInt(),
+  ratio: (json['ratio'] as num?)?.toDouble(),
+  progress: (json['progress'] as num?)?.toDouble(),
+  downloadSpeed: (json['download_speed'] as num?)?.toInt(),
+  uploadSpeed: (json['upload_speed'] as num?)?.toInt(),
+  eta: (json['eta'] as num?)?.toInt(),
+  torrentFile: json['torrent_file'] as bool?,
+  expiresAt: json['expires_at'] as String?,
+  downloadPresent: json['download_present'] as bool?,
+  files: (json['files'] as List<dynamic>?)
+      ?.map((e) => DownloadFileData.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  downloadPath: json['download_path'] as String?,
+  availability: (json['availability'] as num?)?.toDouble(),
+  downloadFinished: json['download_finished'] as bool?,
+  tracker: json['tracker'] as String?,
+  totalUploaded: (json['total_uploaded'] as num?)?.toInt(),
+  totalDownloaded: (json['total_downloaded'] as num?)?.toInt(),
+  cached: json['cached'] as bool?,
+  owner: json['owner'] as String?,
+  seedTorrent: json['seed_torrent'] as bool?,
+  allowZipped: json['allow_zipped'] as bool?,
+  longTermSeeding: json['long_term_seeding'] as bool?,
+  trackerMessage: json['tracker_message'] as String?,
+  cachedAt: json['cached_at'] as String?,
+  private: json['private'] as bool?,
+  alternativeHashes: (json['alternative_hashes'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  airlocked: json['airlocked'] as bool?,
+);
+
+Map<String, dynamic> _$TorrentDataToJson(_TorrentData instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'auth_id': instance.authId,
+      'server': instance.server,
+      'hash': instance.hash,
+      'name': instance.name,
+      'magnet': instance.magnet,
+      'size': instance.size,
+      'active': instance.active,
+      'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
+      'download_state': instance.downloadState,
+      'seeds': instance.seeds,
+      'peers': instance.peers,
+      'ratio': instance.ratio,
+      'progress': instance.progress,
+      'download_speed': instance.downloadSpeed,
+      'upload_speed': instance.uploadSpeed,
+      'eta': instance.eta,
+      'torrent_file': instance.torrentFile,
+      'expires_at': instance.expiresAt,
+      'download_present': instance.downloadPresent,
+      'files': instance.files?.map((e) => e.toJson()).toList(),
+      'download_path': instance.downloadPath,
+      'availability': instance.availability,
+      'download_finished': instance.downloadFinished,
+      'tracker': instance.tracker,
+      'total_uploaded': instance.totalUploaded,
+      'total_downloaded': instance.totalDownloaded,
+      'cached': instance.cached,
+      'owner': instance.owner,
+      'seed_torrent': instance.seedTorrent,
+      'allow_zipped': instance.allowZipped,
+      'long_term_seeding': instance.longTermSeeding,
+      'tracker_message': instance.trackerMessage,
+      'cached_at': instance.cachedAt,
+      'private': instance.private,
+      'alternative_hashes': instance.alternativeHashes,
+      'tags': instance.tags,
+      'airlocked': instance.airlocked,
+    };

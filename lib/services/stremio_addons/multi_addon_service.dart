@@ -6,9 +6,9 @@ import 'package:atba/services/stremio_addons/custom_addon_service.dart';
 import 'package:atba/services/stremio_addons/stremio_addon_service.dart';
 import 'package:atba/services/stremio_addons/torbox_addon_service.dart';
 import 'package:atba/services/stremio_addons/torrentio_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
 import '../torrentio_config.dart';
 
 class MultiStremioAddonAPI with ChangeNotifier {

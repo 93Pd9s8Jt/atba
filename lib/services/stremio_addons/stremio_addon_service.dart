@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 import '../secure_storage_service.dart';
 import '../torrentio_config.dart';

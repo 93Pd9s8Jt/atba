@@ -11,13 +11,13 @@ import 'package:atba/models/library_items/downloadable_item.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/services/torrent_name_parser.dart';
 import 'package:atba/services/update_service.dart';
-import 'package:flutter/material.dart';
 import 'package:atba/models/library_items/torrent.dart';
 import 'package:atba/models/library_items/webdownload.dart';
 import 'package:atba/models/library_items/usenet.dart';
 import 'package:atba/services/torbox_service.dart';
 import 'package:atba/config/constants.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 class LibraryPageState extends ChangeNotifier {

@@ -10,7 +10,7 @@ import 'package:atba/models/library_items/torrent.dart';
 import 'package:atba/models/library_items/usenet.dart';
 import 'package:atba/models/library_items/webdownload.dart';
 import 'package:atba/utils.dart';
-import 'package:icons_plus/icons_plus.dart';
+import 'package:iconsx_plus/iconsx_plus.dart';
 import 'package:provider/provider.dart';
 
 class DownloadableItemDetailScreen extends StatelessWidget {

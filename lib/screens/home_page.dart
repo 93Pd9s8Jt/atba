@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:atba/models/widgets/multi_value_change_observer.dart';
 import 'package:atba/services/torbox_service.dart' show TorboxAPI;
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -18,6 +17,7 @@ import 'package:atba/screens/library_page.dart';
 import 'package:atba/screens/watch_page.dart';
 import 'package:atba/screens/settings/settings_page.dart';
 import 'package:atba/config/constants.dart';
+import 'package:torbox_api/torbox_api.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -135,14 +135,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Adding torrent from file: ${file.path}')),
         );
-        final platformFile = PlatformFile(
-          name: file.path.split(Platform.pathSeparator).last,
-          path: file.path,
-          size: await File(file.path).length(),
-          bytes: await File(file.path).readAsBytes(),
-        );
         final response = await apiService.createTorrent(
-          dotTorrentFile: platformFile,
+          dotTorrentFile: TorboxFileUpload(
+            filename: file.path.split(Platform.pathSeparator).last,
+            bytes: await File(file.path).readAsBytes(),
+          ),
         );
         if (response.success) {
           ScaffoldMessenger.of(context).showSnackBar(

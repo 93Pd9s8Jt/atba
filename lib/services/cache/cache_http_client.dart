@@ -79,15 +79,24 @@ class TorboxCacheHttpClient {
     }
 
     // --- ALWAYS CACHE ---
-    const alwaysCacheEndpoints = [
-      r'^/api/torrents/exportdata', // magnet/.torrent file
-      r'^/api/torrents/requestdl',
-      r'^/meta/',
+    // Each entry carries its own expiry, because the payloads have very
+    // different lifetimes.
+    final alwaysCacheEndpoints = <(String, Duration)>[
+      // Exported magnets/`.torrent` files are immutable for a given torrent,
+      // so they could be kept forever; 7 days stays a sane cap.
+      (r'^/api/torrents/exportdata', const Duration(days: 7)),
+      // `requestdl` returns a pre-signed link that expires server-side in
+      // roughly 2 hours, so the cache must not outlive it — a cached link
+      // handed out after expiry is a dead download. If the real TTL turns
+      // out to be shorter, lower this rather than raising it.
+      (r'^/api/torrents/requestdl', const Duration(hours: 2)),
+      (r'^/api/usenet/requestdl', const Duration(hours: 2)),
+      (r'^/api/webdl/requestdl', const Duration(hours: 2)),
+      (r'^/meta/', const Duration(days: 7)),
     ];
-    for (final pattern in alwaysCacheEndpoints) {
+    for (final (pattern, expiry) in alwaysCacheEndpoints) {
       if (_matches(pattern, path)) {
-        return await _getWithCache(uri, headers,
-            expiry: const Duration(days: 7));
+        return await _getWithCache(uri, headers, expiry: expiry);
       }
     }
 

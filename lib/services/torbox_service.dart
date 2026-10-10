@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
+
 import 'package:atba/models/library_items/queued_torrent.dart';
 import 'package:atba/models/torbox_api_response.dart';
 import 'package:atba/models/library_items/torrent.dart' show Torrent;
@@ -13,8 +14,10 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart'
     show Settings;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:atba/services/cache/cache_dio_interceptor.dart';
 import 'package:atba/services/cache/cache_http_client.dart';
 import 'package:atba/services/secure_storage_service.dart';
+import 'package:torbox_api/torbox_api.dart' as torbox;
 
 TorboxAPIResponse _parseTorboxAPIResponse(dynamic json) {
   assert(
@@ -38,6 +41,10 @@ class TorboxAPI {
   static const search_api_base = 'https://search-api.torbox.app';
   static const api_version = 'v1';
 
+  /// The new-API facade. Kept in sync with [apiKey] by [_syncApi] so that
+  /// individual calls never have to build or look one up.
+  torbox.TorboxApi? _api;
+
   String? apiKey;
   String? googleToken;
 
@@ -48,7 +55,12 @@ class TorboxAPI {
     TorboxCacheHttpClient? client,
     this.baseUrl = '$api_base/$api_version',
     this.apiKey,
-  }) : client = kIsWasm ? null : TorboxCacheHttpClient();
+  }) : client = kIsWasm ? null : TorboxCacheHttpClient() {
+    _syncApi();
+  }
+
+  /// Whether an API key is loaded and [_api] is ready to use.
+  bool get hasApiKey => _api != null;
 
   Future<void> init() async {
     final results = await Future.wait([
@@ -58,16 +70,84 @@ class TorboxAPI {
     ]);
     apiKey = results[0] as String?;
     googleToken = results[1] as String?;
+    _syncApi();
   }
 
   void setDownloadsPageState(LibraryPageState state) {
     downloadsPageState = state;
   }
 
+  /// Creates — or clears — the new-API facade to match the current [apiKey].
+  void _syncApi() {
+    _api = apiKey == null
+        ? null
+        : torbox.TorboxApi(token: apiKey!, baseUrl: baseUrl);
+    // Registered after construction so it runs after the built-in auth
+    // interceptor, and therefore sees the Authorization header that the
+    // cache key is derived from.
+    _api?.addInterceptor(TorboxCacheInterceptor(client: client));
+  }
+
+  /// Runs [call] and turns any failure into a legacy error response.
+  ///
+  /// The new client throws [torbox.TorboxApiException] where the legacy
+  /// `_makeRequest` returned `success: false`, and callers across the app
+  /// branch on `response.success` without catching, so the mapping happens
+  /// here rather than at every call site.
+  Future<TorboxAPIResponse> _guardCall(
+    Future<TorboxAPIResponse> Function() call,
+  ) async {
+    if (_api == null) {
+      return TorboxAPIResponse(
+        success: false,
+        error: 'MISSING_API_KEY',
+        detail: 'API key not found',
+      );
+    }
+    try {
+      return await call();
+    } on torbox.TorboxApiException catch (e) {
+      return TorboxAPIResponse(
+        success: false,
+        error: e.errorCode ?? 'HTTP ${e.statusCode}',
+        detail: e.detail ?? e.message,
+      );
+    } on Exception catch (e) {
+      return TorboxAPIResponse(
+        success: false,
+        error: 'CLIENT_ERROR',
+        detail: e.toString(),
+      );
+    }
+  }
+
+  /// Runs a new-API call and maps its typed envelope back to the legacy
+  /// [TorboxAPIResponse] shape.
+  ///
+  /// [mapData] converts the typed payload into the loosely typed `data` that
+  /// legacy callers expect (usually `toJson()`); omit it when the payload is
+  /// already a plain value.
+  Future<TorboxAPIResponse> _callApi<T>(
+    Future<torbox.TorBoxResponse<T>> Function(torbox.TorboxApi api) call, {
+    Object? Function(T data)? mapData,
+  }) {
+    return _guardCall(() async {
+      final response = await call(_api!);
+      final data = response.data;
+      return TorboxAPIResponse(
+        success: response.success,
+        error: response.error,
+        detail: response.detail,
+        data: data == null ? null : (mapData == null ? data : mapData(data)),
+      );
+    });
+  }
+
+  /// Legacy request path, now used only by the search API (a different host
+  /// the new package does not cover). New code should go through [_callApi].
   Future<TorboxAPIResponse> _makeRequest(
     String endpoint, {
     String method = "get",
-    SuccessReturnType returnType = SuccessReturnType.jsonResponse,
     Map<String, dynamic>? body,
     String? baseUrl,
   }) async {
@@ -199,29 +279,7 @@ class TorboxAPI {
     }
 
     if (statusCode == 200) {
-      if (returnType == SuccessReturnType.file) {
-        // TODO: detect from content type
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath =
-            '${directory.path}/torrent_${body!['id']}.torrent'; // only torrents, web, usenet use this
-        final file = File(filePath);
-        await file.writeAsString(responseData);
-        return TorboxAPIResponse.fromJson({
-          'success': true,
-          'error': null,
-          'detail': '',
-          'data': filePath,
-        });
-      } else if (returnType == SuccessReturnType.xml) {
-        return TorboxAPIResponse.fromJson({
-          'success': true,
-          'error': null,
-          'detail': '',
-          'data': responseData,
-        });
-      } else {
-        return await compute(_parseTorboxAPIResponse, responseData);
-      }
+      return await compute(_parseTorboxAPIResponse, responseData);
     } else {
       // first attempt to parse as torbox response:
       try {
@@ -244,6 +302,7 @@ class TorboxAPI {
   Future<void> saveApiKey(String apiKeyToSave) async {
     await secureStorageService.write('api_key', apiKeyToSave);
     apiKey = apiKeyToSave;
+    _syncApi();
     // now we add referral
     Future.microtask(() async {
       await deleteTorboxCache();
@@ -254,14 +313,15 @@ class TorboxAPI {
   Future<void> deleteApiKey() async {
     await secureStorageService.delete('api_key');
     apiKey = null;
+    _syncApi();
     Future.microtask(() async {
       await deleteTorboxCache();
     });
   }
 
-  Future<void> saveGoogleToken(String token, String UnixExpiryDate) async {
+  Future<void> saveGoogleToken(String token, String unixExpiryDate) async {
     await secureStorageService.write(Constants.googleDriveToken, token);
-    await Settings.setValue(Constants.googleDriveTokenExpiry, UnixExpiryDate);
+    await Settings.setValue(Constants.googleDriveTokenExpiry, unixExpiryDate);
     googleToken = token;
   }
 
@@ -282,36 +342,30 @@ class TorboxAPI {
   // #TORRENTS
 
   Future<TorboxAPIResponse> createTorrent({
-    PlatformFile? dotTorrentFile,
+    torbox.TorboxFileUpload? dotTorrentFile,
     String? magnetLink,
     SeedingPreference? seedingPreference,
     bool? allowZipping,
     String? torrentName,
     bool? asQueued,
   }) async {
-    assert(
-      dotTorrentFile != null || magnetLink != null,
-      'Either dotTorrentFile or magnetLink must be provided',
+    final response = await _callApi(
+      (api) => api.torrents.createTorrent(
+        file: dotTorrentFile,
+        magnet: magnetLink,
+        seed: seedingPreference?.index,
+        allowZip: allowZipping,
+        name: torrentName,
+        asQueued: asQueued,
+        addOnlyIfCached: null,
+      ),
+      mapData: (data) => data.toJson(),
     );
-    assert(
-      dotTorrentFile == null || magnetLink == null,
-      'Only one of dotTorrentFile or magnetLink can be provided',
-    );
-    final response = await _makeRequest(
-      'api/torrents/createtorrent',
-      method: 'post',
-      body: {
-        'file': dotTorrentFile,
-        'magnet': magnetLink,
-        'seeding_preference': seedingPreference?.index,
-        'allow_zipping': allowZipping,
-        'torrent_name': torrentName,
-        'as_queued': asQueued,
-      },
-    );
-    if (response.success && response.data != null) {
-      if (response.data.containsKey('queued_id')) {
-        final newQueuedTorrent = QueuedTorrent.fromJsonStub(response.data);
+
+    final data = response.data;
+    if (response.success && data is Map<String, dynamic>) {
+      if (data['queued_id'] != null) {
+        final newQueuedTorrent = QueuedTorrent.fromJsonStub(data);
         downloadsPageState?.addQueuedTorrent(newQueuedTorrent);
         downloadsPageState?.addItemsToCache([newQueuedTorrent]);
       }
@@ -319,9 +373,7 @@ class TorboxAPI {
         Constants.libraryForegroundUpdate,
         defaultValue: false,
       )!) {
-        downloadsPageState?.startPeriodicUpdate<Torrent>(
-          response.data['torrent_id'],
-        );
+        downloadsPageState?.startPeriodicUpdate<Torrent>(data['torrent_id']);
       }
     }
     return response;
@@ -331,15 +383,13 @@ class TorboxAPI {
     ControlTorrentType operation, {
     int? torrentId,
     bool? all,
-  }) async {
-    assert(
-      torrentId != null || all != null,
-      'Either torrentId or all must be provided',
-    );
-    return _makeRequest(
-      'api/torrents/controltorrent',
-      method: 'post',
-      body: {'torrent_id': torrentId, 'operation': operation.name, 'all': all},
+  }) {
+    return _callApi(
+      (api) => api.torrents.controlTorrent(
+        operation: operation.name,
+        torrentId: torrentId,
+        all: all,
+      ),
     );
   }
 
@@ -347,27 +397,21 @@ class TorboxAPI {
     int torrentId, {
     int? fileId,
     bool? zipLink,
-    bool? returnTorrentFile,
     String? userIP,
   }) async {
     assert(
       fileId != null || zipLink != null,
       'Either fileId or zipLink must be provided',
     );
-    return _makeRequest(
-      'api/torrents/requestdl',
-      method: 'get',
-      returnType: returnTorrentFile == null
-          ? SuccessReturnType.jsonResponse
-          : SuccessReturnType.file,
-      body: {
-        'token': apiKey,
-        'torrent_id': torrentId,
-        'file_id': fileId,
-        'zip_link': zipLink,
-        'torrent_file': returnTorrentFile,
-        'user_ip': userIP,
-      },
+    return _callApi(
+      (api) => api.torrents.requestDownloadLink(
+        torrentId: torrentId,
+        fileId: fileId,
+        zipLink: zipLink,
+        userIP: userIP,
+        token: apiKey,
+      ),
+      mapData: (uri) => uri.toString(),
     );
   }
 
@@ -376,16 +420,23 @@ class TorboxAPI {
     int? torrentId,
     int? offset,
     int? limit,
-  }) async {
-    return _makeRequest(
-      'api/torrents/mylist',
-      method: 'get',
-      body: {
-        'bypass_cache': bypassCache,
-        'id': torrentId,
-        'offset': offset,
-        'limit': limit,
-      },
+  }) {
+    if (torrentId != null) {
+      // The API returns a single object (not a list) for id queries.
+      return _callApi(
+        (api) =>
+            api.torrents.getTorrent(id: torrentId, bypassCache: bypassCache),
+        mapData: (torrent) => torrent.toJson(),
+      );
+    }
+    return _callApi(
+      (api) => api.torrents.getTorrentList(
+        bypassCache: bypassCache,
+        offset: offset,
+        limit: limit,
+      ),
+      mapData: (torrents) =>
+          torrents.map((torrent) => torrent.toJson()).toList(),
     );
   }
 
@@ -393,19 +444,29 @@ class TorboxAPI {
     List<String> torrentHashes, {
     CheckCacheReturnFormat? returnFormat,
     bool? listFiles,
-  }) async {
+  }) {
     assert(
       torrentHashes.isNotEmpty,
       'At least one torrent hash must be provided',
     );
-    return _makeRequest(
-      'api/torrents/checkcached',
-      method: 'get',
-      body: {
-        'hash': torrentHashes.join(','),
-        'format': returnFormat?.name,
-        'list_files': listFiles,
-      },
+    if (returnFormat == CheckCacheReturnFormat.list) {
+      return _callApi(
+        (api) => api.torrents.checkCachedAvailabilityList(
+          hashes: torrentHashes,
+          format: returnFormat?.name,
+          listFiles: listFiles,
+        ),
+        mapData: (entries) => entries.map((entry) => entry.toJson()).toList(),
+      );
+    }
+    return _callApi(
+      (api) => api.torrents.checkCachedAvailability(
+        hashes: torrentHashes,
+        format: returnFormat?.name,
+        listFiles: listFiles,
+      ),
+      mapData: (entries) =>
+          entries.map((key, entry) => MapEntry(key, entry.toJson())),
     );
   }
 
@@ -413,59 +474,55 @@ class TorboxAPI {
     int torrentId,
     ExportTorrentDataType exportType,
   ) async {
-    return _makeRequest(
-      'api/torrents/exportdata',
-      method: 'get',
-      returnType:
-          exportType ==
-              ExportTorrentDataType
-                  .torrentFile // other option is magnet
-          ? SuccessReturnType.file
-          : SuccessReturnType.jsonResponse,
-      body: {'torrent_id': torrentId, 'type': exportType.name},
+    if (exportType == ExportTorrentDataType.torrentFile) {
+      // The API answers with the file itself, so it is streamed to disk and
+      // the saved path is returned in `data`, as the legacy path did.
+      final directory = await getApplicationDocumentsDirectory();
+      return _guardCall(() async {
+        final path = await _api!.torrents.exportTorrentDataAsTorrentFile(
+          torrentId: torrentId,
+          savePath: '${directory.path}/torrent_$torrentId.torrent',
+        );
+        return TorboxAPIResponse(
+          success: true,
+          error: null,
+          detail: null,
+          data: path,
+        );
+      });
+    }
+    return _callApi(
+      (api) => api.torrents.exportTorrentDataAsMagnet(torrentId: torrentId),
     );
   }
 
-  Future<TorboxAPIResponse> getTorrentData(
-    String torrentHash, {
-    int? timeout,
-  }) async {
-    return _makeRequest(
-      'api/torrents/torrentinfo',
-      method: 'get',
-      body: {'hash': torrentHash, 'timeout': timeout},
+  Future<TorboxAPIResponse> getTorrentData(String torrentHash, {int? timeout}) {
+    return _callApi(
+      (api) => api.torrents.getTorrentInfo(hash: torrentHash, timeout: timeout),
+      mapData: (info) => info.toJson(),
     );
   }
 
   // #USENET
 
   Future<TorboxAPIResponse> createUsenetDownload({
-    PlatformFile? nzbFile,
+    torbox.TorboxFileUpload? nzbFile,
     String? link,
     String? name,
     String? password,
     UsenetPostProcessing? postProcessing,
     bool? asQueued,
-  }) async {
-    assert(
-      nzbFile != null || link != null,
-      'Either nzbFile or link must be provided',
-    );
-    assert(
-      nzbFile == null || link == null,
-      'Only one of nzbFile or link can be provided',
-    );
-    return _makeRequest(
-      'api/usenet/createusenetdownload',
-      method: 'post',
-      body: {
-        'file': nzbFile,
-        'link': link,
-        'name': name,
-        'password': password,
-        'post_processing': postProcessing?.index,
-        'as_queued': asQueued,
-      },
+  }) {
+    return _callApi(
+      (api) => api.usenet.createUsenetDownload(
+        file: nzbFile,
+        link: link,
+        name: name,
+        password: password,
+        postProcessing: postProcessing?.index,
+        asQueued: asQueued,
+      ),
+      mapData: (data) => data.toJson(),
     );
   }
 
@@ -473,15 +530,13 @@ class TorboxAPI {
     ControlUsenetType operation, {
     int? usenetId,
     bool? all,
-  }) async {
-    assert(
-      usenetId != null || all != null,
-      'Either usenetId or all must be provided',
-    );
-    return _makeRequest(
-      'api/usenet/controlusenetdownload',
-      method: 'post',
-      body: {'usenet_id': usenetId, 'operation': operation.name, 'all': all},
+  }) {
+    return _callApi(
+      (api) => api.usenet.controlUsenetDownload(
+        operation: operation.name,
+        usenetId: usenetId,
+        all: all,
+      ),
     );
   }
 
@@ -489,35 +544,21 @@ class TorboxAPI {
     int usenetId, {
     int? fileId,
     bool? zipLink,
-    bool? returnTorrentFile,
     String? userIP,
-  }) async {
+  }) {
     assert(
       fileId != null || zipLink != null,
       'Either fileId or zipLink must be provided',
     );
-    assert(
-      zipLink == null || returnTorrentFile == null,
-      'Only one of zipLink or returnTorrentFile can be provided',
-    );
-    assert(
-      zipLink == null || returnTorrentFile == null,
-      'Only one of zipLink or returnTorrentFile can be provided',
-    );
-    return _makeRequest(
-      'api/usenet/requestdl',
-      method: 'get',
-      returnType: returnTorrentFile == null
-          ? SuccessReturnType.jsonResponse
-          : SuccessReturnType.file,
-      body: {
-        'token': apiKey,
-        'usenet_id': usenetId,
-        'file_id': fileId,
-        'zip_link': zipLink,
-        'torrent_file': returnTorrentFile,
-        'user_ip': userIP,
-      },
+    return _callApi(
+      (api) => api.usenet.requestDownloadLink(
+        usenetId: usenetId,
+        fileId: fileId,
+        zipLink: zipLink,
+        userIP: userIP,
+        token: apiKey,
+      ),
+      mapData: (uri) => uri.toString(),
     );
   }
 
@@ -526,28 +567,46 @@ class TorboxAPI {
     int? usenetId,
     int? offset,
     int? limit,
-  }) async {
-    return _makeRequest(
-      'api/usenet/mylist',
-      method: 'get',
-      body: {
-        'bypass_cache': bypassCache,
-        'id': usenetId,
-        'offset': offset,
-        'limit': limit,
-      },
+  }) {
+    if (usenetId != null) {
+      // The API returns a single object (not a list) for id queries.
+      return _callApi(
+        (api) => api.usenet.getUsenet(id: usenetId, bypassCache: bypassCache),
+        mapData: (download) => download.toJson(),
+      );
+    }
+    return _callApi(
+      (api) => api.usenet.getUsenetList(
+        bypassCache: bypassCache,
+        offset: offset,
+        limit: limit,
+      ),
+      mapData: (downloads) =>
+          downloads.map((download) => download.toJson()).toList(),
     );
   }
 
   Future<TorboxAPIResponse> checkIfUsenetCached(
     List<String> usenetHashes, {
     CheckCacheReturnFormat? returnFormat,
-  }) async {
+  }) {
     assert(usenetHashes.isNotEmpty, 'At least one nzb id must be provided');
-    return _makeRequest(
-      'api/usenet/checkcached',
-      method: 'get',
-      body: {'hash': usenetHashes.join(','), 'format': returnFormat?.name},
+    if (returnFormat == CheckCacheReturnFormat.list) {
+      return _callApi(
+        (api) => api.usenet.checkCachedAvailabilityList(
+          hashes: usenetHashes,
+          format: returnFormat?.name,
+        ),
+        mapData: (entries) => entries.map((entry) => entry.toJson()).toList(),
+      );
+    }
+    return _callApi(
+      (api) => api.usenet.checkCachedAvailability(
+        hashes: usenetHashes,
+        format: returnFormat?.name,
+      ),
+      mapData: (entries) =>
+          entries.map((key, entry) => MapEntry(key, entry.toJson())),
     );
   }
 
@@ -558,16 +617,15 @@ class TorboxAPI {
     String? name,
     String? password,
     bool? asQueued,
-  }) async {
-    return _makeRequest(
-      'api/webdl/createwebdownload',
-      method: 'post',
-      body: {
-        'link': link,
-        'name': name,
-        'password': password,
-        'as_queued': asQueued,
-      },
+  }) {
+    return _callApi(
+      (api) => api.webDownloads.createWebDownload(
+        link: link,
+        name: name,
+        password: password,
+        asQueued: asQueued,
+      ),
+      mapData: (data) => data.toJson(),
     );
   }
 
@@ -575,15 +633,13 @@ class TorboxAPI {
     ControlWebdlType operation, {
     int? webId,
     bool? all,
-  }) async {
-    assert(
-      webId != null || all != null,
-      'Either webId or all must be provided',
-    );
-    return _makeRequest(
-      'api/webdl/controlwebdownload',
-      method: 'post',
-      body: {'webdl_id': webId, 'operation': operation.name, 'all': all},
+  }) {
+    return _callApi(
+      (api) => api.webDownloads.controlWebDownload(
+        operation: operation.name,
+        webdlId: webId,
+        all: all,
+      ),
     );
   }
 
@@ -591,31 +647,21 @@ class TorboxAPI {
     int webId, {
     int? fileId,
     bool? zipLink,
-    bool? returnTorrentFile,
     String? userIP,
-  }) async {
+  }) {
     assert(
       fileId != null || zipLink != null,
       'Either fileId or zipLink must be provided',
     );
-    assert(
-      zipLink == null || returnTorrentFile == null,
-      'Only one of zipLink or returnTorrentFile can be provided',
-    );
-    return _makeRequest(
-      'api/webdl/requestdl',
-      method: 'get',
-      returnType: returnTorrentFile == null
-          ? SuccessReturnType.jsonResponse
-          : SuccessReturnType.file,
-      body: {
-        'token': apiKey,
-        'web_id': webId,
-        'file_id': fileId,
-        'zip_link': zipLink,
-        'torrent_file': returnTorrentFile,
-        'user_ip': userIP,
-      },
+    return _callApi(
+      (api) => api.webDownloads.requestDownloadLink(
+        webId: webId,
+        fileId: fileId,
+        zipLink: zipLink,
+        userIP: userIP,
+        token: apiKey,
+      ),
+      mapData: (uri) => uri.toString(),
     );
   }
 
@@ -624,38 +670,60 @@ class TorboxAPI {
     int? webId,
     int? offset,
     int? limit,
-  }) async {
-    return _makeRequest(
-      'api/webdl/mylist',
-      method: 'get',
-      body: {
-        'bypass_cache': bypassCache,
-        'id': webId,
-        'offset': offset,
-        'limit': limit,
-      },
+  }) {
+    if (webId != null) {
+      // The API returns a single object (not a list) for id queries.
+      return _callApi(
+        (api) => api.webDownloads.getWebDownload(
+          id: webId,
+          bypassCache: bypassCache,
+        ),
+        mapData: (download) => download.toJson(),
+      );
+    }
+    return _callApi(
+      (api) => api.webDownloads.getWebDownloadList(
+        bypassCache: bypassCache,
+        offset: offset,
+        limit: limit,
+      ),
+      mapData: (downloads) =>
+          downloads.map((download) => download.toJson()).toList(),
     );
   }
 
   Future<TorboxAPIResponse> checkIfWebDownloadCached(
     List<String> webLinks, {
     CheckCacheReturnFormat? returnFormat,
-  }) async {
+  }) {
     assert(webLinks.isNotEmpty, 'At least one web link must be provided');
-    return _makeRequest(
-      'api/webdl/checkcached',
-      method: 'get',
-      body: {
-        'hash': webLinks
-            .map((link) => md5.convert(utf8.encode(link)).toString())
-            .join(','),
-        'format': returnFormat?.name,
-      },
+    final hashes = webLinks
+        .map((link) => md5.convert(utf8.encode(link)).toString())
+        .toList();
+    if (returnFormat == CheckCacheReturnFormat.list) {
+      return _callApi(
+        (api) => api.webDownloads.checkCachedAvailabilityList(
+          hashes: hashes,
+          format: returnFormat?.name,
+        ),
+        mapData: (entries) => entries.map((entry) => entry.toJson()).toList(),
+      );
+    }
+    return _callApi(
+      (api) => api.webDownloads.checkCachedAvailability(
+        hashes: hashes,
+        format: returnFormat?.name,
+      ),
+      mapData: (entries) =>
+          entries.map((key, entry) => MapEntry(key, entry.toJson())),
     );
   }
 
-  Future<TorboxAPIResponse> getWebHostersList() async {
-    return _makeRequest('api/webdl/hosters', method: 'get');
+  Future<TorboxAPIResponse> getWebHostersList() {
+    return _callApi(
+      (api) => api.webDownloads.getHosters(),
+      mapData: (hosters) => hosters.map((hoster) => hoster.toJson()).toList(),
+    );
   }
 
   // #General
@@ -664,58 +732,67 @@ class TorboxAPI {
     throw UnimplementedError(); // needs special handling because it just requests the base url
   }
 
-  Future<TorboxAPIResponse> getStats() async {
-    return _makeRequest('api/stats', method: 'get');
+  Future<TorboxAPIResponse> getStats() {
+    return _callApi(
+      (api) => api.general.getStats(),
+      mapData: (stats) => stats.toJson(),
+    );
   }
 
   // #Notifications
-  Future<TorboxAPIResponse> getRSSNotificationFeed() async {
-    return _makeRequest(
-      'api/notifications/rss',
-      method: 'get',
-      returnType: SuccessReturnType.xml,
-      body: {"token": apiKey},
+  Future<TorboxAPIResponse> getRSSNotificationFeed() {
+    // XML feed: there is no JSON envelope to map, so the raw document is
+    // returned as `data` (as the legacy path did).
+    return _guardCall(() async {
+      final feed = await _api!.notifications.getRssNotificationFeed(
+        token: apiKey,
+      );
+      return TorboxAPIResponse(
+        success: true,
+        error: null,
+        detail: null,
+        data: feed.xml,
+      );
+    });
+  }
+
+  Future<TorboxAPIResponse> getJSONNotificationFeed() {
+    return _callApi(
+      (api) => api.notifications.getNotificationFeed(),
+      mapData: (notifications) =>
+          notifications.map((notification) => notification.toJson()).toList(),
     );
   }
 
-  Future<TorboxAPIResponse> getJSONNotificationFeed() async {
-    return _makeRequest('api/notifications/mynotifications', method: 'get');
+  Future<TorboxAPIResponse> clearAllNotifications() {
+    return _callApi((api) => api.notifications.clearAllNotifications());
   }
 
-  Future<TorboxAPIResponse> clearAllNotifications() async {
-    return _makeRequest('api/notifications/clear', method: 'post');
-  }
-
-  Future<TorboxAPIResponse> clearNotification(int notificationId) async {
-    return _makeRequest(
-      'api/notifications/clear/$notificationId',
-      method: 'post',
+  Future<TorboxAPIResponse> clearNotification(int notificationId) {
+    return _callApi(
+      (api) => api.notifications.clearNotification(notificationId),
     );
   }
 
-  Future<TorboxAPIResponse> sendTestNotification() async {
-    return _makeRequest('api/notifications/test', method: 'post');
+  Future<TorboxAPIResponse> sendTestNotification() {
+    return _callApi((api) => api.notifications.sendTestNotification());
   }
 
   // #User
 
-  Future<TorboxAPIResponse> getUserData({bool? getSettings}) async {
-    return _makeRequest(
-      'api/user/me',
-      method: 'get',
-      body: {'settings': getSettings},
+  Future<TorboxAPIResponse> getUserData({bool? getSettings}) {
+    return _callApi(
+      (api) => api.user.getUserData(settings: getSettings),
+      mapData: (user) => user.toJson(),
     );
   }
 
-  Future<TorboxAPIResponse> addReferralCode(String referralCode) async {
-    return _makeRequest(
-      'api/user/addreferral?referral=$referralCode',
-      method: 'post',
-    );
+  Future<TorboxAPIResponse> addReferralCode(String referralCode) {
+    return _callApi((api) => api.user.addReferral(referralCode));
   }
 
-  Future<TorboxAPIResponse> requestConfirmationCode() async {
-    return _makeRequest('api/user/getconfirmation', method: 'get');
+  Future<TorboxAPIResponse> requestConfirmationCode() {
+    return _callApi((api) => api.user.getConfirmation());
   }
 
   // #RSS feeds
@@ -730,36 +807,32 @@ class TorboxAPI {
     bool? ensurePassDuplicateCheck,
     FileType? rssType,
     SeedingPreference? seedingPreference,
-  }) async {
+  }) {
     assert(
       minutesScanInterval == null || minutesScanInterval >= 10,
       'minutesScanInterval must be at least 10',
     );
-    return _makeRequest(
-      "api/rss/addrss",
-      method: 'post',
-      body: {
-        'url': url,
-        'name': name,
-        'do_regex': definitelyAddRegex,
-        'dont_regex': dontAddRegex,
-        'dont_older_than': dontAddifOlderThanDays,
-        'scan_interval': minutesScanInterval,
-        'pass_check': ensurePassDuplicateCheck,
-        'rss_type': rssType?.name,
-        'torrent_seeding': seedingPreference?.index,
-      },
+    return _callApi(
+      (api) => api.rssFeeds.addRssFeed(
+        url: url,
+        name: name,
+        doRegex: definitelyAddRegex,
+        dontRegex: dontAddRegex,
+        dontOlderThan: dontAddifOlderThanDays?.toInt(),
+        scanInterval: minutesScanInterval,
+        passCheck: ensurePassDuplicateCheck,
+        rssType: rssType?.name,
+        torrentSeeding: seedingPreference?.index,
+      ),
     );
   }
 
-  Future<TorboxAPIResponse> controlRSSFeed(
-    int rssId,
-    RssOperation operation,
-  ) async {
-    return _makeRequest(
-      "api/rss/controlrss",
-      method: 'post',
-      body: {'rss_feed_id': rssId, 'operation': operation.name},
+  Future<TorboxAPIResponse> controlRSSFeed(int rssId, RssOperation operation) {
+    return _callApi(
+      (api) => api.rssFeeds.controlRssFeed(
+        operation: operation.name,
+        rssFeedId: rssId,
+      ),
     );
   }
 
@@ -773,37 +846,33 @@ class TorboxAPI {
     bool? ensurePassDuplicateCheck,
     FileType? rssType,
     SeedingPreference? seedingPreference,
-  }) async {
-    assert(
-      minutesScanInterval == null || minutesScanInterval >= 10,
-      'minutesScanInterval must be at least 10',
-    );
-    return _makeRequest(
-      "api/rss/modifyrss",
-      method: 'put',
-      body: {
-        'rss_feed_id': rssId,
-        'name': name,
-        'do_regex': definitelyAddRegex,
-        'dont_regex': dontAddRegex,
-        'dont_older_than': dontAddifOlderThanDays,
-        'scan_interval': minutesScanInterval,
-        'pass_check': ensurePassDuplicateCheck,
-        'rss_type': rssType?.name,
-        'torrent_seeding': seedingPreference?.index,
-      },
+  }) {
+    return _callApi(
+      (api) => api.rssFeeds.modifyRssFeed(
+        rssFeedId: rssId,
+        name: name,
+        doRegex: definitelyAddRegex,
+        dontRegex: dontAddRegex,
+        dontOlderThan: dontAddifOlderThanDays?.toInt(),
+        scanInterval: minutesScanInterval,
+        passCheck: ensurePassDuplicateCheck,
+        rssType: rssType?.name,
+        torrentSeeding: seedingPreference?.index,
+      ),
     );
   }
 
-  Future<TorboxAPIResponse> getRSSFeeedsList({int? rssId}) async {
-    return _makeRequest("api/rss/getfeeds", method: 'get', body: {'id': rssId});
+  Future<TorboxAPIResponse> getRSSFeeedsList({int? rssId}) {
+    return _callApi(
+      (api) => api.rssFeeds.getRssFeeds(id: rssId),
+      mapData: (feeds) => feeds.map((feed) => feed.toJson()).toList(),
+    );
   }
 
-  Future<TorboxAPIResponse> getRSSFeedItems(int rssId) async {
-    return _makeRequest(
-      "api/rss/getfeeditems",
-      method: 'get',
-      body: {'rss_feed_id': rssId},
+  Future<TorboxAPIResponse> getRSSFeedItems(int rssId) {
+    return _callApi(
+      (api) => api.rssFeeds.getRssFeedItems(rssFeedId: rssId),
+      mapData: (items) => items.map((item) => item.toJson()).toList(),
     );
   }
 
@@ -815,51 +884,82 @@ class TorboxAPI {
     int? fileId,
     bool? zip,
     IntegrationFileType? type,
-  }) async {
+  }) {
     assert(
       fileId != null || zip != null,
       'Either fileId or zip must be provided',
     );
-    String? token;
+    final String? token;
     switch (integration) {
       case QueueableIntegration.google:
         token = googleToken;
-        break;
-      default:
+      case QueueableIntegration.onedrive:
+      case QueueableIntegration.gofile:
+      case QueueableIntegration.onefichier:
+        // Only Google Drive has a token available on this device.
         token = null;
     }
     assert(
       token != null && token.isNotEmpty,
       'Token for ${integration.name} is not available',
     );
-    return _makeRequest(
-      "api/integration/${integration.name}",
-      method: 'post',
-      body: {
-        'id': id,
-        'file_id': fileId,
-        'zip': zip,
-        'type': type?.name,
-        integration.tokenName:
-            token, // needs oauth token for google & onedrive, api key for 1fichier and gofile
-      },
+    return _callApi((api) {
+      return switch (integration) {
+        QueueableIntegration.google => api.integrations.addToGoogleDrive(
+          id: id,
+          fileId: fileId,
+          zip: zip,
+          type: type?.name,
+          googleToken: token,
+        ),
+        QueueableIntegration.onedrive => api.integrations.addToOneDrive(
+          id: id,
+          fileId: fileId,
+          zip: zip,
+          type: type?.name,
+          onedriveToken: token,
+        ),
+        QueueableIntegration.gofile => api.integrations.addToGofile(
+          id: id,
+          fileId: fileId,
+          zip: zip,
+          type: type?.name,
+          gofileToken: token,
+        ),
+        QueueableIntegration.onefichier => api.integrations.addToOneFichier(
+          id: id,
+          fileId: fileId,
+          zip: zip,
+          type: type?.name,
+          onefichierToken: token,
+        ),
+      };
+    });
+  }
+
+  Future<TorboxAPIResponse> getAllJobs() {
+    return _callApi(
+      (api) => api.integrations.getAllJobs(),
+      mapData: (jobs) => jobs.map((job) => job.toJson()).toList(),
     );
   }
 
-  Future<TorboxAPIResponse> getAllJobs() async {
-    return _makeRequest("api/integration/jobs", method: 'get');
+  Future<TorboxAPIResponse> getJobStatusById(int jobId) {
+    return _callApi(
+      (api) => api.integrations.getJobById(jobId),
+      mapData: (job) => job.toJson(),
+    );
   }
 
-  Future<TorboxAPIResponse> getJobStatusById(int jobId) async {
-    return _makeRequest("api/integration/job/$jobId", method: 'get');
+  Future<TorboxAPIResponse> getJobStatusByHash(String hash) {
+    return _callApi(
+      (api) => api.integrations.getJobsByHash(hash),
+      mapData: (jobs) => jobs.map((job) => job.toJson()).toList(),
+    );
   }
 
-  Future<TorboxAPIResponse> getJobStatusByHash(String hash) async {
-    return _makeRequest("api/integration/jobs/$hash", method: 'get');
-  }
-
-  Future<TorboxAPIResponse> cancelJobById(int jobId) async {
-    return _makeRequest("api/integration/job/$jobId", method: 'delete');
+  Future<TorboxAPIResponse> cancelJobById(int jobId) {
+    return _callApi((api) => api.integrations.cancelJob(jobId));
   }
 
   // #Queued
@@ -870,17 +970,16 @@ class TorboxAPI {
     int? offset,
     int? limit,
     FileType? type,
-  }) async {
-    return _makeRequest(
-      "api/queued/getqueued",
-      method: 'get',
-      body: {
-        'bypass_cache': bypassCache,
-        'id': id,
-        'offset': offset,
-        'limit': limit,
-        'type': type?.name,
-      },
+  }) {
+    return _callApi(
+      (api) => api.queued.getQueuedDownloads(
+        bypassCache: bypassCache,
+        id: id,
+        offset: offset,
+        limit: limit,
+        type: type?.name,
+      ),
+      mapData: (items) => items.map((item) => item.toJson()).toList(),
     );
   }
 
@@ -1004,7 +1103,7 @@ class TorboxAPI {
     QueuedItemOperation operation, {
     int? queuedId,
     bool? all,
-  }) async {
+  }) {
     assert(
       queuedId != null || all != null,
       'Either queuedId or all must be provided',
@@ -1017,17 +1116,17 @@ class TorboxAPI {
       operation != QueuedItemOperation.start || all == null,
       'all can only be true for delete operation',
     );
-    return _makeRequest(
-      "api/queued/controlqueued",
-      method: 'post',
-      body: {'queued_id': queuedId, 'operation': operation.name, 'all': all},
+    return _callApi(
+      (api) => api.queued.controlQueuedDownload(
+        operation: operation.name,
+        queuedId: queuedId,
+        all: all,
+      ),
     );
   }
 
   // Relay
 }
-
-enum SuccessReturnType { jsonResponse, file, xml }
 
 enum SeedingPreference { auto, seed, dontSeed }
 
@@ -1200,19 +1299,6 @@ extension QueueableIntegrationExtension on QueueableIntegration {
         return 'gofile';
       case QueueableIntegration.onefichier:
         return '1fichier';
-    }
-  }
-
-  String get tokenName {
-    switch (this) {
-      case QueueableIntegration.google:
-        return 'google_token';
-      case QueueableIntegration.onedrive:
-        return 'onedrive_token';
-      case QueueableIntegration.gofile:
-        return 'gofile_token';
-      case QueueableIntegration.onefichier:
-        return 'onefichier_token';
     }
   }
 }

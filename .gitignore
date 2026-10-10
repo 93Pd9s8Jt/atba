@@ -44,6 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+/android/build
+
+
 # Signing files
 key.properties
 keystore.jks
@@ -52,3 +55,5 @@ keystore.jks
 .vscode/
 er.name
 devtools_options.yaml
+/dist
+builder.json

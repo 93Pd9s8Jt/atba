@@ -6,7 +6,7 @@ import 'package:atba/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
-import 'package:icons_plus/icons_plus.dart';
+import 'package:iconsx_plus/iconsx_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class JobsStatusPage extends StatefulWidget {
@@ -23,7 +23,10 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
   bool _isSelecting = false;
   late final JobsUpdateService updateService;
 
-  static String _selectedSortingOption = Settings.getValue<String>(Constants.jobQueueSelectedSort, defaultValue: "Default")!;
+  static String _selectedSortingOption = Settings.getValue<String>(
+    Constants.jobQueueSelectedSort,
+    defaultValue: "Default",
+  )!;
 
   static final Map<String, int Function(JobQueueItem, JobQueueItem)>
   _sortingFunctions = {
@@ -56,7 +59,9 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jobs Status'),
-        actions: _isSelecting ? [_buildDeleteIcon(), _buildFilterButton()] : [_buildFilterButton()],
+        actions: _isSelecting
+            ? [_buildDeleteIcon(), _buildFilterButton()]
+            : [_buildFilterButton()],
       ),
       body: _jobs == null
           ? const Center(child: CircularProgressIndicator())
@@ -89,23 +94,27 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
                       ),
                     ),
                     onTap: () => {
-                      if (_isSelecting) {
-                        if (_selectedJobs.contains(job))
-                          {
-                            setState(() {
-                              _selectedJobs.remove(job);
-                              if (_selectedJobs.isEmpty) _isSelecting = false;
-                            }),
-                          }
-                        else
-                          {
-                            setState(() {
-                              _selectedJobs.add(job);
-                            }),
-                          },
-                      } else {
-                        if (job.data.downloadUrl != null) launchUrl(Uri.parse(job.data.downloadUrl!)),
-                      }
+                      if (_isSelecting)
+                        {
+                          if (_selectedJobs.contains(job))
+                            {
+                              setState(() {
+                                _selectedJobs.remove(job);
+                                if (_selectedJobs.isEmpty) _isSelecting = false;
+                              }),
+                            }
+                          else
+                            {
+                              setState(() {
+                                _selectedJobs.add(job);
+                              }),
+                            },
+                        }
+                      else
+                        {
+                          if (job.data.downloadUrl != null)
+                            launchUrl(Uri.parse(job.data.downloadUrl!)),
+                        },
                     },
                     onLongPress: () {
                       if (_isSelecting) {
@@ -197,8 +206,15 @@ class _JobsStatusPageState extends State<JobsStatusPage> {
         _sortingFunctions.length,
         (int index) => MenuItemButton(
           onPressed: () async {
-            setState(() => _selectedSortingOption = _sortingFunctions.keys.elementAt(index));
-            await Settings.setValue(Constants.jobQueueSelectedSort, _selectedSortingOption);
+            setState(
+              () => _selectedSortingOption = _sortingFunctions.keys.elementAt(
+                index,
+              ),
+            );
+            await Settings.setValue(
+              Constants.jobQueueSelectedSort,
+              _selectedSortingOption,
+            );
             // Navigator.pop(context);
           },
           child: Row(

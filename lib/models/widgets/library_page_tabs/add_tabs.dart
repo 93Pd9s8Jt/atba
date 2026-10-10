@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:atba/config/constants.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
+import 'package:torbox_api/torbox_api.dart';
 
 class AddWebDownloadsTab extends StatefulWidget {
   final torbox.TorboxAPI apiService;
@@ -40,8 +41,7 @@ class _AddWebDownloadsTabState extends State<AddWebDownloadsTab> {
               maxLines: 5,
               decoration: const InputDecoration(
                 labelText: 'URLs',
-                hintText:
-                    'http://example.com/file1.zip\nhttp://example.com/file2.rar',
+                hintText: 'http://example.com/file1.zip\nhttp://example.com/file2.rar',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -271,13 +271,13 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
               icon: const Icon(Icons.upload_file),
               label: const Text('Select .torrent file'),
               onPressed: () async {
-                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                List<PlatformFile> result = await FilePicker.pickFiles(
                   type: FileType.custom,
                   allowedExtensions: ['torrent'],
                 );
 
-                if (result != null) {
-                  PlatformFile file = result.files.first;
+                if (result.isNotEmpty) {
+                  PlatformFile file = result.first;
                   setState(() {
                     _fileName = file.name;
                   });
@@ -287,7 +287,10 @@ class _AddTorrentFileTabState extends State<AddTorrentFileTab> {
                   });
 
                   var response = await apiService.createTorrent(
-                    dotTorrentFile: file, // file is handled on api side
+                    dotTorrentFile: TorboxFileUpload(
+                      filename: file.name,
+                      bytes: await file.readAsBytes(),
+                    ), // file is handled on api side
                     torrentName: file.name,
                   );
 
@@ -482,14 +485,13 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
               onPressed: _isLoading
                   ? null
                   : () async {
-                      FilePickerResult? result = await FilePicker.platform
-                          .pickFiles(
-                            type: FileType.custom,
-                            allowedExtensions: ['nzb'],
-                          );
+                      List<PlatformFile> result = await FilePicker.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['nzb'],
+                      );
 
-                      if (result != null) {
-                        PlatformFile file = result.files.first;
+                      if (result.isNotEmpty) {
+                        PlatformFile file = result.first;
                         setState(() {
                           _fileName = file.name;
                         });
@@ -499,7 +501,10 @@ class _AddNzbFileTabState extends State<AddNzbFileTab> {
                         });
 
                         var response = await apiService.createUsenetDownload(
-                          nzbFile: file,
+                          nzbFile: TorboxFileUpload(
+                            filename: file.name,
+                            bytes: await file.readAsBytes(),
+                          ),
                           name: file.name,
                           password: passwordController.text.isNotEmpty
                               ? passwordController.text
@@ -688,9 +693,9 @@ class _AddSearchTabState extends State<AddSearchTab> {
       } else {
         matchedIdPrefix = matchingIds.first;
         matchedIdValue =
-            RegExp(
-              "${matchedIdPrefix.name}:(\\w+)",
-            ).firstMatch(searchQuery)?.group(1) ??
+            RegExp("${matchedIdPrefix.name}:(\\w+)")
+                .firstMatch(searchQuery)
+                ?.group(1) ??
             "";
       }
       // print(matchedIdPrefix.name + " " + matchedIdValue);
