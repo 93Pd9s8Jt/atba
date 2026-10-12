@@ -113,8 +113,11 @@ void main() {
       // `!matchResult.skipFromTitle` guards the endOfTitle update upstream, so
       // the title stays intact even though the match is excluded from it.
       final parser = Parser();
-      parser.addHandler('marker', RegExp(r'\bcollection\b', caseSensitive: false),
-          (input, [previous]) => input, const ParserOptions(skipFromTitle: true));
+      parser.addHandler(
+          'marker',
+          RegExp(r'\bcollection\b', caseSensitive: false),
+          (input, [previous]) => input,
+          const ParserOptions(skipFromTitle: true));
 
       expect(parser.parse('Some Movie Collection')['title'],
           'Some Movie Collection');
@@ -122,7 +125,9 @@ void main() {
 
     test('without skipFromTitle the same match truncates the title', () {
       final parser = Parser();
-      parser.addHandler('marker', RegExp(r'\bcollection\b', caseSensitive: false),
+      parser.addHandler(
+          'marker',
+          RegExp(r'\bcollection\b', caseSensitive: false),
           (input, [previous]) => input);
 
       expect(parser.parse('Some Movie Collection')['title'], 'Some Movie');
