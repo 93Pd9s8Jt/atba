@@ -1,0 +1,18 @@
+name: parse_torrent_title
+description: >-
+  Dart port of parse-torrent-title (https://github.com/TheBeastLT/parse-torrent-title): extracts structured metadata (title, year,
+  resolution, source, codec, season/episode, languages, ...) from a torrent
+  release name.
+version: 1.0.0
+topics:
+  - torrent
+  - parser
+  - release
+  - filename
+
+environment:
+  sdk: ^3.5.0
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^4.0.0

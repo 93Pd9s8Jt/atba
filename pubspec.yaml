@@ -69,6 +69,8 @@ dependencies:
   saf_util: ^0.11.0
   torbox_api:
     path: packages/torbox_api
+  parse_torrent_title:
+    path: packages/parse_torrent_title
 
 flutter_launcher_icons:
   android: true
