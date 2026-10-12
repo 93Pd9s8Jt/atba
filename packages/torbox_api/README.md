@@ -28,19 +28,13 @@ if (torrents.success) {
   }
 }
 
-// POST with a request model (passed directly, never pre-serialized).
-await api.torrents.createTorrent(
-  CreateTorrentRequest(magnet: 'magnet:?xt=urn:btih:…'),
-);
+// POST with a request model
+await api.torrents.createTorrent(magnet: 'magnet:?xt=urn:btih:…');
 
-// File uploads ride the same model: set `file` to an attachment and the
-// client sends it as multipart automatically. Endpoints that can accept
-// a file always receive multipart, even without one attached.
+// File upload
 await api.torrents.createTorrent(
-  CreateTorrentRequest(
-    file: TorboxFileUpload(filename: 'file.torrent', bytes: bytes),
-    name: 'My torrent',
-  ),
+  file: TorboxFileUpload(filename: 'file.torrent', bytes: bytes),
+  name: 'My torrent',
 );
 ```
 
@@ -64,7 +58,7 @@ Every service method returns a `TorBoxResponse<T>` envelope:
 | `success`| Whether the request succeeded                                |
 | `error`  | Machine-readable code (`BAD_TOKEN`, …) or `null` on success  |
 | `detail` | Human-readable message                                       |
-| `data`   | Typed payload (`T?`) — models, lists, maps, `String`, `Uri`, or `Null` for fire-and-forget operations |
+| `data`   | Typed payload (`T?`) — models, lists, maps, `String`, `Uri`, or `Null`.
 
 Endpoints whose payload is provably empty use `TorBoxResponse<Null>`;
 endpoints with undocumented shapes use `TorBoxResponse<dynamic>`.
@@ -107,23 +101,10 @@ Tune globally via `TorboxApi(maxAttempts: …, retryDelay: …, timeout: …)`.
 | `api.queued`        | getqueued/controlqueued                                |
 | `api.general`       | stats, changelogs (JSON + RSS), speedtest              |
 
-The underlying `TorboxClient` is intentionally not exported — services
-are the only public way to make API calls.
-
-Service signatures follow one rule: **POST/PUT bodies take their
-request model** (`controlTorrent(ControlTorrentRequest(…))`), while
-**query/path parameters are scalars** (`getTorrentList(limit: 10)`).
-Request models own the wire format (snake_case keys) and the documented
-parameter constraints via `@Assert`, so services never build maps or
-assert on parameters themselves. File-upload fields hold a
-`TorboxFileUpload` (bytes + filename, never a path) and are marked
-`@JsonKey(includeToJson: false, includeFromJson: false)` — file content
-can never leak into JSON, and uploads work on web where `dart:io`
-doesn't exist.
 
 ## Testing
 
-Unit tests run hermetically: `flutter test test/torbox_api_test.dart`.
+Run tests: `flutter test test/torbox_api_test.dart`.
 
 `test/torbox_live_test.dart` exercises the real API read-only
 (no mutations, no metered links) and is skipped unless set:
@@ -131,9 +112,3 @@ Unit tests run hermetically: `flutter test test/torbox_api_test.dart`.
 ```powershell
 $env:TORBOX_API_KEY='<key>'; flutter test test/torbox_live_test.dart
 ```
-
-## Out of scope
-
-Vendor/reseller endpoints, browser-based OAuth flows
-(authenticate/callback/success/unregister), and endpoints with
-undocumented response shapes (`stats/30days`, `oauth/me`, vendor GETs).
