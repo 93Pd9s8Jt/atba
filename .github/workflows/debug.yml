@@ -112,10 +112,18 @@ jobs:
             - name: Get Dependencies
               working-directory: packages/${{ matrix.package }}
               run: flutter pub get
-              
-            - name: Run build_runner
-              working-directory: packages/${{ matrix.package }}
-              run: flutter pub run build_runner build --delete-conflicting-outputs
+
+            - name: Run build_runner # only for torbox_api
+              shell: bash
+              run: |
+                for package in torbox_api; do
+                  echo "Running build_runner for $package"
+                  (
+                    cd "packages/$package"
+                    flutter pub get
+                    flutter run build_runner build --delete-conflicting-outputs
+                  )
+                done
 
             - name: Run Tests
               working-directory: packages/${{ matrix.package }}
