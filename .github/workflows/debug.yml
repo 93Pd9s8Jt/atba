@@ -120,8 +120,8 @@ jobs:
                   echo "Running build_runner for $package"
                   (
                     cd "packages/$package"
-                    flutter pub get
-                    flutter run build_runner build 
+                    dart pub get
+                    dart run build_runner build
                   )
                 done
 
