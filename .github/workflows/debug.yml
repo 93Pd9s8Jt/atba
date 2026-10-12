@@ -88,3 +88,35 @@ jobs:
           with:
             name: ipa-debug
             path:  build/ios/iphoneos/debug.ipa
+
+  test-packages:
+        name: Test ${{ matrix.package }}
+        runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix:
+                package:
+                    - torbox_api
+                    - parse_torrent_title
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Setup Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  flutter-version: 3.47.5
+
+            - name: Get Dependencies
+              working-directory: packages/${{ matrix.package }}
+              run: flutter pub get
+              
+            - name: Run build_runner
+              working-directory: packages/${{ matrix.package }}
+              run: flutter pub run build_runner build --delete-conflicting-outputs
+
+            - name: Run Tests
+              working-directory: packages/${{ matrix.package }}
+              run: flutter test
