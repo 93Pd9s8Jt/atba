@@ -53,7 +53,6 @@ dependencies:
   url_launcher: ^6.3.2
   uuid: ^4.5.1
   webview_flutter: ^4.13.1
-  memoized: ^2.2.6
   iconsx_plus: ^1.0.0
   background_downloader:
     git:
@@ -71,6 +70,7 @@ dependencies:
     path: packages/torbox_api
   parse_torrent_title:
     path: packages/parse_torrent_title
+  memoize: ^3.0.0
 
 flutter_launcher_icons:
   android: true

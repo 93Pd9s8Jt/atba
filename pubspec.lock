@@ -930,14 +930,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
-  memoized:
+  memoize:
     dependency: "direct main"
     description:
-      name: memoized
-      sha256: ba4621ecb6e795c589f95ba75a371f9fa00b3851187c04425260d401b4498097
+      name: memoize
+      sha256: "51481d328c86cbdc59711369179bac88551ca0556569249be5317e66fc796cac"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.6"
+    version: "3.0.0"
   meta:
     dependency: "direct main"
     description:
@@ -1064,7 +1064,7 @@ packages:
       path: "packages/parse_torrent_title"
       relative: true
     source: path
-    version: "0.0.1"
+    version: "1.0.0"
   path:
     dependency: "direct main"
     description:
@@ -1241,14 +1241,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.6.0"
-  quiver:
-    dependency: transitive
-    description:
-      name: quiver
-      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.2"
   recase:
     dependency: transitive
     description:
@@ -1742,5 +1734,5 @@ packages:
     source: hosted
     version: "3.1.4"
 sdks:
-  dart: ">=3.13.4 <4.0.0"
+  dart: ">=3.13.0 <4.0.0"
   flutter: ">=3.44.0"

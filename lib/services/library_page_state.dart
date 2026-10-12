@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:atba/models/library_items/library_item.dart';
 import 'package:atba/models/library_items/queued_torrent.dart';
-import 'package:memoized/memoized.dart';
+import 'package:memoize/memoize.dart';
 
 import 'package:atba/services/cache/library_item_cache_service.dart';
 import 'package:collection/collection.dart';
@@ -63,7 +64,7 @@ class LibraryPageState extends ChangeNotifier {
   late final UpdateService updateService;
   late final LibraryItemCacheService _cacheService;
 
-  static final Memoized1<String, String> handleTorrentName = Memoized1(
+  static final handleTorrentName = memo1(
     (String name) => _handleTorrentNameImpl(name),
   );
 
@@ -166,12 +167,14 @@ class LibraryPageState extends ChangeNotifier {
 
   static Map<String, int? Function(LibraryItem, LibraryItem)> sortingOptions = {
     "Default": (a, b) => null,
-    "A to Z": (a, b) => (handleTorrentName(
-      a.name,
-    )).toLowerCase().compareTo(handleTorrentName(b.name).toLowerCase()),
-    "Z to A": (a, b) => -(handleTorrentName(
-      a.name,
-    )).toLowerCase().compareTo(handleTorrentName(b.name).toLowerCase()),
+    "A to Z": (a, b) =>
+        (handleTorrentName(a.name))
+            .toLowerCase()
+            .compareTo(handleTorrentName(b.name).toLowerCase()),
+    "Z to A": (a, b) =>
+        -(handleTorrentName(a.name))
+            .toLowerCase()
+            .compareTo(handleTorrentName(b.name).toLowerCase()),
     "Largest": (a, b) =>
         _areQueuedTorrents(a, b) ? null : -a.size.compareTo(b.size),
     "Smallest": (a, b) =>
@@ -209,9 +212,9 @@ class LibraryPageState extends ChangeNotifier {
             return filter != null ? filter(item) ?? true : true;
           }) &&
           (_searchQuery.isEmpty ||
-              handleTorrentName(
-                item.name,
-              ).toLowerCase().contains(_searchQuery.toLowerCase()));
+              handleTorrentName(item.name)
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()));
     }).toList();
   }
 
@@ -720,8 +723,7 @@ class LibraryPageState extends ChangeNotifier {
       Constants.useTorrentNameParsing,
       defaultValue: false,
     )!) {
-      PTN ptn = PTN();
-      return ptn.parse(name)['title'];
+      return parse(name)['title'];
     } else {
       return name;
     }

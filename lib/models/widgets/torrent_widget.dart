@@ -231,7 +231,6 @@ class _BaseTorrentWidget extends StatelessWidget {
           selectedItem.id == item.id &&
           selectedItem.runtimeType == item.runtimeType,
     );
-    PTN ptn = PTN();
 
     void handleTap() {
       if (state.isSelecting) {
@@ -257,7 +256,7 @@ class _BaseTorrentWidget extends StatelessWidget {
                   Constants.useTorrentNameParsing,
                   defaultValue: false,
                 )!
-                ? ptn.parse(item.name)['title']
+                ? parse(item.name)['title']
                 : item.name,
             onTap: handleTap,
           ),
