@@ -89,7 +89,7 @@ jobs:
             name: ipa-debug
             path:  build/ios/iphoneos/debug.ipa
 
-  test-packages:
+    test-packages:
         name: Test ${{ matrix.package }}
         runs-on: ubuntu-latest
 
