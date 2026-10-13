@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.12.0](https://github.com/93Pd9s8Jt/atba/compare/v0.11.0...v0.12.0) (2026-10-12)
+
+
+### Features
+
+* Add a port of the js library parse-torrent-title ([77d768a](https://github.com/93Pd9s8Jt/atba/commit/77d768a0828254b51435dac691627446143a06db))
+* **api:** Rewrite the api to be more modular, cover the latest version, and separate the logic from the app's code ([f50ff29](https://github.com/93Pd9s8Jt/atba/commit/f50ff29d02b43cda0602c25a5c6244da1e5da110))
+* **ios:** Add support for downloading by handling storage locations properly ([75d4301](https://github.com/93Pd9s8Jt/atba/commit/75d4301946f16e1f3b15eb7db8aa09677a7fed3d))
+* Update torrent name parsing to use new library ([ba2c20a](https://github.com/93Pd9s8Jt/atba/commit/ba2c20a93d7e0bfa0c590b8eb2280ad675db7c30))
+
 ## [0.11.0](https://github.com/93Pd9s8Jt/atba/compare/v0.10.1...v0.11.0) (2026-06-01)
 
 
