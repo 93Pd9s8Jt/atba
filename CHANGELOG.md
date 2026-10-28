@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/93Pd9s8Jt/atba/compare/v0.12.0...v0.12.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** upgrade Flutter to address TLS certificate validation vulnerability ([42affe6](https://github.com/93Pd9s8Jt/atba/commit/42affe6b3a8806e92e3e16800db2344b4d4059e2))
+
 ## [0.12.0](https://github.com/93Pd9s8Jt/atba/compare/v0.11.0...v0.12.0) (2026-10-12)
 
 
